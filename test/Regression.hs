@@ -1,17 +1,25 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE EmptyDataDecls #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ConstraintKinds #-}
 module Main where
 
+import Control.Ether.TH
 import Control.Monad.Ether.Reader
 
 import Data.Proxy
 import Data.Functor.Identity
-import Control.Ether.Core
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
 import Test.QuickCheck.Function
+
+etherealReader "AmountTag" "runAmountT" "askAmount" ''Int
+type MonadAmount = MonadEtherReader AmountTag
+
+etherealReader "CountTag" "runCountT" "askCount" ''Integer
+type MonadCount = MonadEtherReader CountTag
 
 main :: IO ()
 main = defaultMain suite
@@ -29,41 +37,23 @@ layeredLocalLeft, layeredLocalRight
 
 layeredLocalLeft k f a1 a2 = property (direct == indirect)
   where
-    run = runIdentity . flip runAmountT a1 . flip runAmount2T a2
+    run = runIdentity . flip runAmountT a1 . flip runCountT a2
     direct = apply k (fromIntegral a1, apply f a2)
     indirect = run $ layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
 
 layeredLocalRight k f a1 a2 = property (direct == indirect)
   where
-    run = runIdentity . flip runAmount2T a2 . flip runAmountT a1
+    run = runIdentity . flip runCountT a2 . flip runAmountT a1
     direct = apply k (fromIntegral a1, apply f a2)
     indirect = run $ layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
 
 layeredLocalCore
-    :: (MonadEtherReader AmountTag m, MonadEtherReader Amount2Tag m)
+    :: (MonadAmount m, MonadCount m)
     => (Integer -> Integer) -> (Int -> Integer -> a) -> m a
 layeredLocalCore f g = do
     n <- askAmount
-    m <- etherLocal (Proxy :: Proxy Amount2Tag) f askAmount2
+    m <- etherLocal (Proxy :: Proxy CountTag) f askCount
     return (g n m)
-
-data AmountTag
-type instance EtherData AmountTag = Int
-
-runAmountT :: EtherReaderT AmountTag m a -> EtherData AmountTag -> m a
-runAmountT = runEtherReaderT (Proxy :: Proxy AmountTag)
-
-askAmount :: MonadEtherReader AmountTag m => m (EtherData AmountTag)
-askAmount = etherAsk (Proxy :: Proxy AmountTag)
-
-data Amount2Tag
-type instance EtherData Amount2Tag = Integer
-
-runAmount2T :: EtherReaderT Amount2Tag m a -> EtherData Amount2Tag -> m a
-runAmount2T = runEtherReaderT (Proxy :: Proxy Amount2Tag)
-
-askAmount2 :: MonadEtherReader Amount2Tag m => m (EtherData Amount2Tag)
-askAmount2 = etherAsk (Proxy :: Proxy Amount2Tag)
 
 -- this should not compile
 z :: IO Int
