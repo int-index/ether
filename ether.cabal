@@ -1,0 +1,44 @@
+name:                ether
+version:             0.1.0.0
+synopsis:            Monad transformers and classes
+description:
+    Ether provides an easy way to create mtl-compatible effects
+    that do not require you to write O(n) instances.
+category:            Control
+license:             BSD3
+license-file:        LICENSE
+author:              Index Int
+author:              Index Int <vlad.z.4096@gmail.com>
+build-type:          Simple
+cabal-version:       >=1.22
+
+library
+
+  exposed-modules:     Control.Ether.Core
+                       Control.Monad.Trans.Ether.Reader
+                       Control.Monad.Ether.Reader
+
+  build-depends:       base >=4.8 && <4.9
+               ,       transformers >=0.4.0.3
+               ,       mtl >=2.2.1
+
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+
+
+test-suite regression
+
+  build-depends:       base >=4.8 && <4.9
+               ,       transformers >=0.4.0.3
+               ,       mtl >=2.2.1
+               ,       tasty >=0.10
+               ,       tasty-quickcheck >=0.8
+               ,       QuickCheck >=2.8
+               ,       ether
+
+  main-is:             Regression.hs
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  default-language:    Haskell2010
+  ghc-options:         -Wall
