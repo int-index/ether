@@ -24,6 +24,7 @@ import qualified Control.Monad.Trans.Except        as Trans        (ExceptT  , m
 import qualified Control.Monad.Trans.Identity      as Trans        (IdentityT, mapIdentityT)
 import qualified Control.Monad.Trans.List          as Trans        (ListT    , mapListT)
 import qualified Control.Monad.Trans.Maybe         as Trans        (MaybeT   , mapMaybeT)
+import qualified Control.Monad.Trans.Reader        as Trans        (ReaderT  , mapReaderT)
 import qualified Control.Monad.Trans.State.Lazy    as Trans.Lazy   (StateT   , mapStateT)
 import qualified Control.Monad.Trans.State.Strict  as Trans.Strict (StateT   , mapStateT)
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy   (WriterT  , mapWriterT)
@@ -69,6 +70,10 @@ instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.ListT m) wher
 instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.MaybeT m) where
     etherAsk proxy = lift (etherAsk proxy)
     etherLocal proxy = Trans.mapMaybeT . etherLocal proxy
+
+instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.ReaderT r' m) where
+    etherAsk proxy = lift (etherAsk proxy)
+    etherLocal proxy = Trans.mapReaderT . etherLocal proxy
 
 instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.Lazy.StateT s m) where
     etherAsk proxy = lift (etherAsk proxy)

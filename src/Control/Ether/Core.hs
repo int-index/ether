@@ -18,6 +18,7 @@ import qualified Control.Monad.Trans.Except        as Trans
 import qualified Control.Monad.Trans.Identity      as Trans
 import qualified Control.Monad.Trans.List          as Trans
 import qualified Control.Monad.Trans.Maybe         as Trans
+import qualified Control.Monad.Trans.Reader        as Trans
 import qualified Control.Monad.Trans.State.Lazy    as Trans.Lazy
 import qualified Control.Monad.Trans.State.Strict  as Trans.Strict
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy
@@ -58,6 +59,9 @@ instance Monad m => MonadEther (Trans.ListT m) where
 
 instance Monad m => MonadEther (Trans.MaybeT m) where
     type EtherTags (Trans.MaybeT m) = EtherTags m
+
+instance Monad m => MonadEther (Trans.ReaderT r m) where
+    type EtherTags (Trans.ReaderT r m) = EtherTags m
 
 instance Monad m => MonadEther (Trans.Lazy.StateT s m) where
     type EtherTags (Trans.Lazy.StateT s m) = EtherTags m
