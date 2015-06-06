@@ -24,7 +24,7 @@ tyVar name = do
     return (TH.PlainTV thName, thType)
 
 data EtherealConfig
-    = EtherealReaderConfig String String String String String
+    = EtherealReaderConfig String String String String String String
 
 defaultEtherealReaderConfig :: String -> EtherealConfig
 defaultEtherealReaderConfig name = EtherealReaderConfig
@@ -33,18 +33,20 @@ defaultEtherealReaderConfig name = EtherealReaderConfig
     ("run" ++ name ++ "T")
     ("run" ++ name)
     ("ask" ++ name)
+    ("local" ++ name)
 
 ethereal :: EtherealConfig -> TH.DecsQ
 
 ethereal (EtherealReaderConfig
  strEffName strTagName strRunTransName
- strRunName strAskName) = do
+ strRunName strAskName strLocalName) = do
     let effName = TH.mkName strEffName
         tagName = TH.mkName strTagName
         tag = TH.conT tagName
         runTransName = TH.mkName strRunTransName
         runName = TH.mkName strRunName
         askName = TH.mkName strAskName
+        localName = TH.mkName strLocalName
     effDecl <- TH.tySynD effName [] [t| MonadEtherReader $tag |]
     tagDecl <- emptyDataDecl tagName
     runTransFunSig <- do
@@ -66,15 +68,23 @@ ethereal (EtherealReaderConfig
         [e| ((runIdentity.).) $(TH.varE runTransName) |]
     askFunSig <- do
         (mBndr, m) <- tyVar "m"
-        (rBndr, r) <- tyVar "m"
+        (rBndr, r) <- tyVar "r"
         TH.sigD askName
           $ TH.forallT [mBndr, rBndr]
              (sequence [ [t| MonadEtherReader $tag $r $m |] ])
              [t| $m $r |]
-    askFunBody <-
-        let body = [e| etherAsk (Proxy :: Proxy $tag) |]
-        in TH.funD askName [ TH.clause [] (TH.normalB body) [] ]
+    askFunBody <- funSimple askName [e| etherAsk (Proxy :: Proxy $tag) |]
+    localFunSig <- do
+        (mBndr, m) <- tyVar "m"
+        (aBndr, a) <- tyVar "a"
+        (rBndr, r) <- tyVar "r"
+        TH.sigD localName
+          $ TH.forallT [mBndr, aBndr, rBndr]
+             (sequence [ [t| MonadEtherReader $tag $r $m |] ])
+             [t| ($r -> $r) -> $m $a -> $m $a |]
+    localFunBody <- funSimple localName [e| etherLocal (Proxy :: Proxy $tag) |]
     return [ effDecl, tagDecl
            , runTransFunSig, runTransFunBody
            , runFunSig, runFunBody
-           , askFunSig, askFunBody ]
+           , askFunSig, askFunBody
+           , localFunSig, localFunBody ]

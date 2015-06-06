@@ -5,6 +5,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Ether.Reader
     ( module Control.Monad.Ether.Reader
@@ -28,7 +29,7 @@ import qualified Control.Monad.Trans.State.Strict  as Trans.Strict (StateT   , m
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy   (WriterT  , mapWriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict (WriterT  , mapWriterT)
 
-class MonadEther m => MonadEtherReader tag r m where
+class MonadEther m => MonadEtherReader tag r m | m tag -> r where
 
     etherLocal :: proxy tag -> (r -> r) -> m a -> m a
 

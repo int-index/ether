@@ -6,16 +6,13 @@
 module Main where
 
 import Control.Ether.TH
-import Control.Monad.Ether.Reader
-
-import Data.Proxy
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
 import Test.QuickCheck.Function
 
-ethereal (defaultEtherealReaderConfig "Amount")
-ethereal (defaultEtherealReaderConfig "Count")
+ethereal (defaultEtherealReaderConfig "Reader1")
+ethereal (defaultEtherealReaderConfig "Reader2")
 
 main :: IO ()
 main = defaultMain suite
@@ -35,24 +32,24 @@ layeredLocalLeft, layeredLocalRight
 
 layeredLocalLeft k f a1 a2 = property (direct == run indirect)
   where
-    run = flip runAmount a1 . flip runCountT a2
+    run = flip runReader1 a1 . flip runReader2T a2
     (direct, indirect) = layeredLocalCore' k f a1 a2
 
 layeredLocalRight k f a1 a2 = property (direct == run indirect)
   where
-    run = flip runCount a2 . flip runAmountT a1
+    run = flip runReader2 a2 . flip runReader1T a1
     (direct, indirect) = layeredLocalCore' k f a1 a2
 
 layeredLocalCore
-    :: (MonadAmount Int m, MonadCount Integer m)
-    => (Integer -> Integer) -> (Int -> Integer -> a) -> m a
+    :: (MonadReader1 r1 m, MonadReader2 r2 m)
+    => (r2 -> r2) -> (r1 -> r2 -> a) -> m a
 layeredLocalCore f g = do
-    n <- askAmount
-    m <- etherLocal (Proxy :: Proxy TagCount) f askCount
+    n <- askReader1
+    m <- localReader2 f askReader2
     return (g n m)
 
 layeredLocalCore'
-    :: (MonadAmount Int m, MonadCount Integer m)
+    :: (MonadReader1 Int m, MonadReader2 Integer m)
     => Fun (Int, Integer) Integer
     -> Fun Integer Integer
     -> Int -> Integer -> (Integer, m Integer)
