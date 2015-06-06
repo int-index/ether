@@ -3,9 +3,11 @@
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
 import Control.Ether.TH
+import Control.Monad.Ether.Reader
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
@@ -57,3 +59,9 @@ layeredLocalCore' k f a1 a2 = (direct, indirect)
   where
     direct = apply k (fromIntegral a1, apply f a2)
     indirect = layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
+
+inferCore :: (MonadReader' Int m, MonadReader' Bool m) => m String
+inferCore = infer local' (succ :: Int -> Int) $ do
+    n :: Int <- infer ask'
+    b <- infer local' not (infer ask')
+    return (if b then "" else show n)

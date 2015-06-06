@@ -9,6 +9,7 @@
 module Control.Monad.Trans.Ether.Reader where
 
 import Data.Proxy (Proxy(Proxy))
+import Data.Functor.Identity (Identity(..))
 import Data.Coerce (coerce)
 import Control.Applicative (Alternative)
 import Control.Monad (MonadPlus)
@@ -30,6 +31,8 @@ newtype EtherReaderT tag r m a = EtherReaderT (R.ReaderT r m a)
     deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
 
+type EtherReader tag r = EtherReaderT tag r Identity
+
 instance Monad m => MonadEther (EtherReaderT tag r m) where
     type EtherTags (EtherReaderT tag r m) = tag ': EtherTags m
 
@@ -39,6 +42,9 @@ etherReaderT _proxy = EtherReaderT . R.ReaderT
 runEtherReaderT :: proxy tag -> EtherReaderT tag r m a -> r -> m a
 runEtherReaderT _proxy (EtherReaderT (R.ReaderT s)) = s
 
+runEtherReader :: proxy tag -> EtherReader tag r a -> r -> a
+runEtherReader proxy m r = runIdentity (runEtherReaderT proxy m r)
+
 mapEtherReaderT :: proxy tag -> (m a -> n b) -> EtherReaderT tag r m a -> EtherReaderT tag r n b
 mapEtherReaderT _proxy f m = EtherReaderT $ R.mapReaderT f (coerce m)
 
@@ -47,6 +53,12 @@ liftCatch _proxy f m h = EtherReaderT $ R.liftCatch f (coerce m) (coerce h)
 
 liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (EtherReaderT tag r m) a b
 liftCallCC _proxy callCC f = EtherReaderT $ R.liftCallCC callCC (coerce f)
+
+runReaderT' :: EtherReaderT r r m a -> r -> m a
+runReaderT' = runEtherReaderT Proxy
+
+runReader' :: EtherReader r r a -> r -> a
+runReader' m r = runIdentity (runEtherReaderT Proxy m r)
 
 -- Instances for mtl classes
 

@@ -4,12 +4,15 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Ether.Reader
     ( module Control.Monad.Ether.Reader
     , module Control.Monad.Trans.Ether.Reader
+    , infer
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -39,6 +42,17 @@ class MonadEther m => MonadEtherReader tag r m | m tag -> r where
 
     etherReader :: proxy tag -> (r -> a) -> m a
     etherReader proxy f = fmap f (etherAsk proxy)
+
+type MonadReader' r = MonadEtherReader r r
+
+local' :: MonadReader' r m => proxy r -> (r -> r) -> m a -> m a
+local' = etherLocal
+
+ask' :: MonadReader' r m => proxy r -> m r
+ask' = etherAsk
+
+reader' :: MonadReader' r m => proxy r -> (r -> a) -> m a
+reader' = etherReader
 
 instance {-# OVERLAPPING #-} (Monad m, EtherTagless tag m)
   => MonadEtherReader tag r (EtherReaderT tag r m) where
