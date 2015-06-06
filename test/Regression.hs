@@ -14,8 +14,8 @@ import Test.Tasty
 import Test.Tasty.QuickCheck
 import Test.QuickCheck.Function
 
-ethereal (defaultEtherealReaderConfig ''Int "Amount")
-ethereal (defaultEtherealReaderConfig ''Integer "Count")
+ethereal (defaultEtherealReaderConfig "Amount")
+ethereal (defaultEtherealReaderConfig "Count")
 
 main :: IO ()
 main = defaultMain suite
@@ -44,7 +44,7 @@ layeredLocalRight k f a1 a2 = property (direct == run indirect)
     (direct, indirect) = layeredLocalCore' k f a1 a2
 
 layeredLocalCore
-    :: (MonadAmount m, MonadCount m)
+    :: (MonadAmount Int m, MonadCount Integer m)
     => (Integer -> Integer) -> (Int -> Integer -> a) -> m a
 layeredLocalCore f g = do
     n <- askAmount
@@ -52,7 +52,7 @@ layeredLocalCore f g = do
     return (g n m)
 
 layeredLocalCore'
-    :: (MonadAmount m, MonadCount m)
+    :: (MonadAmount Int m, MonadCount Integer m)
     => Fun (Int, Integer) Integer
     -> Fun Integer Integer
     -> Int -> Integer -> (Integer, m Integer)

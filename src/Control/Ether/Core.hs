@@ -5,8 +5,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 module Control.Ether.Core
-    ( EtherData
-    , EtherTagless
+    ( EtherTagless
     , MonadEther
     , EtherTags
     ) where
@@ -23,8 +22,6 @@ import qualified Control.Monad.Trans.State.Lazy    as Trans.Lazy
 import qualified Control.Monad.Trans.State.Strict  as Trans.Strict
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict
-
-type family EtherData tag :: *
 
 type family OR (a :: Bool) (b :: Bool) :: Bool where
     OR 'True  a = 'True

@@ -9,7 +9,6 @@ import qualified Language.Haskell.TH as TH
 
 import Data.Proxy
 import Data.Functor.Identity
-import Control.Ether.Core
 import Control.Monad.Ether.Reader
 
 emptyDataDecl :: TH.Name -> TH.DecQ
@@ -25,11 +24,10 @@ tyVar name = do
     return (TH.PlainTV thName, thType)
 
 data EtherealConfig
-    = EtherealReaderConfig TH.Name String String String String String
+    = EtherealReaderConfig String String String String String
 
-defaultEtherealReaderConfig :: TH.Name -> String -> EtherealConfig
-defaultEtherealReaderConfig tyname name = EtherealReaderConfig
-    tyname
+defaultEtherealReaderConfig :: String -> EtherealConfig
+defaultEtherealReaderConfig name = EtherealReaderConfig
     ("Monad" ++ name)
     ("Tag" ++ name)
     ("run" ++ name ++ "T")
@@ -39,8 +37,7 @@ defaultEtherealReaderConfig tyname name = EtherealReaderConfig
 ethereal :: EtherealConfig -> TH.DecsQ
 
 ethereal (EtherealReaderConfig
- tyname strEffName
- strTagName strRunTransName
+ strEffName strTagName strRunTransName
  strRunName strAskName) = do
     let effName = TH.mkName strEffName
         tagName = TH.mkName strTagName
@@ -50,32 +47,34 @@ ethereal (EtherealReaderConfig
         askName = TH.mkName strAskName
     effDecl <- TH.tySynD effName [] [t| MonadEtherReader $tag |]
     tagDecl <- emptyDataDecl tagName
-    [tagInst] <- [d| type instance EtherData $tag = $(TH.conT tyname) |]
     runTransFunSig <- do
         (mBndr, m) <- tyVar "m"
         (aBndr, a) <- tyVar "a"
+        (rBndr, r) <- tyVar "r"
         TH.sigD runTransName
-          $ TH.forallT [mBndr, aBndr] (return [])
-             [t| EtherReaderT $tag $m $a -> EtherData $tag -> $m $a |]
+          $ TH.forallT [mBndr, aBndr, rBndr] (return [])
+             [t| EtherReaderT $tag $r $m $a -> $r -> $m $a |]
     runTransFunBody <- funSimple runTransName
         [e| runEtherReaderT (Proxy :: Proxy $tag) |]
     runFunSig <- do
         (aBndr, a) <- tyVar "a"
+        (rBndr, r) <- tyVar "r"
         TH.sigD runName
-          $ TH.forallT [aBndr] (return [])
-             [t| EtherReaderT $tag Identity $a -> EtherData $tag -> $a |]
+          $ TH.forallT [aBndr, rBndr] (return [])
+             [t| EtherReaderT $tag $r Identity $a -> $r -> $a |]
     runFunBody <- funSimple runName
         [e| ((runIdentity.).) $(TH.varE runTransName) |]
     askFunSig <- do
         (mBndr, m) <- tyVar "m"
+        (rBndr, r) <- tyVar "m"
         TH.sigD askName
-          $ TH.forallT [mBndr]
-             (sequence [ [t| MonadEtherReader $tag $m |] ])
-             [t| $m (EtherData $tag) |]
+          $ TH.forallT [mBndr, rBndr]
+             (sequence [ [t| MonadEtherReader $tag $r $m |] ])
+             [t| $m $r |]
     askFunBody <-
         let body = [e| etherAsk (Proxy :: Proxy $tag) |]
         in TH.funD askName [ TH.clause [] (TH.normalB body) [] ]
-    return [ effDecl, tagDecl, tagInst
+    return [ effDecl, tagDecl
            , runTransFunSig, runTransFunBody
            , runFunSig, runFunBody
            , askFunSig, askFunBody ]
