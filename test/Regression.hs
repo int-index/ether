@@ -9,17 +9,13 @@ import Control.Ether.TH
 import Control.Monad.Ether.Reader
 
 import Data.Proxy
-import Data.Functor.Identity
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
 import Test.QuickCheck.Function
 
-etherealReader "AmountTag" "runAmountT" "askAmount" ''Int
-type MonadAmount = MonadEtherReader AmountTag
-
-etherealReader "CountTag" "runCountT" "askCount" ''Integer
-type MonadCount = MonadEtherReader CountTag
+ethereal (defaultEtherealReaderConfig ''Int "Amount")
+ethereal (defaultEtherealReaderConfig ''Integer "Count")
 
 main :: IO ()
 main = defaultMain suite
@@ -33,27 +29,37 @@ suite = testGroup "Ether"
     ]
 
 layeredLocalLeft, layeredLocalRight
-    :: Fun (Int, Integer) Integer -> Fun Integer Integer -> Int -> Integer -> Property
+    :: Fun (Int, Integer) Integer
+    -> Fun Integer Integer
+    -> Int -> Integer -> Property
 
-layeredLocalLeft k f a1 a2 = property (direct == indirect)
+layeredLocalLeft k f a1 a2 = property (direct == run indirect)
   where
-    run = runIdentity . flip runAmountT a1 . flip runCountT a2
-    direct = apply k (fromIntegral a1, apply f a2)
-    indirect = run $ layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
+    run = flip runAmount a1 . flip runCountT a2
+    (direct, indirect) = layeredLocalCore' k f a1 a2
 
-layeredLocalRight k f a1 a2 = property (direct == indirect)
+layeredLocalRight k f a1 a2 = property (direct == run indirect)
   where
-    run = runIdentity . flip runCountT a2 . flip runAmountT a1
-    direct = apply k (fromIntegral a1, apply f a2)
-    indirect = run $ layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
+    run = flip runCount a2 . flip runAmountT a1
+    (direct, indirect) = layeredLocalCore' k f a1 a2
 
 layeredLocalCore
     :: (MonadAmount m, MonadCount m)
     => (Integer -> Integer) -> (Int -> Integer -> a) -> m a
 layeredLocalCore f g = do
     n <- askAmount
-    m <- etherLocal (Proxy :: Proxy CountTag) f askCount
+    m <- etherLocal (Proxy :: Proxy TagCount) f askCount
     return (g n m)
+
+layeredLocalCore'
+    :: (MonadAmount m, MonadCount m)
+    => Fun (Int, Integer) Integer
+    -> Fun Integer Integer
+    -> Int -> Integer -> (Integer, m Integer)
+layeredLocalCore' k f a1 a2 = (direct, indirect)
+  where
+    direct = apply k (fromIntegral a1, apply f a2)
+    indirect = layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
 
 -- this should not compile
 z :: IO Int
