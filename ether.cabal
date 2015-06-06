@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            Monad transformers and classes
 description:
     Ether provides an easy way to create mtl-compatible effects
-    that do not require you to write O(n) instances.
+    that do not require you to write O(n^2) instances.
 category:            Control
 license:             BSD3
 license-file:        LICENSE
