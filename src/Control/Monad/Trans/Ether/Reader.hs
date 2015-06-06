@@ -3,6 +3,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Trans.Ether.Reader where
 
@@ -13,7 +15,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
-import Control.Ether.Core (EtherData)
+import Control.Ether.Core
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Reader as R
@@ -27,6 +29,9 @@ import qualified Control.Monad.Error.Class   as Class
 newtype EtherReaderT tag m a = EtherReaderT (R.ReaderT (EtherData tag) m a)
     deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
+
+instance Monad m => MonadEther (EtherReaderT tag m) where
+    type EtherTags (EtherReaderT tag m) = tag ': EtherTags m
 
 etherReaderT :: proxy tag -> (EtherData tag -> m a) -> EtherReaderT tag m a
 etherReaderT _proxy = EtherReaderT . R.ReaderT

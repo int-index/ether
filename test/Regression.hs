@@ -60,7 +60,3 @@ layeredLocalCore' k f a1 a2 = (direct, indirect)
   where
     direct = apply k (fromIntegral a1, apply f a2)
     indirect = layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
-
--- this should not compile
-z :: IO Int
-z = runAmountT (runAmountT (runAmountT askAmount 20) 10) 5
