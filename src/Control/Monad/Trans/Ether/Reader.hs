@@ -7,6 +7,7 @@
 module Control.Monad.Trans.Ether.Reader where
 
 import Data.Proxy (Proxy(Proxy))
+import Data.Coerce (coerce)
 import Control.Applicative (Alternative)
 import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
@@ -34,17 +35,13 @@ runEtherReaderT :: proxy tag -> EtherReaderT tag m a -> EtherData tag -> m a
 runEtherReaderT _proxy (EtherReaderT (R.ReaderT s)) = s
 
 mapEtherReaderT :: proxy tag -> (m a -> n b) -> EtherReaderT tag m a -> EtherReaderT tag n b
-mapEtherReaderT proxy f m = etherReaderT proxy $ f . runEtherReaderT proxy m
+mapEtherReaderT _proxy f m = coerce $ R.mapReaderT f (coerce m)
 
 liftCatch :: proxy tag -> Sig.Catch e m a -> Sig.Catch e (EtherReaderT tag m) a
-liftCatch proxy f m h = etherReaderT proxy
-    $ \r -> f (runEtherReaderT proxy m r)
-    $ \e -> runEtherReaderT proxy (h e) r
+liftCatch _proxy f m h = coerce $ R.liftCatch f (coerce m) (coerce h)
 
 liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (EtherReaderT tag m) a b
-liftCallCC proxy callCC f = etherReaderT proxy
-    $ \r -> callCC
-    $ \c -> runEtherReaderT proxy (f (etherReaderT proxy . const . c)) r
+liftCallCC _proxy callCC f = coerce $ R.liftCallCC callCC (coerce f)
 
 -- Instances for mtl classes
 
