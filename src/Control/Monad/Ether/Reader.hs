@@ -45,14 +45,14 @@ class MonadEther m => MonadEtherReader tag r m | m tag -> r where
 
 type MonadReader' r = MonadEtherReader r r
 
-local' :: MonadReader' r m => proxy r -> (r -> r) -> m a -> m a
-local' = etherLocal
+local' :: MonadReader' r m => (r -> r) -> m a -> m a
+local' (f :: r -> r) = etherLocal (Proxy :: Proxy r) f
 
 ask' :: MonadReader' r m => proxy r -> m r
 ask' = etherAsk
 
-reader' :: MonadReader' r m => proxy r -> (r -> a) -> m a
-reader' = etherReader
+reader' :: MonadReader' r m => (r -> a) -> m a
+reader' (f :: r -> a) = etherReader (Proxy :: Proxy r) f
 
 instance {-# OVERLAPPING #-} (Monad m, EtherTagless tag m)
   => MonadEtherReader tag r (EtherReaderT tag r m) where

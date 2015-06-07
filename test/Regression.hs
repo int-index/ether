@@ -61,7 +61,7 @@ layeredLocalCore' k f a1 a2 = (direct, indirect)
     indirect = layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
 
 inferCore :: (MonadReader' Int m, MonadReader' Bool m) => m String
-inferCore = infer local' (succ :: Int -> Int) $ do
+inferCore = local' (succ :: Int -> Int) $ do
     n :: Int <- infer ask'
-    b <- infer local' not (infer ask')
+    b <- local' not (infer ask')
     return (if b then "" else show n)
