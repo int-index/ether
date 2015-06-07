@@ -8,10 +8,8 @@ module Control.Ether.Core
     ( EtherTagless
     , MonadEther
     , EtherTags
-    , infer
     ) where
 
-import Data.Proxy (Proxy(Proxy))
 import Data.Functor.Identity
 import GHC.Exts (Constraint)
 
@@ -25,9 +23,6 @@ import qualified Control.Monad.Trans.State.Lazy    as Trans.Lazy
 import qualified Control.Monad.Trans.State.Strict  as Trans.Strict
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict
-
-infer :: (Proxy tag -> a) -> a
-infer f = f Proxy
 
 type family OR (a :: Bool) (b :: Bool) :: Bool where
     OR 'True  a = 'True

@@ -12,7 +12,6 @@
 module Control.Monad.Ether.Reader
     ( module Control.Monad.Ether.Reader
     , module Control.Monad.Trans.Ether.Reader
-    , infer
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -45,14 +44,14 @@ class MonadEther m => MonadEtherReader tag r m | m tag -> r where
 
 type MonadReader' r = MonadEtherReader r r
 
-local' :: MonadReader' r m => (r -> r) -> m a -> m a
-local' (f :: r -> r) = etherLocal (Proxy :: Proxy r) f
+local' :: forall m r a . MonadReader' r m => (r -> r) -> m a -> m a
+local' = etherLocal (Proxy :: Proxy r)
 
-ask' :: MonadReader' r m => proxy r -> m r
-ask' = etherAsk
+ask' :: forall m r . MonadReader' r m => m r
+ask' = etherAsk (Proxy :: Proxy r)
 
-reader' :: MonadReader' r m => (r -> a) -> m a
-reader' (f :: r -> a) = etherReader (Proxy :: Proxy r) f
+reader' :: forall m r a . MonadReader' r m => (r -> a) -> m a
+reader' = etherReader (Proxy :: Proxy r)
 
 instance {-# OVERLAPPING #-} (Monad m, EtherTagless tag m)
   => MonadEtherReader tag r (EtherReaderT tag r m) where
