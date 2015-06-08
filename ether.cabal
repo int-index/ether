@@ -16,6 +16,7 @@ library
 
   exposed-modules:     Control.Ether.Core
                        Control.Ether.TH
+                       Control.Ether.Wrapped
                        Control.Monad.Trans.Ether.Reader
                        Control.Monad.Ether.Reader
 
