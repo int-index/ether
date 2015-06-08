@@ -10,8 +10,24 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Ether.Reader
-    ( module Control.Monad.Ether.Reader
-    , module Control.Monad.Trans.Ether.Reader
+    ( EtherReaderT
+    , EtherReader
+    , ReaderT'
+    , Reader'
+    , runEtherReaderT
+    , runEtherReader
+    , runReaderT'
+    , runReader'
+    --
+    , MonadEtherReader
+    , etherLocal
+    , etherAsk
+    , etherReader
+    --
+    , MonadReader'
+    , local'
+    , ask'
+    , reader'
     ) where
 
 import Data.Proxy (Proxy(Proxy))

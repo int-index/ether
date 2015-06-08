@@ -6,7 +6,21 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Control.Monad.Trans.Ether.Reader where
+module Control.Monad.Trans.Ether.Reader
+    ( EtherReaderT
+    , EtherReader
+    , ReaderT'
+    , Reader'
+    , runEtherReaderT
+    , runEtherReader
+    , runReaderT'
+    , runReader'
+    --
+    , etherReaderT
+    , mapEtherReaderT
+    , liftCatch
+    , liftCallCC
+    ) where
 
 import Data.Proxy (Proxy(Proxy))
 import Data.Functor.Identity (Identity(..))
@@ -54,10 +68,13 @@ liftCatch _proxy f m h = EtherReaderT $ R.liftCatch f (coerce m) (coerce h)
 liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (EtherReaderT tag r m) a b
 liftCallCC _proxy callCC f = EtherReaderT $ R.liftCallCC callCC (coerce f)
 
-runReaderT' :: EtherReaderT r r m a -> r -> m a
+type ReaderT' r = EtherReaderT r r
+type Reader' r = EtherReader r r
+
+runReaderT' :: ReaderT' r m a -> r -> m a
 runReaderT' = runEtherReaderT Proxy
 
-runReader' :: EtherReader r r a -> r -> a
+runReader' :: Reader' r a -> r -> a
 runReader' m r = runIdentity (runEtherReaderT Proxy m r)
 
 -- Instances for mtl classes
