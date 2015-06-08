@@ -6,11 +6,15 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Control.Ether.Core
     ( EtherTagless
-    , MonadEther
     , EtherTags
     ) where
 
-import Data.Functor.Identity
+import Data.Proxy (Proxy)
+import Data.Functor.Identity (Identity)
+import Data.Monoid (First, Last)
+import qualified Control.Monad.ST.Strict as Strict (ST)
+import qualified Control.Monad.ST.Lazy   as Lazy   (ST)
+import GHC.Conc (STM)
 import GHC.Exts (Constraint)
 
 import qualified Control.Monad.Trans.Cont          as Trans
@@ -36,41 +40,28 @@ type family ELEM (x :: k) (as :: [k]) :: Bool where
 type family EtherTagless (tag :: *) (m :: * -> *) :: Constraint where
     EtherTagless tag m = ELEM tag (EtherTags m) ~ 'False
 
-class Monad m => MonadEther m where
-    type family EtherTags m :: [*]
+type family EtherTags (m :: * -> *) :: [*]
 
-instance MonadEther IO where
-    type EtherTags IO = '[]
+type instance EtherTags IO = '[]
+type instance EtherTags Identity = '[]
+type instance EtherTags [] = '[]
+type instance EtherTags Maybe = '[]
+type instance EtherTags Last = '[]
+type instance EtherTags First = '[]
+type instance EtherTags ((->) r) = '[]
+type instance EtherTags STM = '[]
+type instance EtherTags (Either e) = '[]
+type instance EtherTags Proxy = '[]
+type instance EtherTags (Strict.ST s) = '[]
+type instance EtherTags (Lazy.ST s) = '[]
 
-instance MonadEther Identity where
-    type EtherTags Identity = '[]
-
-instance Monad m => MonadEther (Trans.ContT r m) where
-    type EtherTags (Trans.ContT r m) = EtherTags m
-
-instance Monad m => MonadEther (Trans.ExceptT e m) where
-    type EtherTags (Trans.ExceptT e m) = EtherTags m
-
-instance Monad m => MonadEther (Trans.IdentityT m) where
-    type EtherTags (Trans.IdentityT m) = EtherTags m
-
-instance Monad m => MonadEther (Trans.ListT m) where
-    type EtherTags (Trans.ListT m) = EtherTags m
-
-instance Monad m => MonadEther (Trans.MaybeT m) where
-    type EtherTags (Trans.MaybeT m) = EtherTags m
-
-instance Monad m => MonadEther (Trans.ReaderT r m) where
-    type EtherTags (Trans.ReaderT r m) = EtherTags m
-
-instance Monad m => MonadEther (Trans.Lazy.StateT s m) where
-    type EtherTags (Trans.Lazy.StateT s m) = EtherTags m
-
-instance Monad m => MonadEther (Trans.Strict.StateT s m) where
-    type EtherTags (Trans.Strict.StateT s m) = EtherTags m
-
-instance (Monoid w, Monad m) => MonadEther (Trans.Lazy.WriterT w m) where
-    type EtherTags (Trans.Lazy.WriterT w m) = EtherTags m
-
-instance (Monoid w, Monad m) => MonadEther (Trans.Strict.WriterT w m) where
-    type EtherTags (Trans.Strict.WriterT w m) = EtherTags m
+type instance EtherTags (Trans.ContT r m) = EtherTags m
+type instance EtherTags (Trans.ExceptT e m) = EtherTags m
+type instance EtherTags (Trans.IdentityT m) = EtherTags m
+type instance EtherTags (Trans.ListT m) = EtherTags m
+type instance EtherTags (Trans.MaybeT m) = EtherTags m
+type instance EtherTags (Trans.ReaderT r m) = EtherTags m
+type instance EtherTags (Trans.Lazy.StateT s m) = EtherTags m
+type instance EtherTags (Trans.Strict.StateT s m) = EtherTags m
+type instance EtherTags (Trans.Lazy.WriterT w m) = EtherTags m
+type instance EtherTags (Trans.Strict.WriterT w m) = EtherTags m

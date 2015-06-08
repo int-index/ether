@@ -45,10 +45,9 @@ newtype EtherReaderT tag r m a = EtherReaderT (R.ReaderT r m a)
     deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
 
-type EtherReader tag r = EtherReaderT tag r Identity
+type instance EtherTags (EtherReaderT tag r m) = tag ': EtherTags m
 
-instance Monad m => MonadEther (EtherReaderT tag r m) where
-    type EtherTags (EtherReaderT tag r m) = tag ': EtherTags m
+type EtherReader tag r = EtherReaderT tag r Identity
 
 etherReaderT :: proxy tag -> (r -> m a) -> EtherReaderT tag r m a
 etherReaderT _proxy = EtherReaderT . R.ReaderT
