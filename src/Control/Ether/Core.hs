@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 module Control.Ether.Core
-    ( EtherTagless
+    ( EtherTagset
     , EtherTags
     ) where
 
@@ -28,17 +28,17 @@ import qualified Control.Monad.Trans.State.Strict  as Trans.Strict
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict
 
-type family OR (a :: Bool) (b :: Bool) :: Bool where
-    OR 'True  a = 'True
-    OR 'False a = a
+type family Elem (x :: k) (as :: [k]) :: Bool where
+    Elem x (x ': as) = 'True
+    Elem x (a ': as) = Elem x as
+    Elem x '[] = 'False
 
-type family ELEM (x :: k) (as :: [k]) :: Bool where
-    ELEM x (x ': as) = 'True
-    ELEM x (a ': as) = ELEM x as
-    ELEM x '[] = 'False
+type family Unique (as :: [k]) :: Constraint where
+    Unique '[] = ()
+    Unique (a ': as) = (Elem a as ~ 'False, Unique as)
 
-type family EtherTagless (tag :: *) (m :: * -> *) :: Constraint where
-    EtherTagless tag m = ELEM tag (EtherTags m) ~ 'False
+type family EtherTagset (m :: * -> *) :: Constraint where
+    EtherTagset m = Unique (EtherTags m)
 
 type family EtherTags (m :: * -> *) :: [*]
 
