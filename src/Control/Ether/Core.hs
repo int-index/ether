@@ -5,8 +5,9 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 module Control.Ether.Core
-    ( EtherTagset
-    , EtherTags
+    ( EtherTags
+    , UniqueEtherTags
+    , ensureUniqueEtherTags
     ) where
 
 import Data.Proxy (Proxy)
@@ -37,8 +38,11 @@ type family Unique (as :: [k]) :: Constraint where
     Unique '[] = ()
     Unique (a ': as) = (Elem a as ~ 'False, Unique as)
 
-type family EtherTagset (m :: * -> *) :: Constraint where
-    EtherTagset m = Unique (EtherTags m)
+type family UniqueEtherTags (m :: * -> *) :: Constraint where
+    UniqueEtherTags m = Unique (EtherTags m)
+
+ensureUniqueEtherTags :: UniqueEtherTags m => m a -> m a
+ensureUniqueEtherTags = id
 
 type family EtherTags (m :: * -> *) :: [*]
 

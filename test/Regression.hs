@@ -75,3 +75,20 @@ inferCore = local' (succ :: Int -> Int) $ do
 
 wrapCore :: MonadEtherReader TagReader1 Int m => m Int
 wrapCore = ethered r1 ask
+
+
+-- Should not compile with `ensureUniqueEtherTags`
+uniqueTagsCore :: IO ()
+uniqueTagsCore = flip runReader1T (1 :: Int)
+               . flip runReader1T (True :: Bool)
+               . flip runReader1T (2 :: Int)
+               . flip runReader1T (3 :: Integer)
+            {- . ensureUniqueEtherTags -}
+               $ do
+                    a :: Integer <- askReader1
+                    b :: Int <- askReader1
+                    c :: Bool <- askReader1
+                    liftIO $ do
+                        print a
+                        print b
+                        print c

@@ -34,7 +34,6 @@ module Control.Monad.Ether.Reader
 import Data.Proxy (Proxy(Proxy))
 import Control.Monad.Trans (lift)
 
-import Control.Ether.Core
 import Control.Monad.Trans.Ether.Reader
 
 -- for mtl instances
@@ -49,7 +48,7 @@ import qualified Control.Monad.Trans.State.Strict  as Trans.Strict (StateT   , m
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy   (WriterT  , mapWriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict (WriterT  , mapWriterT)
 
-class (Monad m, EtherTagset m) => MonadEtherReader tag r m | m tag -> r where
+class Monad m => MonadEtherReader tag r m | m tag -> r where
 
     etherLocal :: proxy tag -> (r -> r) -> m a -> m a
 
@@ -70,13 +69,11 @@ ask' = etherAsk (Proxy :: Proxy r)
 reader' :: forall m r a . MonadReader' r m => (r -> a) -> m a
 reader' = etherReader (Proxy :: Proxy r)
 
-instance {-# OVERLAPPING #-} (Monad m, EtherTagset (EtherReaderT tag r m))
-  => MonadEtherReader tag r (EtherReaderT tag r m) where
+instance {-# OVERLAPPING #-} Monad m => MonadEtherReader tag r (EtherReaderT tag r m) where
     etherAsk proxy = etherReaderT proxy return
     etherLocal proxy f m = etherReaderT proxy (runEtherReaderT proxy m . f)
 
-instance (MonadEtherReader tag r m, EtherTagset (EtherReaderT tag' r' m))
-  => MonadEtherReader tag r (EtherReaderT tag' r' m) where
+instance (MonadEtherReader tag r m) => MonadEtherReader tag r (EtherReaderT tag' r' m) where
     etherAsk proxy = lift (etherAsk proxy)
     etherLocal proxy = mapEtherReaderT Proxy . etherLocal proxy
 
