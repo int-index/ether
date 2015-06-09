@@ -8,9 +8,16 @@ category:            Control
 license:             BSD3
 license-file:        LICENSE
 author:              Index Int
-author:              Index Int <vlad.z.4096@gmail.com>
+maintainer:          Index Int <vlad.z.4096@gmail.com>
+bug-reports:         https://github.com/int-index/ether/issues
 build-type:          Simple
 cabal-version:       >=1.22
+
+source-repository head
+
+  type:                git
+  location:            git@github.com:int-index/ether.git
+
 
 library
 
