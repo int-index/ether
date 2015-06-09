@@ -6,6 +6,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Control.Ether.Core
     ( EtherTags
+    , UniqueEtherTag
     , UniqueEtherTags
     , ensureUniqueEtherTags
     ) where
@@ -29,14 +30,17 @@ import qualified Control.Monad.Trans.State.Strict  as Trans.Strict
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict
 
-type family Elem (x :: k) (as :: [k]) :: Bool where
-    Elem x (x ': as) = 'True
-    Elem x (a ': as) = Elem x as
-    Elem x '[] = 'False
+-- Never declare instances for this class
+class UniqueEtherTag a
+
+type family IsUnique (x :: k) (as :: [k]) :: Constraint where
+    IsUnique x (x ': as) = UniqueEtherTag x
+    IsUnique x (a ': as) = IsUnique x as
+    IsUnique x '[] = ()
 
 type family Unique (as :: [k]) :: Constraint where
     Unique '[] = ()
-    Unique (a ': as) = (Elem a as ~ 'False, Unique as)
+    Unique (a ': as) = (IsUnique a as, Unique as)
 
 type family UniqueEtherTags (m :: * -> *) :: Constraint where
     UniqueEtherTags m = Unique (EtherTags m)
