@@ -13,8 +13,16 @@ module Control.Monad.Trans.Ether.State
     , State'
     , runEtherStateT
     , runEtherState
+    , evalEtherStateT
+    , evalEtherState
+    , execEtherStateT
+    , execEtherState
     , runStateT'
     , runState'
+    , evalStateT'
+    , evalState'
+    , execStateT'
+    , execState'
     --
     , etherStateT
     , mapEtherStateT
@@ -60,6 +68,18 @@ runEtherStateT _proxy (EtherStateT (S.StateT f)) = f
 runEtherState :: proxy tag -> EtherState tag s a  -> s -> (a, s)
 runEtherState proxy m s = runIdentity (runEtherStateT proxy m s)
 
+evalEtherStateT :: Functor m => proxy tag -> EtherStateT tag s m a  -> s -> m a
+evalEtherStateT proxy m s = fmap fst (runEtherStateT proxy m s)
+
+evalEtherState :: proxy tag -> EtherState tag s a  -> s -> a
+evalEtherState proxy m s = fst (runEtherState proxy m s)
+
+execEtherStateT :: Functor m => proxy tag -> EtherStateT tag s m a  -> s -> m s
+execEtherStateT proxy m s = fmap snd (runEtherStateT proxy m s)
+
+execEtherState :: proxy tag -> EtherState tag s a  -> s -> s
+execEtherState proxy m s = snd (runEtherState proxy m s)
+
 mapEtherStateT :: proxy tag -> (m (a, s) -> n (b, s)) -> EtherStateT tag s m a -> EtherStateT tag s n b
 mapEtherStateT _proxy f m = EtherStateT $ S.mapStateT f (coerce m)
 
@@ -83,6 +103,18 @@ runStateT' = runEtherStateT Proxy
 
 runState' :: State' s a -> s -> (a, s)
 runState' m s = runIdentity (runStateT' m s)
+
+evalStateT' :: Functor m => StateT' s m a -> s -> m a
+evalStateT' m s = fmap fst (runStateT' m s)
+
+evalState' :: State' s a -> s -> a
+evalState' m s = fst (runState' m s)
+
+execStateT' :: Functor m => StateT' s m a -> s -> m s
+execStateT' m s = fmap snd (runStateT' m s)
+
+execState' :: State' s a -> s -> s
+execState' m s = snd (runState' m s)
 
 -- Instances for mtl classes
 

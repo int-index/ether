@@ -17,20 +17,30 @@ module Control.Monad.Ether.State
     , State'
     , runEtherStateT
     , runEtherState
+    , evalEtherStateT
+    , evalEtherState
+    , execEtherStateT
+    , execEtherState
     , runStateT'
     , runState'
+    , evalStateT'
+    , evalState'
+    , execStateT'
+    , execState'
     --
     , MonadEtherState
     , etherGet
     , etherGets
     , etherPut
     , etherState
+    , etherModify
     --
     , MonadState'
     , get'
     , gets'
     , put'
     , state'
+    , modify'
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -71,6 +81,9 @@ class Monad m => MonadEtherState tag s m | m tag -> s where
 etherGets :: MonadEtherState tag s m => proxy tag -> (s -> a) -> m a
 etherGets proxy f = fmap f (etherGet proxy)
 
+etherModify :: MonadEtherState tag s m => proxy tag -> (s -> s) -> m ()
+etherModify proxy f = etherState proxy $ \ s -> ((), f s)
+
 type MonadState' s = MonadEtherState s s
 
 get' :: forall m s . MonadState' s m => m s
@@ -84,6 +97,9 @@ put' = etherPut (Proxy :: Proxy s)
 
 state' :: forall m s a . MonadState' s m => (s -> (a, s)) -> m a
 state' = etherState (Proxy :: Proxy s)
+
+modify' :: forall m s . MonadState' s m => (s -> s) -> m ()
+modify' = etherModify (Proxy :: Proxy s)
 
 instance {-# OVERLAPPING #-} Monad m => MonadEtherState tag s (EtherStateT tag s m) where
     etherGet proxy = etherStateT proxy (\s -> return (s, s))
