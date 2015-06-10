@@ -50,6 +50,8 @@ import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict (WriterT  , m
 
 class Monad m => MonadEtherReader tag r m | m tag -> r where
 
+    {-# MINIMAL (etherAsk | etherReader), etherLocal #-}
+
     etherLocal :: proxy tag -> (r -> r) -> m a -> m a
 
     etherAsk :: proxy tag -> m r
