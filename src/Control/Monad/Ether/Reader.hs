@@ -34,6 +34,7 @@ module Control.Monad.Ether.Reader
 import Data.Proxy (Proxy(Proxy))
 import Control.Monad.Trans (lift)
 
+import Control.Monad.Trans.Ether.State (EtherStateT, mapEtherStateT)
 import Control.Monad.Trans.Ether.Reader
 
 -- for mtl instances
@@ -78,6 +79,12 @@ instance {-# OVERLAPPING #-} Monad m => MonadEtherReader tag r (EtherReaderT tag
 instance (MonadEtherReader tag r m) => MonadEtherReader tag r (EtherReaderT tag' r' m) where
     etherAsk proxy = lift (etherAsk proxy)
     etherLocal proxy = mapEtherReaderT Proxy . etherLocal proxy
+
+-- Instances for other tagged transformers
+
+instance (MonadEtherReader tag r m) => MonadEtherReader tag r (EtherStateT tag' s m) where
+    etherAsk proxy = lift (etherAsk proxy)
+    etherLocal proxy = mapEtherStateT Proxy . etherLocal proxy
 
 -- Instances for mtl transformers
 

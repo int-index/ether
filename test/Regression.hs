@@ -8,9 +8,11 @@ module Main where
 
 import Data.Proxy
 
+import Control.Ether.Core
 import Control.Ether.TH
 import Control.Ether.Wrapped
 import Control.Monad.Ether.Reader
+import Control.Monad.Ether.State
 import Control.Monad.Reader
 
 import Test.Tasty
@@ -92,3 +94,13 @@ uniqueTagsCore = flip runReader1T (1 :: Int)
                         print a
                         print b
                         print c
+
+data TagState1
+
+stateCore :: ( MonadEtherState  TagState1  Int m
+             , MonadEtherReader TagReader1 Int m
+             , UniqueEtherTags m ) => m ()
+stateCore = do
+    a <- etherAsk (Proxy :: Proxy TagReader1)
+    n <- etherGet (Proxy :: Proxy TagState1)
+    etherPut (Proxy :: Proxy TagState1) (n * a)
