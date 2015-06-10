@@ -9,7 +9,6 @@ module Control.Ether.Core
     , UniqueEtherTag
     , UniqueEtherTags
     , ensureUniqueEtherTags
-    , Strictness (Strict, Lazy)
     ) where
 
 import Data.Proxy (Proxy)
@@ -33,8 +32,6 @@ import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict
 
 -- Never declare instances for this class
 class UniqueEtherTag a
-
-data Strictness = Strict | Lazy
 
 type family IsUnique (x :: k) (as :: [k]) :: Constraint where
     IsUnique x (x ': as) = UniqueEtherTag x
