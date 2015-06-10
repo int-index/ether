@@ -7,17 +7,17 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Trans.Ether.Reader
-    ( EtherReaderT
-    , EtherReader
+    ( ReaderT
+    , Reader
     , ReaderT'
     , Reader'
-    , runEtherReaderT
-    , runEtherReader
+    , runReaderT
+    , runReader
     , runReaderT'
     , runReader'
     --
     , etherReaderT
-    , mapEtherReaderT
+    , mapReaderT
     , liftCatch
     , liftCallCC
     ) where
@@ -33,7 +33,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Control.Ether.Core
 
 import qualified Control.Monad.Signatures as Sig
-import qualified Control.Monad.Trans.Reader as R
+import qualified Control.Monad.Trans.Reader as Trans
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -41,62 +41,62 @@ import qualified Control.Monad.State.Class   as Class
 import qualified Control.Monad.Writer.Class  as Class
 import qualified Control.Monad.Error.Class   as Class
 
-newtype EtherReaderT tag r m a = EtherReaderT (R.ReaderT r m a)
+newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
     deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
 
-type instance EtherTags (EtherReaderT tag r m) = tag ': EtherTags m
+type instance Tags (ReaderT tag r m) = tag ': Tags m
 
-type EtherReader tag r = EtherReaderT tag r Identity
+type Reader tag r = ReaderT tag r Identity
 
-etherReaderT :: proxy tag -> (r -> m a) -> EtherReaderT tag r m a
-etherReaderT _proxy = EtherReaderT . R.ReaderT
+etherReaderT :: proxy tag -> (r -> m a) -> ReaderT tag r m a
+etherReaderT _proxy = ReaderT . Trans.ReaderT
 
-runEtherReaderT :: proxy tag -> EtherReaderT tag r m a -> r -> m a
-runEtherReaderT _proxy (EtherReaderT (R.ReaderT f)) = f
+runReaderT :: proxy tag -> ReaderT tag r m a -> r -> m a
+runReaderT _proxy (ReaderT (Trans.ReaderT f)) = f
 
-runEtherReader :: proxy tag -> EtherReader tag r a -> r -> a
-runEtherReader proxy m r = runIdentity (runEtherReaderT proxy m r)
+runReader :: proxy tag -> Reader tag r a -> r -> a
+runReader proxy m r = runIdentity (runReaderT proxy m r)
 
-mapEtherReaderT :: proxy tag -> (m a -> n b) -> EtherReaderT tag r m a -> EtherReaderT tag r n b
-mapEtherReaderT _proxy f m = EtherReaderT $ R.mapReaderT f (coerce m)
+mapReaderT :: proxy tag -> (m a -> n b) -> ReaderT tag r m a -> ReaderT tag r n b
+mapReaderT _proxy f m = ReaderT $ Trans.mapReaderT f (coerce m)
 
-liftCatch :: proxy tag -> Sig.Catch e m a -> Sig.Catch e (EtherReaderT tag r m) a
-liftCatch _proxy f m h = EtherReaderT $ R.liftCatch f (coerce m) (coerce h)
+liftCatch :: proxy tag -> Sig.Catch e m a -> Sig.Catch e (ReaderT tag r m) a
+liftCatch _proxy f m h = ReaderT $ Trans.liftCatch f (coerce m) (coerce h)
 
-liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (EtherReaderT tag r m) a b
-liftCallCC _proxy callCC f = EtherReaderT $ R.liftCallCC callCC (coerce f)
+liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (ReaderT tag r m) a b
+liftCallCC _proxy callCC f = ReaderT $ Trans.liftCallCC callCC (coerce f)
 
-type ReaderT' r = EtherReaderT r r
-type Reader'  r = EtherReader  r r
+type ReaderT' r = ReaderT r r
+type Reader'  r = Reader  r r
 
 runReaderT' :: ReaderT' r m a -> r -> m a
-runReaderT' = runEtherReaderT Proxy
+runReaderT' = runReaderT Proxy
 
 runReader' :: Reader' r a -> r -> a
 runReader' m r = runIdentity (runReaderT' m r)
 
 -- Instances for mtl classes
 
-instance Class.MonadCont m => Class.MonadCont (EtherReaderT tag r m) where
+instance Class.MonadCont m => Class.MonadCont (ReaderT tag r m) where
     callCC = liftCallCC Proxy Class.callCC
 
-instance Class.MonadReader r' m => Class.MonadReader r' (EtherReaderT tag r m) where
+instance Class.MonadReader r' m => Class.MonadReader r' (ReaderT tag r m) where
     ask = lift Class.ask
-    local = mapEtherReaderT Proxy . Class.local
+    local = mapReaderT Proxy . Class.local
     reader = lift . Class.reader
 
-instance Class.MonadState s m => Class.MonadState s (EtherReaderT tag r m) where
+instance Class.MonadState s m => Class.MonadState s (ReaderT tag r m) where
     get = lift Class.get
     put = lift . Class.put
     state = lift . Class.state
 
-instance Class.MonadWriter w m => Class.MonadWriter w (EtherReaderT tag r m) where
+instance Class.MonadWriter w m => Class.MonadWriter w (ReaderT tag r m) where
     writer = lift . Class.writer
     tell   = lift . Class.tell
-    listen = mapEtherReaderT Proxy Class.listen
-    pass   = mapEtherReaderT Proxy Class.pass
+    listen = mapReaderT Proxy Class.listen
+    pass   = mapReaderT Proxy Class.pass
 
-instance Class.MonadError e m => Class.MonadError e (EtherReaderT tag r m) where
+instance Class.MonadError e m => Class.MonadError e (ReaderT tag r m) where
     throwError = lift . Class.throwError
     catchError = liftCatch Proxy Class.catchError

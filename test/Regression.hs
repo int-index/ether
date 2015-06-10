@@ -6,28 +6,27 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Data.Proxy
-
 import Control.Ether.Core
 import Control.Ether.TH
 import Control.Ether.Wrapped
 import Control.Monad.Ether.Reader
 import Control.Monad.Ether.State
-import Control.Monad.Reader
+import qualified Control.Monad.Reader as Tagless
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
 import Test.QuickCheck.Function
 
-ethereal (defaultEtherealReaderConfig "Reader1")
-ethereal (defaultEtherealReaderConfig "Reader2")
+ethereal "R1" "r1"
+ethereal "R2" "r2"
+ethereal "S1" "s1"
 
 main :: IO ()
 main = defaultMain suite
 
 suite :: TestTree
 suite = testGroup "Ether"
-    [ testGroup "EtherReaderT"
+    [ testGroup "ReaderT"
         [ testProperty "layered sum (local left)" layeredLocalLeft
         , testProperty "layered sum (local right)" layeredLocalRight
         ]
@@ -40,24 +39,24 @@ layeredLocalLeft, layeredLocalRight
 
 layeredLocalLeft k f a1 a2 = property (direct == run indirect)
   where
-    run = flip runReader1 a1 . flip runReader2T a2
+    run = flip (runReader r1) a1 . flip (runReaderT r2) a2
     (direct, indirect) = layeredLocalCore' k f a1 a2
 
 layeredLocalRight k f a1 a2 = property (direct == run indirect)
   where
-    run = flip runReader2 a2 . flip runReader1T a1
+    run = flip (runReader r2) a2 . flip (runReaderT r1) a1
     (direct, indirect) = layeredLocalCore' k f a1 a2
 
 layeredLocalCore
-    :: (MonadReader1 r1 m, MonadReader2 r2 m)
+    :: (MonadReader R1 r1 m, MonadReader R2 r2 m)
     => (r2 -> r2) -> (r1 -> r2 -> a) -> m a
 layeredLocalCore f g = do
-    n <- askReader1
-    m <- localReader2 f askReader2
+    n <- ask r1
+    m <- local r2 f (ask r2)
     return (g n m)
 
 layeredLocalCore'
-    :: (MonadReader1 Int m, MonadReader2 Integer m)
+    :: (MonadReader R1 Int m, MonadReader R2 Integer m)
     => Fun (Int, Integer) Integer
     -> Fun Integer Integer
     -> Int -> Integer -> (Integer, m Integer)
@@ -72,32 +71,30 @@ inferCore = local' (succ :: Int -> Int) $ do
     b <- local' not ask'
     return (if b then "" else show n)
 
-wrapCore :: MonadEtherReader TagReader1 Int m => m Int
-wrapCore = ethered tagReader1 ask
+wrapCore :: MonadReader R1 Int m => m Int
+wrapCore = ethered r1 Tagless.ask
 
 
--- Should not compile with `ensureUniqueEtherTags`
+-- Should not compile with `ensureUniqueTags`
 uniqueTagsCore :: IO ()
-uniqueTagsCore = flip runReader1T (1 :: Int)
-               . flip runReader1T (True :: Bool)
-               . flip runReader1T (2 :: Int)
-               . flip runReader1T (3 :: Integer)
-            {- . ensureUniqueEtherTags -}
+uniqueTagsCore = flip (runReaderT r1) (1 :: Int)
+               . flip (runReaderT r1) (True :: Bool)
+               . flip (runReaderT r1) (2 :: Int)
+               . flip (runReaderT r1) (3 :: Integer)
+            {- . ensureUniqueTags -}
                $ do
-                    a :: Integer <- askReader1
-                    b :: Int <- askReader1
-                    c :: Bool <- askReader1
-                    liftIO $ do
+                    a :: Integer <- ask r1
+                    b :: Int <- ask r1
+                    c :: Bool <- ask r1
+                    Tagless.liftIO $ do
                         print a
                         print b
                         print c
 
-data TagState1
-
-stateCore :: ( MonadEtherState  TagState1  Int m
-             , MonadEtherReader TagReader1 Int m
-             , UniqueEtherTags m ) => m ()
+stateCore :: ( MonadState  S1 Int m
+             , MonadReader R1 Int m
+             , UniqueTags m ) => m ()
 stateCore = do
-    a <- etherAsk (Proxy :: Proxy TagReader1)
-    n <- etherGet (Proxy :: Proxy TagState1)
-    etherPut (Proxy :: Proxy TagState1) (n * a)
+    a <- ask r1
+    n <- get s1
+    put s1 (n * a)

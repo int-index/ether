@@ -11,19 +11,19 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Ether.Reader
-    ( EtherReaderT
-    , EtherReader
+    ( ReaderT
+    , Reader
     , ReaderT'
     , Reader'
-    , runEtherReaderT
-    , runEtherReader
+    , runReaderT
+    , runReader
     , runReaderT'
     , runReader'
     --
-    , MonadEtherReader
-    , etherLocal
-    , etherAsk
-    , etherReader
+    , MonadReader
+    , local
+    , ask
+    , reader
     --
     , MonadReader'
     , local'
@@ -34,7 +34,7 @@ module Control.Monad.Ether.Reader
 import Data.Proxy (Proxy(Proxy))
 import Control.Monad.Trans (lift)
 
-import Control.Monad.Trans.Ether.State (EtherStateT, mapEtherStateT)
+import Control.Monad.Trans.Ether.State (StateT, mapStateT)
 import Control.Monad.Trans.Ether.Reader
 
 -- for mtl instances
@@ -49,81 +49,81 @@ import qualified Control.Monad.Trans.State.Strict  as Trans.Strict (StateT   , m
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy   (WriterT  , mapWriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict (WriterT  , mapWriterT)
 
-class Monad m => MonadEtherReader tag r m | m tag -> r where
+class Monad m => MonadReader tag r m | m tag -> r where
 
-    {-# MINIMAL (etherAsk | etherReader), etherLocal #-}
+    {-# MINIMAL (ask | reader), local #-}
 
-    etherLocal :: proxy tag -> (r -> r) -> m a -> m a
+    local :: proxy tag -> (r -> r) -> m a -> m a
 
-    etherAsk :: proxy tag -> m r
-    etherAsk proxy = etherReader proxy id
+    ask :: proxy tag -> m r
+    ask proxy = reader proxy id
 
-    etherReader :: proxy tag -> (r -> a) -> m a
-    etherReader proxy f = fmap f (etherAsk proxy)
+    reader :: proxy tag -> (r -> a) -> m a
+    reader proxy f = fmap f (ask proxy)
 
-type MonadReader' r = MonadEtherReader r r
+type MonadReader' r = MonadReader r r
 
 local' :: forall m r a . MonadReader' r m => (r -> r) -> m a -> m a
-local' = etherLocal (Proxy :: Proxy r)
+local' = local (Proxy :: Proxy r)
 
 ask' :: forall m r . MonadReader' r m => m r
-ask' = etherAsk (Proxy :: Proxy r)
+ask' = ask (Proxy :: Proxy r)
 
 reader' :: forall m r a . MonadReader' r m => (r -> a) -> m a
-reader' = etherReader (Proxy :: Proxy r)
+reader' = reader (Proxy :: Proxy r)
 
-instance {-# OVERLAPPING #-} Monad m => MonadEtherReader tag r (EtherReaderT tag r m) where
-    etherAsk proxy = etherReaderT proxy return
-    etherLocal proxy f m = etherReaderT proxy (runEtherReaderT proxy m . f)
+instance {-# OVERLAPPING #-} Monad m => MonadReader tag r (ReaderT tag r m) where
+    ask proxy = etherReaderT proxy return
+    local proxy f m = etherReaderT proxy (runReaderT proxy m . f)
 
-instance (MonadEtherReader tag r m) => MonadEtherReader tag r (EtherReaderT tag' r' m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = mapEtherReaderT Proxy . etherLocal proxy
+instance (MonadReader tag r m) => MonadReader tag r (ReaderT tag' r' m) where
+    ask proxy = lift (ask proxy)
+    local proxy = mapReaderT Proxy . local proxy
 
 -- Instances for other tagged transformers
 
-instance (MonadEtherReader tag r m) => MonadEtherReader tag r (EtherStateT tag' s m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = mapEtherStateT Proxy . etherLocal proxy
+instance (MonadReader tag r m) => MonadReader tag r (StateT tag' s m) where
+    ask proxy = lift (ask proxy)
+    local proxy = mapStateT Proxy . local proxy
 
 -- Instances for mtl transformers
 
-instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.ContT r' m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = Trans.liftLocal (etherAsk proxy) (etherLocal proxy)
+instance MonadReader tag r m => MonadReader tag r (Trans.ContT r' m) where
+    ask proxy = lift (ask proxy)
+    local proxy = Trans.liftLocal (ask proxy) (local proxy)
 
-instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.ExceptT e m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = Trans.mapExceptT . etherLocal proxy
+instance MonadReader tag r m => MonadReader tag r (Trans.ExceptT e m) where
+    ask proxy = lift (ask proxy)
+    local proxy = Trans.mapExceptT . local proxy
 
-instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.IdentityT m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = Trans.mapIdentityT . etherLocal proxy
+instance MonadReader tag r m => MonadReader tag r (Trans.IdentityT m) where
+    ask proxy = lift (ask proxy)
+    local proxy = Trans.mapIdentityT . local proxy
 
-instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.ListT m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = Trans.mapListT . etherLocal proxy
+instance MonadReader tag r m => MonadReader tag r (Trans.ListT m) where
+    ask proxy = lift (ask proxy)
+    local proxy = Trans.mapListT . local proxy
 
-instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.MaybeT m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = Trans.mapMaybeT . etherLocal proxy
+instance MonadReader tag r m => MonadReader tag r (Trans.MaybeT m) where
+    ask proxy = lift (ask proxy)
+    local proxy = Trans.mapMaybeT . local proxy
 
-instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.ReaderT r' m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = Trans.mapReaderT . etherLocal proxy
+instance MonadReader tag r m => MonadReader tag r (Trans.ReaderT r' m) where
+    ask proxy = lift (ask proxy)
+    local proxy = Trans.mapReaderT . local proxy
 
-instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.Lazy.StateT s m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = Trans.Lazy.mapStateT . etherLocal proxy
+instance MonadReader tag r m => MonadReader tag r (Trans.Lazy.StateT s m) where
+    ask proxy = lift (ask proxy)
+    local proxy = Trans.Lazy.mapStateT . local proxy
 
-instance MonadEtherReader tag r m => MonadEtherReader tag r (Trans.Strict.StateT s m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = Trans.Strict.mapStateT . etherLocal proxy
+instance MonadReader tag r m => MonadReader tag r (Trans.Strict.StateT s m) where
+    ask proxy = lift (ask proxy)
+    local proxy = Trans.Strict.mapStateT . local proxy
 
-instance (Monoid w, MonadEtherReader tag r m) => MonadEtherReader tag r (Trans.Lazy.WriterT w m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = Trans.Lazy.mapWriterT . etherLocal proxy
+instance (Monoid w, MonadReader tag r m) => MonadReader tag r (Trans.Lazy.WriterT w m) where
+    ask proxy = lift (ask proxy)
+    local proxy = Trans.Lazy.mapWriterT . local proxy
 
-instance (Monoid w, MonadEtherReader tag r m) => MonadEtherReader tag r (Trans.Strict.WriterT w m) where
-    etherAsk proxy = lift (etherAsk proxy)
-    etherLocal proxy = Trans.Strict.mapWriterT . etherLocal proxy
+instance (Monoid w, MonadReader tag r m) => MonadReader tag r (Trans.Strict.WriterT w m) where
+    ask proxy = lift (ask proxy)
+    local proxy = Trans.Strict.mapWriterT . local proxy

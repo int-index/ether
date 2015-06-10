@@ -19,9 +19,9 @@ newtype WrappedEther tag m a = WrapEther { unwrapEther :: m a }
     deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadIO )
 
-instance MonadEtherReader tag r m => Class.MonadReader r (WrappedEther tag m) where
-    ask = WrapEther $ etherAsk (Proxy :: Proxy tag)
-    local f = WrapEther . etherLocal (Proxy :: Proxy tag) f . unwrapEther
+instance MonadReader tag r m => Class.MonadReader r (WrappedEther tag m) where
+    ask = WrapEther $ ask (Proxy :: Proxy tag)
+    local f = WrapEther . local (Proxy :: Proxy tag) f . unwrapEther
 
 ethered :: proxy tag -> WrappedEther tag m a -> m a
 ethered _proxy = unwrapEther

@@ -11,16 +11,16 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Ether.State
-    ( EtherStateT
-    , EtherState
+    ( StateT
+    , State
     , StateT'
     , State'
-    , runEtherStateT
-    , runEtherState
-    , evalEtherStateT
-    , evalEtherState
-    , execEtherStateT
-    , execEtherState
+    , runStateT
+    , runState
+    , evalStateT
+    , evalState
+    , execStateT
+    , execState
     , runStateT'
     , runState'
     , evalStateT'
@@ -28,12 +28,12 @@ module Control.Monad.Ether.State
     , execStateT'
     , execState'
     --
-    , MonadEtherState
-    , etherGet
-    , etherGets
-    , etherPut
-    , etherState
-    , etherModify
+    , MonadState
+    , get
+    , gets
+    , put
+    , state
+    , modify
     --
     , MonadState'
     , get'
@@ -46,7 +46,7 @@ module Control.Monad.Ether.State
 import Data.Proxy (Proxy(Proxy))
 import Control.Monad.Trans (lift)
 
-import Control.Monad.Trans.Ether.Reader (EtherReaderT)
+import Control.Monad.Trans.Ether.Reader (ReaderT)
 import Control.Monad.Trans.Ether.State
 
 -- for mtl instances
@@ -61,110 +61,110 @@ import qualified Control.Monad.Trans.State.Strict  as Trans.Strict (StateT)
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy   (WriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict (WriterT)
 
-class Monad m => MonadEtherState tag s m | m tag -> s where
+class Monad m => MonadState tag s m | m tag -> s where
 
-    {-# MINIMAL etherState | etherGet, etherPut #-}
+    {-# MINIMAL state | get, put #-}
 
-    etherGet :: proxy tag -> m s
-    etherGet proxy = etherState proxy (\s -> (s, s))
+    get :: proxy tag -> m s
+    get proxy = state proxy (\s -> (s, s))
 
-    etherPut :: proxy tag -> s -> m ()
-    etherPut proxy s = etherState proxy (\_ -> ((), s))
+    put :: proxy tag -> s -> m ()
+    put proxy s = state proxy (\_ -> ((), s))
 
-    etherState :: proxy tag -> (s -> (a, s)) -> m a
-    etherState proxy f = do
-        s <- etherGet proxy
+    state :: proxy tag -> (s -> (a, s)) -> m a
+    state proxy f = do
+        s <- get proxy
         let ~(a, s') = f s
-        etherPut proxy s'
+        put proxy s'
         return a
 
-etherGets :: MonadEtherState tag s m => proxy tag -> (s -> a) -> m a
-etherGets proxy f = fmap f (etherGet proxy)
+gets :: MonadState tag s m => proxy tag -> (s -> a) -> m a
+gets proxy f = fmap f (get proxy)
 
-etherModify :: MonadEtherState tag s m => proxy tag -> (s -> s) -> m ()
-etherModify proxy f = etherState proxy $ \ s -> ((), f s)
+modify :: MonadState tag s m => proxy tag -> (s -> s) -> m ()
+modify proxy f = state proxy $ \ s -> ((), f s)
 
-type MonadState' s = MonadEtherState s s
+type MonadState' s = MonadState s s
 
 get' :: forall m s . MonadState' s m => m s
-get' = etherGet (Proxy :: Proxy s)
+get' = get (Proxy :: Proxy s)
 
 gets' :: forall m s a . MonadState' s m => (s -> a) -> m a
-gets' = etherGets (Proxy :: Proxy s)
+gets' = gets (Proxy :: Proxy s)
 
 put' :: forall m s . MonadState' s m => s -> m ()
-put' = etherPut (Proxy :: Proxy s)
+put' = put (Proxy :: Proxy s)
 
 state' :: forall m s a . MonadState' s m => (s -> (a, s)) -> m a
-state' = etherState (Proxy :: Proxy s)
+state' = state (Proxy :: Proxy s)
 
 modify' :: forall m s . MonadState' s m => (s -> s) -> m ()
-modify' = etherModify (Proxy :: Proxy s)
+modify' = modify (Proxy :: Proxy s)
 
-instance {-# OVERLAPPING #-} Monad m => MonadEtherState tag s (EtherStateT tag s m) where
-    etherGet proxy = etherStateT proxy (\s -> return (s, s))
-    etherPut proxy s = etherStateT proxy (\_ -> return ((), s))
+instance {-# OVERLAPPING #-} Monad m => MonadState tag s (StateT tag s m) where
+    get proxy = etherStateT proxy (\s -> return (s, s))
+    put proxy s = etherStateT proxy (\_ -> return ((), s))
 
-instance (MonadEtherState tag s m) => MonadEtherState tag s (EtherStateT tag' s' m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance (MonadState tag s m) => MonadState tag s (StateT tag' s' m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
 -- Instances for other tagged transformers
 
-instance (MonadEtherState tag s m) => MonadEtherState tag s (EtherReaderT tag' r m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance (MonadState tag s m) => MonadState tag s (ReaderT tag' r m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
 -- Instances for mtl transformers
 
-instance MonadEtherState tag s m => MonadEtherState tag s (Trans.ContT r m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance MonadState tag s m => MonadState tag s (Trans.ContT r m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
-instance MonadEtherState tag s m => MonadEtherState tag s (Trans.ExceptT e m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance MonadState tag s m => MonadState tag s (Trans.ExceptT e m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
-instance MonadEtherState tag s m => MonadEtherState tag s (Trans.IdentityT m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance MonadState tag s m => MonadState tag s (Trans.IdentityT m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
-instance MonadEtherState tag s m => MonadEtherState tag s (Trans.ListT m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance MonadState tag s m => MonadState tag s (Trans.ListT m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
-instance MonadEtherState tag s m => MonadEtherState tag s (Trans.MaybeT m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance MonadState tag s m => MonadState tag s (Trans.MaybeT m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
-instance MonadEtherState tag s m => MonadEtherState tag s (Trans.ReaderT r m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance MonadState tag s m => MonadState tag s (Trans.ReaderT r m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
-instance MonadEtherState tag s m => MonadEtherState tag s (Trans.Lazy.StateT s' m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance MonadState tag s m => MonadState tag s (Trans.Lazy.StateT s' m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
-instance MonadEtherState tag s m => MonadEtherState tag s (Trans.Strict.StateT s' m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance MonadState tag s m => MonadState tag s (Trans.Strict.StateT s' m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
-instance (Monoid w, MonadEtherState tag s m) => MonadEtherState tag s (Trans.Lazy.WriterT w m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance (Monoid w, MonadState tag s m) => MonadState tag s (Trans.Lazy.WriterT w m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
 
-instance (Monoid w, MonadEtherState tag s m) => MonadEtherState tag s (Trans.Strict.WriterT w m) where
-    etherGet proxy = lift (etherGet proxy)
-    etherPut proxy = lift . etherPut proxy
-    etherState proxy = lift . etherState proxy
+instance (Monoid w, MonadState tag s m) => MonadState tag s (Trans.Strict.WriterT w m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy

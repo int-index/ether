@@ -7,16 +7,16 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Trans.Ether.State
-    ( EtherStateT
-    , EtherState
+    ( StateT
+    , State
     , StateT'
     , State'
-    , runEtherStateT
-    , runEtherState
-    , evalEtherStateT
-    , evalEtherState
-    , execEtherStateT
-    , execEtherState
+    , runStateT
+    , runState
+    , evalStateT
+    , evalState
+    , execStateT
+    , execState
     , runStateT'
     , runState'
     , evalStateT'
@@ -25,7 +25,7 @@ module Control.Monad.Trans.Ether.State
     , execState'
     --
     , etherStateT
-    , mapEtherStateT
+    , mapStateT
     , liftCatch
     , liftCallCC'
     , liftListen
@@ -43,7 +43,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Control.Ether.Core
 
 import qualified Control.Monad.Signatures as Sig
-import qualified Control.Monad.Trans.State.Lazy as S
+import qualified Control.Monad.Trans.State.Lazy as Trans
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -51,55 +51,55 @@ import qualified Control.Monad.State.Class   as Class
 import qualified Control.Monad.Writer.Class  as Class
 import qualified Control.Monad.Error.Class   as Class
 
-newtype EtherStateT tag s m a = EtherStateT (S.StateT s m a)
+newtype StateT tag s m a = StateT (Trans.StateT s m a)
     deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
 
-type instance EtherTags (EtherStateT tag r m) = tag ': EtherTags m
+type instance Tags (StateT tag r m) = tag ': Tags m
 
-type EtherState tag r = EtherStateT tag r Identity
+type State tag r = StateT tag r Identity
 
-etherStateT :: proxy tag -> (s -> m (a, s)) -> EtherStateT tag s m a
-etherStateT _proxy = EtherStateT . S.StateT
+etherStateT :: proxy tag -> (s -> m (a, s)) -> StateT tag s m a
+etherStateT _proxy = StateT . Trans.StateT
 
-runEtherStateT :: proxy tag -> EtherStateT tag s m a  -> s -> m (a, s)
-runEtherStateT _proxy (EtherStateT (S.StateT f)) = f
+runStateT :: proxy tag -> StateT tag s m a  -> s -> m (a, s)
+runStateT _proxy (StateT (Trans.StateT f)) = f
 
-runEtherState :: proxy tag -> EtherState tag s a  -> s -> (a, s)
-runEtherState proxy m s = runIdentity (runEtherStateT proxy m s)
+runState :: proxy tag -> State tag s a  -> s -> (a, s)
+runState proxy m s = runIdentity (runStateT proxy m s)
 
-evalEtherStateT :: Functor m => proxy tag -> EtherStateT tag s m a  -> s -> m a
-evalEtherStateT proxy m s = fmap fst (runEtherStateT proxy m s)
+evalStateT :: Functor m => proxy tag -> StateT tag s m a  -> s -> m a
+evalStateT proxy m s = fmap fst (runStateT proxy m s)
 
-evalEtherState :: proxy tag -> EtherState tag s a  -> s -> a
-evalEtherState proxy m s = fst (runEtherState proxy m s)
+evalState :: proxy tag -> State tag s a  -> s -> a
+evalState proxy m s = fst (runState proxy m s)
 
-execEtherStateT :: Functor m => proxy tag -> EtherStateT tag s m a  -> s -> m s
-execEtherStateT proxy m s = fmap snd (runEtherStateT proxy m s)
+execStateT :: Functor m => proxy tag -> StateT tag s m a  -> s -> m s
+execStateT proxy m s = fmap snd (runStateT proxy m s)
 
-execEtherState :: proxy tag -> EtherState tag s a  -> s -> s
-execEtherState proxy m s = snd (runEtherState proxy m s)
+execState :: proxy tag -> State tag s a  -> s -> s
+execState proxy m s = snd (runState proxy m s)
 
-mapEtherStateT :: proxy tag -> (m (a, s) -> n (b, s)) -> EtherStateT tag s m a -> EtherStateT tag s n b
-mapEtherStateT _proxy f m = EtherStateT $ S.mapStateT f (coerce m)
+mapStateT :: proxy tag -> (m (a, s) -> n (b, s)) -> StateT tag s m a -> StateT tag s n b
+mapStateT _proxy f m = StateT $ Trans.mapStateT f (coerce m)
 
-liftCatch :: proxy tag -> Sig.Catch e m (a, s) -> Sig.Catch e (EtherStateT tag s m) a
-liftCatch _proxy f m h = EtherStateT $ S.liftCatch f (coerce m) (coerce h)
+liftCatch :: proxy tag -> Sig.Catch e m (a, s) -> Sig.Catch e (StateT tag s m) a
+liftCatch _proxy f m h = StateT $ Trans.liftCatch f (coerce m) (coerce h)
 
-liftCallCC' :: proxy tag -> Sig.CallCC m (a, s) (b, s) -> Sig.CallCC (EtherStateT tag s m) a b
-liftCallCC' _proxy callCC f = EtherStateT $ S.liftCallCC' callCC (coerce f)
+liftCallCC' :: proxy tag -> Sig.CallCC m (a, s) (b, s) -> Sig.CallCC (StateT tag s m) a b
+liftCallCC' _proxy callCC f = StateT $ Trans.liftCallCC' callCC (coerce f)
 
-liftListen :: Monad m => proxy tag -> Sig.Listen w m (a, s) -> Sig.Listen w (EtherStateT tag s m) a
-liftListen _proxy listen m = EtherStateT $ S.liftListen listen (coerce m)
+liftListen :: Monad m => proxy tag -> Sig.Listen w m (a, s) -> Sig.Listen w (StateT tag s m) a
+liftListen _proxy listen m = StateT $ Trans.liftListen listen (coerce m)
 
-liftPass :: Monad m => proxy tag -> Sig.Pass w m (a,s) -> Sig.Pass w (EtherStateT tag s m) a
-liftPass _proxy pass m = EtherStateT $ S.liftPass pass (coerce m)
+liftPass :: Monad m => proxy tag -> Sig.Pass w m (a,s) -> Sig.Pass w (StateT tag s m) a
+liftPass _proxy pass m = StateT $ Trans.liftPass pass (coerce m)
 
-type StateT' s = EtherStateT s s
-type State'  s = EtherState  s s
+type StateT' s = StateT s s
+type State'  s = State  s s
 
 runStateT' :: StateT' s m a -> s -> m (a, s)
-runStateT' = runEtherStateT Proxy
+runStateT' = runStateT Proxy
 
 runState' :: State' s a -> s -> (a, s)
 runState' m s = runIdentity (runStateT' m s)
@@ -118,25 +118,25 @@ execState' m s = snd (runState' m s)
 
 -- Instances for mtl classes
 
-instance Class.MonadCont m => Class.MonadCont (EtherStateT tag s m) where
+instance Class.MonadCont m => Class.MonadCont (StateT tag s m) where
     callCC = liftCallCC' Proxy Class.callCC
 
-instance Class.MonadReader r m => Class.MonadReader r (EtherStateT tag s m) where
+instance Class.MonadReader r m => Class.MonadReader r (StateT tag s m) where
     ask = lift Class.ask
-    local = mapEtherStateT Proxy . Class.local
+    local = mapStateT Proxy . Class.local
     reader = lift . Class.reader
 
-instance Class.MonadState s' m => Class.MonadState s' (EtherStateT tag s m) where
+instance Class.MonadState s' m => Class.MonadState s' (StateT tag s m) where
     get = lift Class.get
     put = lift . Class.put
     state = lift . Class.state
 
-instance Class.MonadWriter w m => Class.MonadWriter w (EtherStateT tag s m) where
+instance Class.MonadWriter w m => Class.MonadWriter w (StateT tag s m) where
     writer = lift . Class.writer
     tell   = lift . Class.tell
     listen = liftListen Proxy Class.listen
     pass   = liftPass Proxy Class.pass
 
-instance Class.MonadError e m => Class.MonadError e (EtherStateT tag s m) where
+instance Class.MonadError e m => Class.MonadError e (StateT tag s m) where
     throwError = lift . Class.throwError
     catchError = liftCatch Proxy Class.catchError
