@@ -22,9 +22,6 @@ import Test.QuickCheck.Function
 ethereal (defaultEtherealReaderConfig "Reader1")
 ethereal (defaultEtherealReaderConfig "Reader2")
 
-r1 :: Proxy TagReader1
-r1 = Proxy
-
 main :: IO ()
 main = defaultMain suite
 
@@ -76,7 +73,7 @@ inferCore = local' (succ :: Int -> Int) $ do
     return (if b then "" else show n)
 
 wrapCore :: MonadEtherReader TagReader1 Int m => m Int
-wrapCore = ethered r1 ask
+wrapCore = ethered tagReader1 ask
 
 
 -- Should not compile with `ensureUniqueEtherTags`

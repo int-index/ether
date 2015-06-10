@@ -23,13 +23,20 @@ tyVar name = do
     let thType = TH.varT thName
     return (TH.PlainTV thName, thType)
 
+proxySimple :: TH.Name -> TH.TypeQ -> TH.Q (TH.Dec, TH.Dec)
+proxySimple name ty = do
+    sig <- TH.sigD name [t| Proxy $ty |]
+    val <- funSimple name [e| Proxy |]
+    return (sig, val)
+
 data EtherealConfig
-    = EtherealReaderConfig String String String String String String
+    = EtherealReaderConfig String String String String String String String
 
 defaultEtherealReaderConfig :: String -> EtherealConfig
 defaultEtherealReaderConfig name = EtherealReaderConfig
     ("Monad" ++ name)
     ("Tag" ++ name)
+    ("tag" ++ name)
     ("run" ++ name ++ "T")
     ("run" ++ name)
     ("ask" ++ name)
@@ -38,17 +45,20 @@ defaultEtherealReaderConfig name = EtherealReaderConfig
 ethereal :: EtherealConfig -> TH.DecsQ
 
 ethereal (EtherealReaderConfig
- strEffName strTagName strRunTransName
- strRunName strAskName strLocalName) = do
+ strEffName strTagName strTagProxyName
+ strRunTransName strRunName strAskName
+ strLocalName) = do
     let effName = TH.mkName strEffName
         tagName = TH.mkName strTagName
         tag = TH.conT tagName
+        tagProxyName = TH.mkName strTagProxyName
         runTransName = TH.mkName strRunTransName
         runName = TH.mkName strRunName
         askName = TH.mkName strAskName
         localName = TH.mkName strLocalName
     effDecl <- TH.tySynD effName [] [t| MonadEtherReader $tag |]
     tagDecl <- emptyDataDecl tagName
+    (tagProxySig, tagProxyVal) <- proxySimple tagProxyName tag
     runTransFunSig <- do
         (mBndr, m) <- tyVar "m"
         (aBndr, a) <- tyVar "a"
@@ -84,6 +94,7 @@ ethereal (EtherealReaderConfig
              [t| ($r -> $r) -> $m $a -> $m $a |]
     localFunBody <- funSimple localName [e| etherLocal (Proxy :: Proxy $tag) |]
     return [ effDecl, tagDecl
+           , tagProxySig, tagProxyVal
            , runTransFunSig, runTransFunBody
            , runFunSig, runFunBody
            , askFunSig, askFunBody
