@@ -53,7 +53,7 @@ etherReaderT :: proxy tag -> (r -> m a) -> EtherReaderT tag r m a
 etherReaderT _proxy = EtherReaderT . R.ReaderT
 
 runEtherReaderT :: proxy tag -> EtherReaderT tag r m a -> r -> m a
-runEtherReaderT _proxy (EtherReaderT (R.ReaderT s)) = s
+runEtherReaderT _proxy (EtherReaderT (R.ReaderT f)) = f
 
 runEtherReader :: proxy tag -> EtherReader tag r a -> r -> a
 runEtherReader proxy m r = runIdentity (runEtherReaderT proxy m r)
@@ -68,13 +68,13 @@ liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (EtherReaderT tag r m)
 liftCallCC _proxy callCC f = EtherReaderT $ R.liftCallCC callCC (coerce f)
 
 type ReaderT' r = EtherReaderT r r
-type Reader' r = EtherReader r r
+type Reader'  r = EtherReader  r r
 
 runReaderT' :: ReaderT' r m a -> r -> m a
 runReaderT' = runEtherReaderT Proxy
 
 runReader' :: Reader' r a -> r -> a
-runReader' m r = runIdentity (runEtherReaderT Proxy m r)
+runReader' m r = runIdentity (runReaderT' m r)
 
 -- Instances for mtl classes
 

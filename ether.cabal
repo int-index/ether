@@ -2,13 +2,15 @@ name:                ether
 version:             0.1.0.0
 synopsis:            Monad transformers and classes
 description:
-    Ether provides an easy way to create mtl-compatible effects
-    that do not require you to write O(n^2) instances.
+    Ether is a Haskell library that extends @mtl@ and @transformers@ with
+    tagged monad transformers and classes in a compatible way.
+
 category:            Control
 license:             BSD3
 license-file:        LICENSE
 author:              Index Int
 maintainer:          Index Int <vlad.z.4096@gmail.com>
+homepage:            https://int-index.github.io/ether/
 bug-reports:         https://github.com/int-index/ether/issues
 build-type:          Simple
 cabal-version:       >=1.22
@@ -25,6 +27,8 @@ library
                        Control.Ether.TH
                        Control.Ether.Wrapped
                        Control.Monad.Trans.Ether.Reader
+                       Control.Monad.Trans.Ether.State
+                       Control.Monad.Trans.Ether.State.Lazy
                        Control.Monad.Ether.Reader
 
   build-depends:       base >=4.8 && <4.9
