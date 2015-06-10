@@ -1,16 +1,165 @@
 <!doctype html>
 <html>
     <head>
-        <style>
+        <link href='https://fonts.googleapis.com/css?family=Ubuntu:400,700&subset=latin,greek' rel='stylesheet' type='text/css'>
 
+        <style>
 html, body {
     margin: 0;
     padding: 0;
+}
+a {
+    color: inherit;
+}
+a:hover {
+    color: #0a9bf0;
+}
+body {
+    font-family: 'Ubuntu', sans-serif;
+    font-size: 20px;
+    color: #444444;
+}
+h1 {
+    margin-top: 2em;
+}
+section {
+    display: block;
+    padding: 0;
+    margin: 0;
+}
+.section {
+    display: block;
+    margin: 0 auto;
+    max-width: 50em;
+}
+section:first-child {
+    font-size: 6em;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-flow: column;
+        -ms-flex-flow: column;
+            flex-flow: column;
+    -webkit-justify-content: space-around;
+        -ms-flex-pack: distribute;
+            justify-content: space-around;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+        -ms-flex-align: center;
+            align-items: center;
+    color: #0a9bf0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+section:first-child h1 {
+    text-align: center;
+    margin: 0;
+}
+section:first-child h2 {
+    font-size: 0.4em;
+}
+li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+blockquote {
+    border-left: 1px solid #0a9bf0;
+    padding-left: 2em;
+}
+
+#forkongithub a {
+  background: #0a9bf0;
+  color: white;
+  text-decoration: none;
+  text-align: center;
+  font-weight: bold;
+  padding: 5px 40px;
+  font-size: 16px;
+  font-size: 1rem;
+  line-height: 32px;
+  line-height: 2rem;
+  width: 200px;
+  position: absolute;
+  top: 60px;
+  right:-60px;
+  -webkit-transform:rotate(45deg);
+      -ms-transform:rotate(45deg);
+          transform:rotate(45deg);
+}
+#forkongithub a:before,
+#forkongithub a:after {
+  content: "";
+  width: 100%;
+  display: block;
+  position: absolute;
+  top: 1px;
+  left: 0;
+  height: 1px;
+  background: #0a9bf0;
+}
+#forkongithub a:after {
+  bottom: 1px;
+  top: auto;
+}
+#forkongithub {
+  position: absolute;
+  display: block;
+  top: 0;
+  right: 0;
+  width: 200px;
+  overflow: hidden;
+  height: 200px;
+  z-index: 9999;
+}
+
+@media screen and (max-width:1030px) {
+    body { font-size: 1.6vw; }
 }
 
         </style>
         <title>Ether: Monad Transformers and Classes</title>
     </head>
     <body>
+
+      <span id="forkongithub">
+        <a href="https://github.com/int-index/ether">Source on GitHub</a>
+      </span>
+
+      <main>
+        <section>
+            <h1>Ether</h1>
+            <h2>Monad Transformers and Classes</h2>
+        </section>
+        <section>
+        <div class="section">
+            <h1>In Short</h1>
+            <p>
+              Ether is a Haskell library that extends <a href='https://hackage.haskell.org/package/mtl'>mtl</a> and <a href='https://hackage.haskell.org/package/transformers'>transformers</a> with tagged monad transformers and classes. Here are some resources to learn about the concept:
+            <ul>
+              <li>Blog post <a href='http://blog.sigfpe.com/2010/02/tagging-monad-transformer-layers.html'>Tagging Monad Transformer Layers</a> by Dan Piponi</li>
+              <li>Paper [PDF] <a href='http://muddsnyder.com/pubs/monadfactory.pdf'>Monad Factory: Type-Indexed Monads</a> by Mark Snyder, Perry Alexander</li>
+            </ul>
+            </p>
+            <h2>Features</h2>
+            <ul>
+              <li> Mix tagged and untagged effects with no effort. </li>
+              <li> Turn untagged effects into tagged by wrapping them. </li>
+              <li> Create custom effects with one line of code. </li>
+              <li> Different tagging styles: explicit and type-derived. </li>
+              <li> Ensure tag uniqueness for extra safety. </li>
+            </ul>
+            <h2>The Code</h2>
+            <blockquote>
+                <p>Talk is cheap. Show me the code.</p>
+                <footer>
+                &mdash; <cite><a href="https://lkml.org/lkml/2000/8/25/132">Linus Torvalds</a></cite>
+                </footer>
+            </blockquote>
+            <p> <em> Work in progress... </em>
+            </p>
+        </div>
+        </section>
+      </main>
     </body>
 </html>
