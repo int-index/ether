@@ -44,8 +44,11 @@ import qualified Control.Monad.Trans.Writer.Strict as Trans.W.Strict
 
 class Monad m => MonadExcept tag e m | m tag -> e where
 
+    -- | Is used within a monadic computation to begin exception processing.
     throw :: proxy tag -> e -> m a
 
+    -- | A handler function to handle previous exceptions and return to
+    -- normal execution.
     catch :: proxy tag -> m a -> (e -> m a) -> m a
 
 instance {-# OVERLAPPING #-} Monad m => MonadExcept tag e (ExceptT tag e m) where
