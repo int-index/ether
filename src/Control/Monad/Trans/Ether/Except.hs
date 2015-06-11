@@ -20,6 +20,7 @@ module Control.Monad.Trans.Ether.Except
     , liftCallCC
     , liftListen
     , liftPass
+    , liftCatch
     ) where
 
 import Data.Proxy (Proxy(Proxy))

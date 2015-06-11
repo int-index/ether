@@ -33,6 +33,7 @@ module Control.Monad.Ether.State
 import Control.Monad.Trans (lift)
 
 import Control.Monad.Trans.Ether.Reader (ReaderT)
+import Control.Monad.Trans.Ether.Except (ExceptT)
 import Control.Monad.Trans.Ether.State
 
 -- for mtl instances
@@ -79,7 +80,7 @@ instance {-# OVERLAPPING #-} Monad m => MonadState tag s (StateT tag s m) where
     get proxy = stateT proxy (\s -> return (s, s))
     put proxy s = stateT proxy (\_ -> return ((), s))
 
-instance (MonadState tag s m) => MonadState tag s (StateT tag' s' m) where
+instance MonadState tag s m => MonadState tag s (StateT tag' s' m) where
     get proxy = lift (get proxy)
     put proxy = lift . put proxy
     state proxy = lift . state proxy
@@ -87,6 +88,11 @@ instance (MonadState tag s m) => MonadState tag s (StateT tag' s' m) where
 -- Instances for other tagged transformers
 
 instance (MonadState tag s m) => MonadState tag s (ReaderT tag' r m) where
+    get proxy = lift (get proxy)
+    put proxy = lift . put proxy
+    state proxy = lift . state proxy
+
+instance (MonadState tag s m) => MonadState tag s (ExceptT tag' e m) where
     get proxy = lift (get proxy)
     put proxy = lift . put proxy
     state proxy = lift . state proxy

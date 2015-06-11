@@ -22,13 +22,14 @@ module Control.Monad.Ether.Reader
     , ReaderT
     , readerT
     , runReaderT
-    , mapStateT
+    , mapReaderT
     ) where
 
 import Data.Proxy (Proxy(Proxy))
 import Control.Monad.Trans (lift)
 
-import Control.Monad.Trans.Ether.State (StateT, mapStateT)
+import Control.Monad.Trans.Ether.State  (StateT , mapStateT)
+import Control.Monad.Trans.Ether.Except (ExceptT, mapExceptT)
 import Control.Monad.Trans.Ether.Reader
 
 -- for mtl instances
@@ -81,7 +82,7 @@ instance {-# OVERLAPPING #-} Monad m => MonadReader tag r (ReaderT tag r m) wher
     ask proxy = readerT proxy return
     local proxy f m = readerT proxy (runReaderT proxy m . f)
 
-instance (MonadReader tag r m) => MonadReader tag r (ReaderT tag' r' m) where
+instance MonadReader tag r m => MonadReader tag r (ReaderT tag' r' m) where
     ask proxy = lift (ask proxy)
     local proxy = mapReaderT Proxy . local proxy
 
@@ -90,6 +91,10 @@ instance (MonadReader tag r m) => MonadReader tag r (ReaderT tag' r' m) where
 instance (MonadReader tag r m) => MonadReader tag r (StateT tag' s m) where
     ask proxy = lift (ask proxy)
     local proxy = mapStateT Proxy . local proxy
+
+instance (MonadReader tag r m) => MonadReader tag r (ExceptT tag' e m) where
+    ask proxy = lift (ask proxy)
+    local proxy = mapExceptT Proxy . local proxy
 
 -- Instances for mtl transformers
 

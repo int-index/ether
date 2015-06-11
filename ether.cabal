@@ -31,6 +31,7 @@ library
                        Control.Monad.Trans.Ether.Except
                        Control.Monad.Ether.Reader
                        Control.Monad.Ether.State
+                       Control.Monad.Ether.Except
                        Control.Monad.Ether.Implicit.Reader
                        Control.Monad.Ether.Implicit.State
 
