@@ -18,7 +18,7 @@ body {
     font-size: 20px;
     color: #444;
 }
-pre, tt {
+pre, code {
     font-family: 'Source Code Pro', monospace;
     font-size: 0.8em;
 }
@@ -75,6 +75,11 @@ blockquote, .source {
 body > footer {
     padding: 1em;
     text-align: center;
+}
+.hint::before { content: '[' }
+.hint::after  { content: ']' }
+.hint {
+    color: #999;
 }
 .source {
     background: #444;
@@ -162,7 +167,7 @@ body > footer {
               Ether is a Haskell library that extends <a href='https://hackage.haskell.org/package/mtl'>mtl</a> and <a href='https://hackage.haskell.org/package/transformers'>transformers</a> with tagged monad transformers and classes. Here are some resources to learn about the concept:
             <ul>
               <li>Blog post <a href='http://blog.sigfpe.com/2010/02/tagging-monad-transformer-layers.html'>Tagging Monad Transformer Layers</a> by Dan Piponi</li>
-              <li>Paper [PDF] <a href='http://muddsnyder.com/pubs/monadfactory.pdf'>Monad Factory: Type-Indexed Monads</a> by Mark Snyder, Perry Alexander</li>
+              <li>Paper <span class="hint">PDF</span> <a href='http://muddsnyder.com/pubs/monadfactory.pdf'>Monad Factory: Type-Indexed Monads</a> by Mark Snyder, Perry Alexander</li>
             </ul>
             </p>
             <h1>Features</h1>
@@ -186,21 +191,21 @@ body > footer {
 ethereal <span class="lit">"Foo" "foo"</span>
 ethereal <span class="lit">"Bar" "bar"</span>
 </pre>
-              <tt>ethereal</tt> is a Template Haskell function that expands to
-              an empty data declaration and a value-level proxy. If for some
+              <code>ethereal</code> is a Template Haskell function that expands
+              to an empty data declaration and a value-level proxy. If for some
               reason you don't want to use Template Haskell, you can create tags
               manually like so:
 <pre class="source">
 <span class="kw">data</span> Foo
 foo <span class="kw">=</span> Proxy <span class="kw">::</span> Proxy Foo
 </pre>
-              In fact, any data type of kind <tt>*</tt> can serve as a tag. Later
-              we'll see how it's used for implicit tagging.
+              In fact, any data type of kind <code>*</code> can serve as a tag.
+              Later we'll see how it's used for implicit tagging.
             </p>
             <p>
-              But for now let's stick to our newly created tags <tt>Foo</tt> and
-              <tt>Bar</tt>. We define a function that uses multiple
-              <tt>MonadReader</tt>s (something impossible with mtl):
+              But for now let's stick to our newly created tags <code>Foo</code>
+              and <code>Bar</code>. We define a function that uses multiple
+              <code>MonadReader</code>s (something impossible with mtl):
 <pre class="source">
 add <span class="kw">::</span> ( Num a
        <span class="kw">,</span> MonadReader Foo a m
@@ -211,11 +216,11 @@ add <span class="kw">=</span> liftA2 (+) (ask foo) (ask bar)
 n <span class="kw">::</span> Num a <span class="kw">=&gt;</span> a
 n <span class="kw">=</span> runReader foo (runReaderT bar add 10) 20
 </pre>
-              Here we can see that <tt>MonadReader</tt>, <tt>ask</tt>,
-              <tt>runReader</tt> and <tt>runReaderT</tt> are used just like the
-              ones from mtl, only with a tag. As you might expect, <tt>n</tt>
-              here equals <tt>30</tt> (or <tt>30.0</tt>&mdash;the reader
-              environment can be polymorphic).
+              Here we can see that <code>MonadReader</code>, <code>ask</code>,
+              <code>runReader</code> and <code>runReaderT</code> are used just
+              like the ones from mtl, only with a tag. As you might expect,
+              <code>n</code> here equals <code>30</code> (or <code>30.0</code>
+              &mdash;the reader environment can be polymorphic).
             </p>
             <p> <em> Work in progress... </em>
             </p>
