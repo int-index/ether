@@ -11,16 +11,16 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Ether.Reader
-    ( ReaderT
-    , Reader
-    , runReaderT
-    , runReader
-    --
-    , MonadReader
-    , local
-    , ask
-    , reader
+    (
+    -- * MonadReader class
+      MonadReader(..)
     , asks
+    -- * The Reader monad
+    , Reader
+    , runReader
+    -- * The ReaderT monad transformer
+    , ReaderT
+    , runReaderT
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -76,8 +76,8 @@ asks
 asks = reader
 
 instance {-# OVERLAPPING #-} Monad m => MonadReader tag r (ReaderT tag r m) where
-    ask proxy = etherReaderT proxy return
-    local proxy f m = etherReaderT proxy (runReaderT proxy m . f)
+    ask proxy = readerT proxy return
+    local proxy f m = readerT proxy (runReaderT proxy m . f)
 
 instance (MonadReader tag r m) => MonadReader tag r (ReaderT tag' r' m) where
     ask proxy = lift (ask proxy)

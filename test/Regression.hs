@@ -6,13 +6,15 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Control.Ether.Core
+import Control.Ether.Tags
 import Control.Ether.TH
 import Control.Ether.Wrapped
 import Control.Monad.Ether.Reader
 import Control.Monad.Ether.State
 import qualified Control.Monad.Ether.Implicit.Reader as I
-import qualified Control.Monad.Reader as Tagless
+import qualified Control.Monad.Ether.Implicit.State  as I
+import qualified Control.Monad.Reader as T
+import qualified Control.Monad.State  as T
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
@@ -72,9 +74,28 @@ implicitCore = I.local (succ :: Int -> Int) $ do
     b <- I.local not I.ask
     return (if b then "" else show n)
 
-wrapCore :: MonadReader R1 Int m => m Int
-wrapCore = ethered r1 Tagless.ask
+wrapCore
+    :: ( T.MonadReader Int m
+       , T.MonadState  Int m
+       ) => m Int
+wrapCore = do
+    b <- T.get
+    a <- T.ask
+    T.put (a + b)
+    return (a * b)
 
+wrapCore'
+    :: ( MonadReader S1 Int m
+       , MonadState S1 Int m
+       , MonadReader R1 Int m
+       ) => m Int
+wrapCore' = do
+    a <- ethered s1 wrapCore
+    c <- ask r1
+    return (a + c)
+
+wrapCore'' :: Int -> (Int, Int)
+wrapCore'' a = runReader r1 (runStateT s1 (runReaderT s1 wrapCore' a) a) (-1)
 
 -- Should not compile with `ensureUniqueTags`
 uniqueTagsCore :: IO ()
@@ -87,7 +108,7 @@ uniqueTagsCore = flip (runReaderT r1) (1 :: Int)
                     a :: Integer <- ask r1
                     b :: Int <- ask r1
                     c :: Bool <- ask r1
-                    Tagless.liftIO $ do
+                    T.liftIO $ do
                         print a
                         print b
                         print c
@@ -99,3 +120,23 @@ stateCore = do
     a <- ask r1
     n <- get s1
     put s1 (n * a)
+    modify s1 (subtract 1)
+
+recurseCore :: (Num a, Ord a) => (I.MonadReader a m, I.MonadState Int m)  => m a
+recurseCore = do
+    a <- I.ask
+    if (a <= 0)
+        then do
+            I.put (0 :: Int)
+            return 1
+        else do
+            I.modify (succ :: Int -> Int)
+            b <- I.runReaderT recurseCore (a - 1)
+            I.modify (succ :: Int -> Int)
+            return (a * b)
+
+factorial :: (Num a, Ord a) => a -> (a, Int)
+factorial a = I.runState (I.runReaderT recurseCore a) (0 :: Int)
+
+factorial' :: Int -> (Int, Int)
+factorial' a = factorial (a :: Int)

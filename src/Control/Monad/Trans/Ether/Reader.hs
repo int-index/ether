@@ -7,12 +7,16 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Trans.Ether.Reader
-    ( ReaderT
-    , Reader
-    , runReaderT
+    (
+    -- * The Reader monad
+      Reader
     , runReader
-    , etherReaderT
+    -- * The ReaderT monad transformer
+    , ReaderT
+    , readerT
+    , runReaderT
     , mapReaderT
+    -- * Lifting other operations
     , liftCatch
     , liftCallCC
     ) where
@@ -25,7 +29,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
-import Control.Ether.Core
+import Control.Ether.Tags (Tags)
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Reader as Trans
@@ -36,29 +40,48 @@ import qualified Control.Monad.State.Class   as Class
 import qualified Control.Monad.Writer.Class  as Class
 import qualified Control.Monad.Error.Class   as Class
 
+-- | The parameterizable reader monad.
+--
+-- Computations are functions of a shared environment.
+--
+-- The 'return' function ignores the environment, while '>>=' passes
+-- the inherited environment to both subcomputations.
+type Reader tag r = ReaderT tag r Identity
+
+-- | The reader monad transformer,
+-- which adds a read-only environment to the given monad.
+--
+-- The 'return' function ignores the environment, while '>>=' passes
+-- the inherited environment to both subcomputations.
 newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
     deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
 
 type instance Tags (ReaderT tag r m) = tag ': Tags m
 
-type Reader tag r = ReaderT tag r Identity
+-- | Constructor for computations in the reader monad transformer.
+readerT :: proxy tag -> (r -> m a) -> ReaderT tag r m a
+readerT _proxy = ReaderT . Trans.ReaderT
 
-etherReaderT :: proxy tag -> (r -> m a) -> ReaderT tag r m a
-etherReaderT _proxy = ReaderT . Trans.ReaderT
-
+-- | Runs a 'Reader' and extracts the final value from it.
 runReaderT :: proxy tag -> ReaderT tag r m a -> r -> m a
 runReaderT _proxy (ReaderT (Trans.ReaderT f)) = f
 
+-- | Runs a 'Reader' and extracts the final value from it.
 runReader :: proxy tag -> Reader tag r a -> r -> a
 runReader proxy m r = runIdentity (runReaderT proxy m r)
 
+-- | Transform the computation inside a @ReaderT@.
+--
+-- * @'runReaderT' tag ('mapReaderT' tag f m) = f . 'runReaderT' tag m@
 mapReaderT :: proxy tag -> (m a -> n b) -> ReaderT tag r m a -> ReaderT tag r n b
 mapReaderT _proxy f m = ReaderT $ Trans.mapReaderT f (coerce m)
 
+-- | Lift a @catchE@ operation to the new monad.
 liftCatch :: proxy tag -> Sig.Catch e m a -> Sig.Catch e (ReaderT tag r m) a
 liftCatch _proxy f m h = ReaderT $ Trans.liftCatch f (coerce m) (coerce h)
 
+-- | Lift a @callCC@ operation to the new monad.
 liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (ReaderT tag r m) a b
 liftCallCC _proxy callCC f = ReaderT $ Trans.liftCallCC callCC (coerce f)
 

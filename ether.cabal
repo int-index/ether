@@ -23,7 +23,7 @@ source-repository head
 
 library
 
-  exposed-modules:     Control.Ether.Core
+  exposed-modules:     Control.Ether.Tags
                        Control.Ether.TH
                        Control.Ether.Wrapped
                        Control.Monad.Trans.Ether.Reader

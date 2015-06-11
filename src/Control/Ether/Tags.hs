@@ -4,7 +4,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Control.Ether.Core
+module Control.Ether.Tags
     ( Tags
     , UniqueTag
     , UniqueTags

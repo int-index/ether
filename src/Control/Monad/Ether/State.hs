@@ -69,8 +69,8 @@ modify :: MonadState tag s m => proxy tag -> (s -> s) -> m ()
 modify proxy f = state proxy $ \ s -> ((), f s)
 
 instance {-# OVERLAPPING #-} Monad m => MonadState tag s (StateT tag s m) where
-    get proxy = etherStateT proxy (\s -> return (s, s))
-    put proxy s = etherStateT proxy (\_ -> return ((), s))
+    get proxy = stateT proxy (\s -> return (s, s))
+    put proxy s = stateT proxy (\_ -> return ((), s))
 
 instance (MonadState tag s m) => MonadState tag s (StateT tag' s' m) where
     get proxy = lift (get proxy)

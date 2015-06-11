@@ -15,7 +15,7 @@ module Control.Monad.Trans.Ether.State
     , evalState
     , execStateT
     , execState
-    , etherStateT
+    , stateT
     , mapStateT
     , liftCatch
     , liftCallCC'
@@ -31,7 +31,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
-import Control.Ether.Core
+import Control.Ether.Tags (Tags)
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.State.Lazy as Trans
@@ -50,8 +50,8 @@ type instance Tags (StateT tag r m) = tag ': Tags m
 
 type State tag r = StateT tag r Identity
 
-etherStateT :: proxy tag -> (s -> m (a, s)) -> StateT tag s m a
-etherStateT _proxy = StateT . Trans.StateT
+stateT :: proxy tag -> (s -> m (a, s)) -> StateT tag s m a
+stateT _proxy = StateT . Trans.StateT
 
 runStateT :: proxy tag -> StateT tag s m a  -> s -> m (a, s)
 runStateT _proxy (StateT (Trans.StateT f)) = f
