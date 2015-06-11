@@ -13,22 +13,14 @@
 module Control.Monad.Ether.Reader
     ( ReaderT
     , Reader
-    , ReaderT'
-    , Reader'
     , runReaderT
     , runReader
-    , runReaderT'
-    , runReader'
     --
     , MonadReader
     , local
     , ask
     , reader
-    --
-    , MonadReader'
-    , local'
-    , ask'
-    , reader'
+    , asks
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -53,24 +45,35 @@ class Monad m => MonadReader tag r m | m tag -> r where
 
     {-# MINIMAL (ask | reader), local #-}
 
-    local :: proxy tag -> (r -> r) -> m a -> m a
-
+    -- | Retrieves the monad environment.
     ask :: proxy tag -> m r
     ask proxy = reader proxy id
 
-    reader :: proxy tag -> (r -> a) -> m a
+    -- | Executes a computation in a modified environment.
+    local
+        :: proxy tag
+        -> (r -> r)
+        -- ^ The function to modify the environment.
+        -> m a
+        -- ^ @Reader@ to run in the modified environment.
+        -> m a
+
+    -- | Retrieves a function of the current environment.
+    reader
+        :: proxy tag
+        -> (r -> a)
+        -- ^ The selector function to apply to the environment.
+        -> m a
     reader proxy f = fmap f (ask proxy)
 
-type MonadReader' r = MonadReader r r
-
-local' :: forall m r a . MonadReader' r m => (r -> r) -> m a -> m a
-local' = local (Proxy :: Proxy r)
-
-ask' :: forall m r . MonadReader' r m => m r
-ask' = ask (Proxy :: Proxy r)
-
-reader' :: forall m r a . MonadReader' r m => (r -> a) -> m a
-reader' = reader (Proxy :: Proxy r)
+-- | Retrieves a function of the current environment.
+asks
+    :: MonadReader tag r m
+    => proxy tag
+    -> (r -> a)
+    -- ^ The selector function to apply to the environment.
+    -> m a
+asks = reader
 
 instance {-# OVERLAPPING #-} Monad m => MonadReader tag r (ReaderT tag r m) where
     ask proxy = etherReaderT proxy return

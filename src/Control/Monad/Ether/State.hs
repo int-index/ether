@@ -13,20 +13,12 @@
 module Control.Monad.Ether.State
     ( StateT
     , State
-    , StateT'
-    , State'
     , runStateT
     , runState
     , evalStateT
     , evalState
     , execStateT
     , execState
-    , runStateT'
-    , runState'
-    , evalStateT'
-    , evalState'
-    , execStateT'
-    , execState'
     --
     , MonadState
     , get
@@ -34,16 +26,8 @@ module Control.Monad.Ether.State
     , put
     , state
     , modify
-    --
-    , MonadState'
-    , get'
-    , gets'
-    , put'
-    , state'
-    , modify'
     ) where
 
-import Data.Proxy (Proxy(Proxy))
 import Control.Monad.Trans (lift)
 
 import Control.Monad.Trans.Ether.Reader (ReaderT)
@@ -83,23 +67,6 @@ gets proxy f = fmap f (get proxy)
 
 modify :: MonadState tag s m => proxy tag -> (s -> s) -> m ()
 modify proxy f = state proxy $ \ s -> ((), f s)
-
-type MonadState' s = MonadState s s
-
-get' :: forall m s . MonadState' s m => m s
-get' = get (Proxy :: Proxy s)
-
-gets' :: forall m s a . MonadState' s m => (s -> a) -> m a
-gets' = gets (Proxy :: Proxy s)
-
-put' :: forall m s . MonadState' s m => s -> m ()
-put' = put (Proxy :: Proxy s)
-
-state' :: forall m s a . MonadState' s m => (s -> (a, s)) -> m a
-state' = state (Proxy :: Proxy s)
-
-modify' :: forall m s . MonadState' s m => (s -> s) -> m ()
-modify' = modify (Proxy :: Proxy s)
 
 instance {-# OVERLAPPING #-} Monad m => MonadState tag s (StateT tag s m) where
     get proxy = etherStateT proxy (\s -> return (s, s))

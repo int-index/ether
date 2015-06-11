@@ -9,13 +9,8 @@
 module Control.Monad.Trans.Ether.Reader
     ( ReaderT
     , Reader
-    , ReaderT'
-    , Reader'
     , runReaderT
     , runReader
-    , runReaderT'
-    , runReader'
-    --
     , etherReaderT
     , mapReaderT
     , liftCatch
@@ -66,15 +61,6 @@ liftCatch _proxy f m h = ReaderT $ Trans.liftCatch f (coerce m) (coerce h)
 
 liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (ReaderT tag r m) a b
 liftCallCC _proxy callCC f = ReaderT $ Trans.liftCallCC callCC (coerce f)
-
-type ReaderT' r = ReaderT r r
-type Reader'  r = Reader  r r
-
-runReaderT' :: ReaderT' r m a -> r -> m a
-runReaderT' = runReaderT Proxy
-
-runReader' :: Reader' r a -> r -> a
-runReader' m r = runIdentity (runReaderT' m r)
 
 -- Instances for mtl classes
 

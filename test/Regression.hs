@@ -11,6 +11,7 @@ import Control.Ether.TH
 import Control.Ether.Wrapped
 import Control.Monad.Ether.Reader
 import Control.Monad.Ether.State
+import qualified Control.Monad.Ether.Implicit.Reader as I
 import qualified Control.Monad.Reader as Tagless
 
 import Test.Tasty
@@ -65,10 +66,10 @@ layeredLocalCore' k f a1 a2 = (direct, indirect)
     direct = apply k (fromIntegral a1, apply f a2)
     indirect = layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
 
-inferCore :: (MonadReader' Int m, MonadReader' Bool m) => m String
-inferCore = local' (succ :: Int -> Int) $ do
-    n :: Int <- ask'
-    b <- local' not ask'
+implicitCore :: (I.MonadReader Int m, I.MonadReader Bool m) => m String
+implicitCore = I.local (succ :: Int -> Int) $ do
+    n :: Int <- I.ask
+    b <- I.local not I.ask
     return (if b then "" else show n)
 
 wrapCore :: MonadReader R1 Int m => m Int

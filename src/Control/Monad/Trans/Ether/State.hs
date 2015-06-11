@@ -9,21 +9,12 @@
 module Control.Monad.Trans.Ether.State
     ( StateT
     , State
-    , StateT'
-    , State'
     , runStateT
     , runState
     , evalStateT
     , evalState
     , execStateT
     , execState
-    , runStateT'
-    , runState'
-    , evalStateT'
-    , evalState'
-    , execStateT'
-    , execState'
-    --
     , etherStateT
     , mapStateT
     , liftCatch
@@ -94,27 +85,6 @@ liftListen _proxy listen m = StateT $ Trans.liftListen listen (coerce m)
 
 liftPass :: Monad m => proxy tag -> Sig.Pass w m (a,s) -> Sig.Pass w (StateT tag s m) a
 liftPass _proxy pass m = StateT $ Trans.liftPass pass (coerce m)
-
-type StateT' s = StateT s s
-type State'  s = State  s s
-
-runStateT' :: StateT' s m a -> s -> m (a, s)
-runStateT' = runStateT Proxy
-
-runState' :: State' s a -> s -> (a, s)
-runState' m s = runIdentity (runStateT' m s)
-
-evalStateT' :: Functor m => StateT' s m a -> s -> m a
-evalStateT' m s = fmap fst (runStateT' m s)
-
-evalState' :: State' s a -> s -> a
-evalState' m s = fst (runState' m s)
-
-execStateT' :: Functor m => StateT' s m a -> s -> m s
-execStateT' m s = fmap snd (runStateT' m s)
-
-execState' :: State' s a -> s -> s
-execState' m s = snd (runState' m s)
 
 -- Instances for mtl classes
 
