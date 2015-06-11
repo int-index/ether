@@ -11,21 +11,23 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Control.Monad.Ether.State
-    ( StateT
-    , State
-    , runStateT
-    , runState
-    , evalStateT
-    , evalState
-    , execStateT
-    , execState
-    --
-    , MonadState
-    , get
-    , gets
-    , put
-    , state
+    (
+    -- * MonadState class
+      MonadState(..)
     , modify
+    , gets
+    -- * The State monad
+    , State
+    , runState
+    , evalState
+    , execState
+    -- * The StateT monad transformer
+    , StateT
+    , stateT
+    , runStateT
+    , evalStateT
+    , execStateT
+    , mapStateT
     ) where
 
 import Control.Monad.Trans (lift)
@@ -49,12 +51,15 @@ class Monad m => MonadState tag s m | m tag -> s where
 
     {-# MINIMAL state | get, put #-}
 
+    -- | Return the state from the internals of the monad.
     get :: proxy tag -> m s
     get proxy = state proxy (\s -> (s, s))
 
+    -- | Replace the state inside the monad.
     put :: proxy tag -> s -> m ()
     put proxy s = state proxy (\_ -> ((), s))
 
+    -- | Embed a simple state action into the monad.
     state :: proxy tag -> (s -> (a, s)) -> m a
     state proxy f = do
         s <- get proxy
@@ -62,11 +67,13 @@ class Monad m => MonadState tag s m | m tag -> s where
         put proxy s'
         return a
 
-gets :: MonadState tag s m => proxy tag -> (s -> a) -> m a
-gets proxy f = fmap f (get proxy)
-
+-- | Modifies the state inside a state monad.
 modify :: MonadState tag s m => proxy tag -> (s -> s) -> m ()
 modify proxy f = state proxy $ \ s -> ((), f s)
+
+-- | Gets specific component of the state, using a projection function supplied.
+gets :: MonadState tag s m => proxy tag -> (s -> a) -> m a
+gets proxy f = fmap f (get proxy)
 
 instance {-# OVERLAPPING #-} Monad m => MonadState tag s (StateT tag s m) where
     get proxy = stateT proxy (\s -> return (s, s))

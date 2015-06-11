@@ -17,6 +17,14 @@ proxySimple name ty = do
     val <- funSimple name [e| Proxy |]
     return (sig, val)
 
+-- |
+-- Creates a tag and a value-level proxy for it.
+--
+-- @'ethereal' \"Foo\" \"foo\"@ generates the following code:
+-- 
+-- > data Foo
+-- > foo :: Proxy Foo
+-- > foo = Proxy
 ethereal :: String -> String -> TH.DecsQ
 ethereal strTagName strTagProxyName = do
     let tagName = TH.mkName strTagName

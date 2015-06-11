@@ -63,15 +63,17 @@ type instance Tags (ReaderT tag r m) = tag ': Tags m
 readerT :: proxy tag -> (r -> m a) -> ReaderT tag r m a
 readerT _proxy = ReaderT . Trans.ReaderT
 
--- | Runs a 'Reader' and extracts the final value from it.
+-- | Runs a 'ReaderT' with the given environment
+-- and returns the vinal value.
 runReaderT :: proxy tag -> ReaderT tag r m a -> r -> m a
 runReaderT _proxy (ReaderT (Trans.ReaderT f)) = f
 
--- | Runs a 'Reader' and extracts the final value from it.
+-- | Runs a 'ReaderT' with the given environment
+-- and returns the vinal value.
 runReader :: proxy tag -> Reader tag r a -> r -> a
 runReader proxy m r = runIdentity (runReaderT proxy m r)
 
--- | Transform the computation inside a @ReaderT@.
+-- | Transform the computation inside a 'ReaderT'.
 --
 -- * @'runReaderT' tag ('mapReaderT' tag f m) = f . 'runReaderT' tag m@
 mapReaderT :: proxy tag -> (m a -> n b) -> ReaderT tag r m a -> ReaderT tag r n b

@@ -30,7 +30,10 @@ import qualified Control.Monad.Trans.State.Strict  as Trans.Strict
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict
 
--- Never declare instances for this class
+-- |
+-- The main purpose of the 'UniqueTag' class is to provide clear error
+-- messages when the tag uniqueness property is violated. You should never
+-- provide instances for it unless you know what you're doing.
 class UniqueTag a
 
 type family IsUnique (x :: k) (as :: [k]) :: Constraint where
@@ -42,12 +45,23 @@ type family Unique (as :: [k]) :: Constraint where
     Unique '[] = ()
     Unique (a ': as) = (IsUnique a as, Unique as)
 
+-- |
+-- The 'UniqueTags` constraint placed on a type variable representing a
+-- monad transformer stack ensures that every tag in the stack appears
+-- only once.
 type family UniqueTags (m :: * -> *) :: Constraint where
     UniqueTags m = Unique (Tags m)
 
+-- |
+-- Type-restricted version of 'id' that adds a 'UniqueTags' constraint to
+-- the provided monadic value.
 ensureUniqueTags :: UniqueTags m => m a -> m a
 ensureUniqueTags = id
 
+-- |
+-- The 'Tags' type family returns a type-level list of all tags of its argument
+-- @m@. Simple monads have no tags, monad transformers propagate the tags of
+-- their inner monads, and tagged monad transformers also add their own tag.
 type family Tags (m :: * -> *) :: [*]
 
 type instance Tags IO = '[]

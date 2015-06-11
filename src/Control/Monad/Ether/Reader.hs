@@ -20,7 +20,9 @@ module Control.Monad.Ether.Reader
     , runReader
     -- * The ReaderT monad transformer
     , ReaderT
+    , readerT
     , runReaderT
+    , mapStateT
     ) where
 
 import Data.Proxy (Proxy(Proxy))
