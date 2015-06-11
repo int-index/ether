@@ -1,8 +1,7 @@
 <!doctype html>
 <html>
     <head>
-        <link href='https://fonts.googleapis.com/css?family=Ubuntu:400,700&subset=latin,greek' rel='stylesheet' type='text/css'>
-
+        <link href='https://fonts.googleapis.com/css?family=Ubuntu:400,700|Source+Code+Pro' rel='stylesheet' type='text/css'>
         <style>
 html, body {
     margin: 0;
@@ -17,7 +16,11 @@ a:hover {
 body {
     font-family: 'Ubuntu', sans-serif;
     font-size: 20px;
-    color: #444444;
+    color: #444;
+}
+pre, tt {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.8em;
 }
 h1 {
     margin-top: 2em;
@@ -63,9 +66,28 @@ li {
     margin-top: 0.5em;
     margin-bottom: 0.5em;
 }
-blockquote {
-    border-left: 1px solid #0a9bf0;
+blockquote, .source {
+    border-left: 2px solid #0a9bf0;
     padding-left: 2em;
+    margin-left: 2em;
+}
+body > footer {
+    padding: 1em;
+    text-align: center;
+}
+.source {
+    background: #444;
+    color: white;
+    max-width: 50%;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    border-color: white;
+}
+.kw {
+    color: #6bcffa;
+}
+.lit {
+    color: #eee890;
 }
 
 #forkongithub a {
@@ -144,9 +166,8 @@ blockquote {
             <h1>Features</h1>
             <ul>
               <li> Mix tagged and untagged effects with no effort. </li>
-              <li> Turn untagged effects into tagged by wrapping them. </li>
-              <li> Create custom effects with one line of code. </li>
-              <li> Different tagging styles: explicit and type-derived. </li>
+              <li> Turn untagged effects into tagged ones by wrapping them. </li>
+              <li> Different tagging styles: explicit and implicit. </li>
               <li> Ensure tag uniqueness for extra safety. </li>
             </ul>
             <h1>The Code</h1>
@@ -156,10 +177,51 @@ blockquote {
                 &mdash; <cite><a href="https://lkml.org/lkml/2000/8/25/132">Linus Torvalds</a></cite>
                 </footer>
             </blockquote>
+            <p>
+              Ether's interface is similar to mtl's interface, except most
+              functions require a tag. So let's create some tags:
+<pre class="source">
+ethereal <span class="lit">"Foo"</span> <span class="lit">"foo"</span>
+ethereal <span class="lit">"Bar"</span> <span class="lit">"bar"</span>
+</pre>
+              <tt>ethereal</tt> is a Template Haskell function that expands to
+              an empty data declaration and a value-level proxy. If for some
+              reason you don't want to use Template Haskell, you can create tags
+              manually like so:
+<pre class="source">
+<span class="kw">data</span> Foo
+foo <span class="kw">=</span> Proxy <span class="kw">::</span> Proxy Foo
+</pre>
+              In fact, any data type of kind <tt>*</tt> can serve as a tag. Later
+              we'll see how it's used for implicit tagging.
+            </p>
+            <p>
+              But for now let's stick to our newly created tags <tt>Foo</tt> and
+              <tt>Bar</tt>. We define a function that uses multiple
+              <tt>MonadReader</tt>s (something impossible with mtl):
+<pre class="source">
+add <span class="kw">::</span> ( Num a
+       <span class="kw">,</span> MonadReader Foo a m
+       <span class="kw">,</span> MonadReader Bar a m
+       ) <span class="kw">=&gt;</span> m a
+add <span class="kw">=</span> liftA2 (+) (ask foo) (ask bar)
+
+n <span class="kw">::</span> Num a <span class="kw">=&gt;</span> a
+n <span class="kw">=</span> runReader foo (runReaderT bar add 10) 20
+</pre>
+              Here we can see that <tt>MonadReader</tt>, <tt>ask</tt>,
+              <tt>runReader</tt> and <tt>runReaderT</tt> are used just like the
+              ones from mtl, only with a tag. As you might expect, <tt>n</tt>
+              here equals <tt>30</tt> (or <tt>30.0</tt>&mdash;the reader
+              environment can be polymorphic).
+            </p>
             <p> <em> Work in progress... </em>
             </p>
         </div>
         </section>
       </main>
+      <footer>
+        <a href="https://github.com/int-index">Index Int</a>, 2015
+      </footer>
     </body>
 </html>
