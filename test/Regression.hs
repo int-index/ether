@@ -4,6 +4,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE LambdaCase #-}
 module Main where
 
 import Control.Ether.Tags
@@ -13,6 +14,7 @@ import Control.Monad.Ether.Reader
 import Control.Monad.Ether.State
 import qualified Control.Monad.Ether.Implicit.Reader as I
 import qualified Control.Monad.Ether.Implicit.State  as I
+import qualified Control.Monad.Ether.Implicit.Except as I
 import qualified Control.Monad.Reader as T
 import qualified Control.Monad.State  as T
 
@@ -140,3 +142,28 @@ factorial a = I.runState (I.runReaderT recurseCore a) (0 :: Int)
 
 factorial' :: Int -> (Int, Int)
 factorial' a = factorial (a :: Int)
+
+data DivideByZero = DivideByZero
+    deriving (Show)
+data NegativeLog = NegativeLog
+    deriving (Show)
+
+exceptCore
+    :: ( Floating a, Ord a
+       , I.MonadExcept DivideByZero m
+       , I.MonadExcept NegativeLog m
+       ) => a -> a -> m a
+exceptCore a b = do
+    if b == 0
+      then I.throw DivideByZero
+      else
+        let d = a /b
+        in if d < 0
+             then I.throw NegativeLog
+             else return $ log (a / b)
+
+exceptCore' :: Double -> Double -> String
+exceptCore' a b
+    = either (\NegativeLog -> "nl") id
+    $ I.runExcept
+        (either (\DivideByZero -> "dz") show <$> I.runExceptT (exceptCore a b))
