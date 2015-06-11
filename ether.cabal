@@ -28,6 +28,7 @@ library
                        Control.Ether.Wrapped
                        Control.Monad.Trans.Ether.Reader
                        Control.Monad.Trans.Ether.State
+                       Control.Monad.Trans.Ether.Except
                        Control.Monad.Ether.Reader
                        Control.Monad.Ether.State
                        Control.Monad.Ether.Implicit.Reader
