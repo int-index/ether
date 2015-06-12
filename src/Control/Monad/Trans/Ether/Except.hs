@@ -88,8 +88,8 @@ exceptT t = tagged t . Trans.ExceptT
 
 -- | Constructor for computations in the exception monad
 -- (the inverse of 'runExcept').
-except :: proxy tag -> Either e a -> Except tag e a
-except t = tagged t . Trans.except
+except :: Monad m => proxy tag -> Either e a -> ExceptT tag e m a
+except t = exceptT t . return
 
 -- | Runs an 'ExceptT' and returns either an exception or a normal value.
 runExceptT :: proxy tag -> ExceptT tag e m a -> m (Either e a)

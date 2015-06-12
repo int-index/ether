@@ -59,15 +59,13 @@ import qualified Control.Monad.Error.Class   as Class
 -- Computations have access to a mutable state.
 --
 -- The 'return' function leaves the state unchanged, while '>>=' uses
--- the final state of the first computation as the initial state of
--- the second.
+-- the final state of the first computation as the initial state of the second.
 type State tag r = StateT tag r Identity
 
 -- | The state monad transformer.
 --
 -- The 'return' function leaves the state unchanged, while '>>=' uses
--- the final state of the first computation as the initial state of
--- the second.
+-- the final state of the first computation as the initial state of the second.
 newtype StateT tag s m a = StateT (Trans.StateT s m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
@@ -93,17 +91,17 @@ state t = tagged t . Trans.state
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns both the final value and the final state.
-runStateT :: proxy tag -> StateT tag s m a  -> s -> m (a, s)
+runStateT :: proxy tag -> StateT tag s m a -> s -> m (a, s)
 runStateT t = Trans.runStateT . untagged t
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns the final value, discarding the final state.
-evalStateT :: Monad m => proxy tag -> StateT tag s m a  -> s -> m a
+evalStateT :: Monad m => proxy tag -> StateT tag s m a -> s -> m a
 evalStateT t = Trans.evalStateT . untagged t
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns the final state, discarding the final value.
-execStateT :: Monad m => proxy tag -> StateT tag s m a  -> s -> m s
+execStateT :: Monad m => proxy tag -> StateT tag s m a -> s -> m s
 execStateT t = Trans.execStateT . untagged t
 
 -- | Runs a 'State' with the given initial state
