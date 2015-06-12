@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -35,6 +36,8 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Ether.Tags (Taggable(..), Tagged(..))
+import GHC.Generics (Generic)
+import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Reader as Trans
@@ -59,8 +62,11 @@ type Reader tag r = ReaderT tag r Identity
 -- The 'return' function ignores the environment, while '>>=' passes
 -- the inherited environment to both subcomputations.
 newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
-    deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
+    deriving ( Generic
+             , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
+
+instance NT.Newtype (ReaderT tag r m a)
 
 instance Taggable (ReaderT tag r m) where
     type Tag (ReaderT tag r m) = 'Just tag
@@ -68,8 +74,6 @@ instance Taggable (ReaderT tag r m) where
 
 instance Tagged (ReaderT tag r m) tag where
     type Untagged (ReaderT tag r m) = Trans.ReaderT r m
-    tagged _ = ReaderT
-    untagged _ (ReaderT a) = a
 
 -- | Constructor for computations in the reader monad transformer.
 readerT :: proxy tag -> (r -> m a) -> ReaderT tag r m a

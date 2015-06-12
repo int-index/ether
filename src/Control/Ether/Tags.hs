@@ -3,9 +3,12 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE DefaultSignatures #-}
 module Control.Ether.Tags
     ( Taggable(..)
     , Tagged(..)
@@ -22,6 +25,7 @@ import qualified Control.Monad.ST.Strict as Strict (ST)
 import qualified Control.Monad.ST.Lazy   as Lazy   (ST)
 import GHC.Conc (STM)
 import GHC.Exts (Constraint)
+import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Trans.Cont          as Trans
 import qualified Control.Monad.Trans.Except        as Trans
@@ -137,6 +141,17 @@ type Tags (m :: * -> *) = MaybeToList (Tag m) ++ MaybeToList (MaybeMapTag (Inner
 -- | The 'Tagged' type class establishes a relationship between a tagged
 -- monad transformer and its untagged counterpart.
 class (Taggable m, Tag m ~ 'Just tag) => Tagged m tag | m -> tag where
+
     type Untagged m :: * -> *
+
     tagged :: proxy tag -> Untagged m a -> m a
+    default tagged
+        :: (NT.Newtype (m a), NT.O (m a) ~ Untagged m a)
+        => proxy tag -> Untagged m a -> m a
+    tagged _ = NT.pack
+
     untagged :: proxy tag -> m a -> Untagged m a
+    default untagged
+        :: (NT.Newtype (m a), NT.O (m a) ~ Untagged m a)
+        => proxy tag -> m a -> Untagged m a
+    untagged _ = NT.unpack

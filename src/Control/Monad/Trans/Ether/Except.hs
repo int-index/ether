@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -37,6 +38,8 @@ import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Ether.Tags (Taggable(..), Tagged(..))
 import qualified Control.Ether.Util as Util
+import GHC.Generics (Generic)
+import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Except as Trans
@@ -66,8 +69,11 @@ runExcept t = Trans.runExcept . untagged t
 -- the first exception.
 
 newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
-    deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
+    deriving ( Generic
+             , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
+
+instance NT.Newtype (ExceptT tag e m a)
 
 instance Taggable (ExceptT tag e m) where
     type Tag (ExceptT tag e m) = 'Just tag
@@ -75,8 +81,6 @@ instance Taggable (ExceptT tag e m) where
 
 instance Tagged (ExceptT tag e m) tag where
     type Untagged (ExceptT tag e m) = Trans.ExceptT e m
-    tagged _ = ExceptT
-    untagged _ (ExceptT a) = a
 
 -- | Constructor for computations in the exception monad transformer.
 exceptT :: proxy tag -> m (Either e a) -> ExceptT tag e m a

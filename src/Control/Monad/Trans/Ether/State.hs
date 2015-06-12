@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -40,6 +41,8 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Ether.Tags (Taggable(..), Tagged(..))
+import GHC.Generics (Generic)
+import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.State.Lazy as Trans
@@ -66,9 +69,11 @@ type State tag r = StateT tag r Identity
 -- the final state of the first computation as the initial state of
 -- the second.
 newtype StateT tag s m a = StateT (Trans.StateT s m a)
-    deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
+    deriving ( Generic
+             , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
 
+instance NT.Newtype (StateT tag s m a)
 
 instance Taggable (StateT tag s m) where
     type Tag (StateT tag s m) = 'Just tag
@@ -76,8 +81,6 @@ instance Taggable (StateT tag s m) where
 
 instance Tagged (StateT tag s m) tag where
     type Untagged (StateT tag s m) = Trans.StateT s m
-    tagged _ = StateT
-    untagged _ (StateT a) = a
 
 -- | Constructor for computations in the state monad transformer.
 stateT :: proxy tag -> (s -> m (a, s)) -> StateT tag s m a
