@@ -10,17 +10,24 @@ module Control.Monad.Trans.Ether.Except
     (
     -- * The Except monad
       Except
+    , except
     , runExcept
     -- * The ExceptT monad transformer
     , ExceptT
     , exceptT
     , runExceptT
     , mapExceptT
+    -- * Exception operations
+    , throw
+    , catch
     -- * Lifting other operations
     , liftCallCC
     , liftListen
     , liftPass
     , liftCatch
+    -- * Wrapping operations
+    , tagWrap
+    , tagUnwrap
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -32,6 +39,7 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Ether.Tags (Tags)
+import qualified Control.Ether.Util as Util
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Except as Trans
@@ -53,7 +61,7 @@ type Except tag e = ExceptT tag e Identity
 
 -- | Runs an 'Except' and returns either an exception or a normal value.
 runExcept :: proxy tag -> Except tag e a -> Either e a
-runExcept proxy m = runIdentity (runExceptT proxy m)
+runExcept t = Trans.runExcept . tagUnwrap t
 
 -- | The exception monad transformer.
 --
@@ -64,17 +72,28 @@ newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
     deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
 
+tagWrap :: proxy tag -> Trans.ExceptT e m a -> ExceptT tag e m a
+tagWrap _ = ExceptT
+
+tagUnwrap :: proxy tag -> ExceptT tag e m a -> Trans.ExceptT e m a
+tagUnwrap _ (ExceptT a) = a
+
 type instance Tags (ExceptT tag r m) = tag ': Tags m
 
 -- | Constructor for computations in the exception monad transformer.
 exceptT :: proxy tag -> m (Either e a) -> ExceptT tag e m a
-exceptT _proxy = ExceptT . Trans.ExceptT
+exceptT t = tagWrap t . Trans.ExceptT
+
+-- | Constructor for computations in the exception monad
+-- (the inverse of 'runExcept').
+except :: proxy tag -> Either e a -> Except tag e a
+except t = tagWrap t . Trans.except
 
 -- | Runs an 'ExceptT' and returns either an exception or a normal value.
 runExceptT :: proxy tag -> ExceptT tag e m a -> m (Either e a)
-runExceptT _proxy (ExceptT (Trans.ExceptT f)) = f
+runExceptT t = Trans.runExceptT . tagUnwrap t
 
--- | Transform the computation inside an 'ExceptT'.
+-- | Transforms the computation inside an 'ExceptT'.
 --
 -- * @'runExceptT' tag ('mapExceptT' tag f m) = f ('runExceptT' tag m)@
 mapExceptT
@@ -82,23 +101,29 @@ mapExceptT
     -> (m (Either e a) -> n (Either e' b))
     -> ExceptT tag e  m a
     -> ExceptT tag e' n b
-mapExceptT _proxy f m = ExceptT $ Trans.mapExceptT f (coerce m)
+mapExceptT t f m = tagWrap t $ Trans.mapExceptT f (coerce m)
+
+throw :: Monad m => proxy tag -> e -> ExceptT tag e m a
+throw t = tagWrap t . Trans.throwE
+
+catch :: Monad m => proxy tag -> ExceptT tag e m a -> (e -> ExceptT tag e m a) -> ExceptT tag e m a
+catch t m h = tagWrap t $ Trans.catchE (coerce m) (coerce . h)
 
 -- | Lift a @callCC@ operation to the new monad.
 liftCallCC :: proxy tag -> Sig.CallCC m (Either e a) (Either e b) -> Sig.CallCC (ExceptT tag e m) a b
-liftCallCC _proxy callCC f = ExceptT $ Trans.liftCallCC callCC (coerce f)
+liftCallCC t callCC f = tagWrap t $ Trans.liftCallCC callCC (coerce f)
 
 -- | Lift a @listen@ operation to the new monad.
 liftListen :: Monad m => proxy tag -> Sig.Listen w m (Either e a) -> Sig.Listen w (ExceptT tag e m) a
-liftListen _proxy listen m = ExceptT $ Trans.liftListen listen (coerce m)
+liftListen t listen m = tagWrap t $ Trans.liftListen listen (coerce m)
 
 -- | Lift a @pass@ operation to the new monad.
 liftPass :: Monad m => proxy tag -> Sig.Pass w m (Either e a) -> Sig.Pass w (ExceptT tag e m) a
-liftPass _proxy pass m = ExceptT $ Trans.liftPass pass (coerce m)
+liftPass t pass m = tagWrap t $ Trans.liftPass pass (coerce m)
 
 -- | Lift a @catchE@ operation to the new monad.
 liftCatch :: proxy tag -> Sig.Catch e m (Either e' a) -> Sig.Catch e (ExceptT tag e' m) a
-liftCatch proxy catchE m h = exceptT proxy $ catchE (runExceptT proxy m) (runExceptT proxy . h)
+liftCatch t catchE m h = tagWrap t $ Util.liftCatch_ExceptT catchE (coerce m) (coerce h)
 
 instance Class.MonadCont m => Class.MonadCont (ExceptT tag e m) where
     callCC = liftCallCC Proxy Class.callCC

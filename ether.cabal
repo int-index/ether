@@ -37,6 +37,8 @@ library
                        Control.Monad.Ether.Implicit.Except
                        Control.Monad.Ether.Implicit.Except.TH
 
+  other-modules:       Control.Ether.Util
+
   build-depends:       base >=4.8 && <4.9
                ,       transformers >=0.4.0.3
                ,       mtl >=2.2.1

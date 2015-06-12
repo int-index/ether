@@ -10,15 +10,23 @@ module Control.Monad.Trans.Ether.Reader
     (
     -- * The Reader monad
       Reader
+    , reader
     , runReader
     -- * The ReaderT monad transformer
     , ReaderT
     , readerT
     , runReaderT
     , mapReaderT
+    , withReaderT
+    -- * Reader operations
+    , ask
+    , local
     -- * Lifting other operations
     , liftCatch
     , liftCallCC
+    -- * Wrapping operations
+    , tagWrap
+    , tagUnwrap
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -57,35 +65,76 @@ newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
     deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO )
 
+tagWrap :: proxy tag -> Trans.ReaderT r m a -> ReaderT tag r m a
+tagWrap _ = ReaderT
+
+tagUnwrap :: proxy tag -> ReaderT tag r m a -> Trans.ReaderT r m a
+tagUnwrap _ (ReaderT a) = a
+
 type instance Tags (ReaderT tag r m) = tag ': Tags m
 
 -- | Constructor for computations in the reader monad transformer.
 readerT :: proxy tag -> (r -> m a) -> ReaderT tag r m a
-readerT _proxy = ReaderT . Trans.ReaderT
+readerT t = tagWrap t . Trans.ReaderT
+
+-- | Constructor for computations in the reader monad
+-- (the inverse of 'runReader').
+reader :: Monad m => proxy tag -> (r -> a) -> ReaderT tag r m a
+reader t = tagWrap t . Trans.reader
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the vinal value.
 runReaderT :: proxy tag -> ReaderT tag r m a -> r -> m a
-runReaderT _proxy (ReaderT (Trans.ReaderT f)) = f
+runReaderT t = Trans.runReaderT . tagUnwrap t
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the vinal value.
 runReader :: proxy tag -> Reader tag r a -> r -> a
-runReader proxy m r = runIdentity (runReaderT proxy m r)
+runReader t = Trans.runReader . tagUnwrap t
 
 -- | Transform the computation inside a 'ReaderT'.
 --
 -- * @'runReaderT' tag ('mapReaderT' tag f m) = f . 'runReaderT' tag m@
 mapReaderT :: proxy tag -> (m a -> n b) -> ReaderT tag r m a -> ReaderT tag r n b
-mapReaderT _proxy f m = ReaderT $ Trans.mapReaderT f (coerce m)
+mapReaderT t f m = tagWrap t $ Trans.mapReaderT f (coerce m)
+
+-- | Execute a computation in a modified environment
+-- (a more general version of 'local').
+--
+-- * @'runReaderT' tag ('withReaderT' tag f m) = 'runReaderT' tag m . f@
+withReaderT
+    :: proxy tag
+    -> (r' -> r)
+    -- ^ The function to modify the environment.
+    -> ReaderT tag r  m a
+    -- ^ Computation to run in the modified environment.
+    -> ReaderT tag r' m a
+withReaderT t f m = tagWrap t $ Trans.withReaderT f (coerce m)
 
 -- | Lift a @catchE@ operation to the new monad.
 liftCatch :: proxy tag -> Sig.Catch e m a -> Sig.Catch e (ReaderT tag r m) a
-liftCatch _proxy f m h = ReaderT $ Trans.liftCatch f (coerce m) (coerce h)
+liftCatch t f m h = tagWrap t $ Trans.liftCatch f (coerce m) (coerce h)
 
 -- | Lift a @callCC@ operation to the new monad.
 liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (ReaderT tag r m) a b
-liftCallCC _proxy callCC f = ReaderT $ Trans.liftCallCC callCC (coerce f)
+liftCallCC t callCC f = tagWrap t $ Trans.liftCallCC callCC (coerce f)
+
+-- | Fetch the value of the environment.
+ask :: Monad m => proxy tag -> ReaderT tag r m r
+ask t = tagWrap t Trans.ask
+
+-- | Execute a computation in a modified environment
+-- (a specialization of 'withReaderT').
+--
+-- * @'runReaderT' tag ('local' tag f m) = 'runReaderT' tag m . f@
+local
+    :: proxy tag
+    -> (r -> r)
+    -- ^ The function to modify the environment.
+    -> ReaderT tag r m a
+    -- ^ Computation to run in the modified environment.
+    -> ReaderT tag r m a
+local = withReaderT
 
 -- Instances for mtl classes
 

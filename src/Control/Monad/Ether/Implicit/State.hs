@@ -30,13 +30,13 @@ runStateT = Explicit.runStateT Proxy
 runState :: State s a -> s -> (a, s)
 runState = Explicit.runState Proxy
 
-evalStateT :: Functor m => StateT s m a -> s -> m a
+evalStateT :: Monad m => StateT s m a -> s -> m a
 evalStateT = Explicit.evalStateT Proxy
 
 evalState :: State s a -> s -> a
 evalState = Explicit.evalState Proxy
 
-execStateT :: Functor m => StateT s m a -> s -> m s
+execStateT :: Monad m => StateT s m a -> s -> m s
 execStateT = Explicit.execStateT Proxy
 
 execState :: State s a -> s -> s
@@ -58,4 +58,3 @@ state = Explicit.state (Proxy :: Proxy s)
 
 modify :: forall m s . MonadState s m => (s -> s) -> m ()
 modify = Explicit.modify (Proxy :: Proxy s)
-

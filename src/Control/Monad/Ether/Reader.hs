@@ -30,7 +30,8 @@ import Control.Monad.Trans (lift)
 
 import Control.Monad.Trans.Ether.State  (StateT , mapStateT)
 import Control.Monad.Trans.Ether.Except (ExceptT, mapExceptT)
-import Control.Monad.Trans.Ether.Reader
+import Control.Monad.Trans.Ether.Reader hiding (reader, ask, local)
+import qualified Control.Monad.Trans.Ether.Reader as R
 
 -- for mtl instances
 import qualified Control.Monad.Trans.Cont          as Trans        (ContT    , liftLocal)
@@ -50,7 +51,7 @@ class Monad m => MonadReader tag r m | m tag -> r where
 
     -- | Retrieves the monad environment.
     ask :: proxy tag -> m r
-    ask proxy = reader proxy id
+    ask t = reader t id
 
     -- | Executes a computation in a modified environment.
     local
@@ -67,7 +68,7 @@ class Monad m => MonadReader tag r m | m tag -> r where
         -> (r -> a)
         -- ^ The selector function to apply to the environment.
         -> m a
-    reader proxy f = fmap f (ask proxy)
+    reader t f = fmap f (ask t)
 
 -- | Retrieves a function of the current environment.
 asks
@@ -79,61 +80,62 @@ asks
 asks = reader
 
 instance {-# OVERLAPPING #-} Monad m => MonadReader tag r (ReaderT tag r m) where
-    ask proxy = readerT proxy return
-    local proxy f m = readerT proxy (runReaderT proxy m . f)
+    ask = R.ask
+    local = R.local
+    reader = R.reader
 
 instance MonadReader tag r m => MonadReader tag r (ReaderT tag' r' m) where
-    ask proxy = lift (ask proxy)
-    local proxy = mapReaderT Proxy . local proxy
+    ask t = lift (ask t)
+    local t = mapReaderT Proxy . local t
 
 -- Instances for other tagged transformers
 
 instance (MonadReader tag r m) => MonadReader tag r (StateT tag' s m) where
-    ask proxy = lift (ask proxy)
-    local proxy = mapStateT Proxy . local proxy
+    ask t = lift (ask t)
+    local t = mapStateT Proxy . local t
 
 instance (MonadReader tag r m) => MonadReader tag r (ExceptT tag' e m) where
-    ask proxy = lift (ask proxy)
-    local proxy = mapExceptT Proxy . local proxy
+    ask t = lift (ask t)
+    local t = mapExceptT Proxy . local t
 
 -- Instances for mtl transformers
 
 instance MonadReader tag r m => MonadReader tag r (Trans.ContT r' m) where
-    ask proxy = lift (ask proxy)
-    local proxy = Trans.liftLocal (ask proxy) (local proxy)
+    ask t = lift (ask t)
+    local t = Trans.liftLocal (ask t) (local t)
 
 instance MonadReader tag r m => MonadReader tag r (Trans.ExceptT e m) where
-    ask proxy = lift (ask proxy)
-    local proxy = Trans.mapExceptT . local proxy
+    ask t = lift (ask t)
+    local t = Trans.mapExceptT . local t
 
 instance MonadReader tag r m => MonadReader tag r (Trans.IdentityT m) where
-    ask proxy = lift (ask proxy)
-    local proxy = Trans.mapIdentityT . local proxy
+    ask t = lift (ask t)
+    local t = Trans.mapIdentityT . local t
 
 instance MonadReader tag r m => MonadReader tag r (Trans.ListT m) where
-    ask proxy = lift (ask proxy)
-    local proxy = Trans.mapListT . local proxy
+    ask t = lift (ask t)
+    local t = Trans.mapListT . local t
 
 instance MonadReader tag r m => MonadReader tag r (Trans.MaybeT m) where
-    ask proxy = lift (ask proxy)
-    local proxy = Trans.mapMaybeT . local proxy
+    ask t = lift (ask t)
+    local t = Trans.mapMaybeT . local t
 
 instance MonadReader tag r m => MonadReader tag r (Trans.ReaderT r' m) where
-    ask proxy = lift (ask proxy)
-    local proxy = Trans.mapReaderT . local proxy
+    ask t = lift (ask t)
+    local t = Trans.mapReaderT . local t
 
 instance MonadReader tag r m => MonadReader tag r (Trans.Lazy.StateT s m) where
-    ask proxy = lift (ask proxy)
-    local proxy = Trans.Lazy.mapStateT . local proxy
+    ask t = lift (ask t)
+    local t = Trans.Lazy.mapStateT . local t
 
 instance MonadReader tag r m => MonadReader tag r (Trans.Strict.StateT s m) where
-    ask proxy = lift (ask proxy)
-    local proxy = Trans.Strict.mapStateT . local proxy
+    ask t = lift (ask t)
+    local t = Trans.Strict.mapStateT . local t
 
 instance (Monoid w, MonadReader tag r m) => MonadReader tag r (Trans.Lazy.WriterT w m) where
-    ask proxy = lift (ask proxy)
-    local proxy = Trans.Lazy.mapWriterT . local proxy
+    ask t = lift (ask t)
+    local t = Trans.Lazy.mapWriterT . local t
 
 instance (Monoid w, MonadReader tag r m) => MonadReader tag r (Trans.Strict.WriterT w m) where
-    ask proxy = lift (ask proxy)
-    local proxy = Trans.Strict.mapWriterT . local proxy
+    ask t = lift (ask t)
+    local t = Trans.Strict.mapWriterT . local t

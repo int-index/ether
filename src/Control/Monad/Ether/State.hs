@@ -34,7 +34,8 @@ import Control.Monad.Trans (lift)
 
 import Control.Monad.Trans.Ether.Reader (ReaderT)
 import Control.Monad.Trans.Ether.Except (ExceptT)
-import Control.Monad.Trans.Ether.State
+import Control.Monad.Trans.Ether.State hiding (state, get, put)
+import qualified Control.Monad.Trans.Ether.State as S
 
 -- for mtl instances
 import qualified Control.Monad.Trans.Cont          as Trans        (ContT)
@@ -54,97 +55,98 @@ class Monad m => MonadState tag s m | m tag -> s where
 
     -- | Return the state from the internals of the monad.
     get :: proxy tag -> m s
-    get proxy = state proxy (\s -> (s, s))
+    get t = state t (\s -> (s, s))
 
     -- | Replace the state inside the monad.
     put :: proxy tag -> s -> m ()
-    put proxy s = state proxy (\_ -> ((), s))
+    put t s = state t (\_ -> ((), s))
 
     -- | Embed a simple state action into the monad.
     state :: proxy tag -> (s -> (a, s)) -> m a
-    state proxy f = do
-        s <- get proxy
+    state t f = do
+        s <- get t
         let ~(a, s') = f s
-        put proxy s'
+        put t s'
         return a
 
 -- | Modifies the state inside a state monad.
 modify :: MonadState tag s m => proxy tag -> (s -> s) -> m ()
-modify proxy f = state proxy $ \ s -> ((), f s)
+modify t f = state t (\s -> ((), f s))
 
 -- | Gets specific component of the state, using a projection function supplied.
 gets :: MonadState tag s m => proxy tag -> (s -> a) -> m a
-gets proxy f = fmap f (get proxy)
+gets t f = fmap f (get t)
 
 instance {-# OVERLAPPING #-} Monad m => MonadState tag s (StateT tag s m) where
-    get proxy = stateT proxy (\s -> return (s, s))
-    put proxy s = stateT proxy (\_ -> return ((), s))
+    get = S.get
+    put = S.put
+    state = S.state
 
 instance MonadState tag s m => MonadState tag s (StateT tag' s' m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 -- Instances for other tagged transformers
 
 instance (MonadState tag s m) => MonadState tag s (ReaderT tag' r m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 instance (MonadState tag s m) => MonadState tag s (ExceptT tag' e m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 -- Instances for mtl transformers
 
 instance MonadState tag s m => MonadState tag s (Trans.ContT r m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 instance MonadState tag s m => MonadState tag s (Trans.ExceptT e m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 instance MonadState tag s m => MonadState tag s (Trans.IdentityT m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 instance MonadState tag s m => MonadState tag s (Trans.ListT m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 instance MonadState tag s m => MonadState tag s (Trans.MaybeT m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 instance MonadState tag s m => MonadState tag s (Trans.ReaderT r m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 instance MonadState tag s m => MonadState tag s (Trans.Lazy.StateT s' m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 instance MonadState tag s m => MonadState tag s (Trans.Strict.StateT s' m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 instance (Monoid w, MonadState tag s m) => MonadState tag s (Trans.Lazy.WriterT w m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
 
 instance (Monoid w, MonadState tag s m) => MonadState tag s (Trans.Strict.WriterT w m) where
-    get proxy = lift (get proxy)
-    put proxy = lift . put proxy
-    state proxy = lift . state proxy
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t

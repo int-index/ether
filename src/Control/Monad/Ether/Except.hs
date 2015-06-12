@@ -29,7 +29,8 @@ import Control.Monad.Trans (lift)
 
 import qualified Control.Monad.Trans.Ether.Reader as Reader
 import qualified Control.Monad.Trans.Ether.State  as State
-import Control.Monad.Trans.Ether.Except
+import Control.Monad.Trans.Ether.Except hiding (throw, catch)
+import qualified Control.Monad.Trans.Ether.Except as E
 
 -- for mtl instances
 import qualified Control.Monad.Trans.Except        as Trans (ExceptT(..), runExceptT)
@@ -52,61 +53,58 @@ class Monad m => MonadExcept tag e m | m tag -> e where
     catch :: proxy tag -> m a -> (e -> m a) -> m a
 
 instance {-# OVERLAPPING #-} Monad m => MonadExcept tag e (ExceptT tag e m) where
-    throw proxy = exceptT proxy . return . Left
-    catch proxy m h
-        = exceptT proxy
-        $ runExceptT proxy m
-      >>= either (runExceptT proxy . h) (return . Right)
+    throw = E.throw
+    catch = E.catch
 
 instance MonadExcept tag e m => MonadExcept tag e (ExceptT tag' e' m) where
-    throw proxy = lift . throw proxy
-    catch proxy = liftCatch Proxy (catch proxy)
+    throw t = lift . throw t
+    catch t = liftCatch Proxy (catch t)
 
 -- Instances for other tagged transformers
 
 instance MonadExcept tag e m => MonadExcept tag e (Reader.ReaderT tag' r m) where
-    throw proxy = lift . throw proxy
-    catch proxy = Reader.liftCatch Proxy (catch proxy)
+    throw t = lift . throw t
+    catch t = Reader.liftCatch Proxy (catch t)
 
 instance MonadExcept tag e m => MonadExcept tag e (State.StateT tag' s m) where
-    throw proxy = lift . throw proxy
-    catch proxy = State.liftCatch Proxy (catch proxy)
+    throw t = lift . throw t
+    catch t = State.liftCatch Proxy (catch t)
 
 
 -- Instances for mtl transformers
 
 instance MonadExcept tag e m => MonadExcept tag e (Trans.ExceptT e' m) where
-    throw proxy = lift . throw proxy
-    catch proxy m h = Trans.ExceptT $ catch proxy (Trans.runExceptT m) (Trans.runExceptT . h)
+    throw t = lift . throw t
+    catch t m h = Trans.ExceptT $ catch t (Trans.runExceptT m) (Trans.runExceptT . h)
 
 instance MonadExcept tag e m => MonadExcept tag e (Trans.I.IdentityT m) where
-    throw proxy = lift . throw proxy
-    catch proxy = Trans.I.liftCatch (catch proxy)
+    throw t = lift . throw t
+    catch t = Trans.I.liftCatch (catch t)
 
 instance MonadExcept tag e m => MonadExcept tag e (Trans.L.ListT m) where
-    throw proxy = lift . throw proxy
-    catch proxy = Trans.L.liftCatch (catch proxy)
+    throw t = lift . throw t
+    catch t = Trans.L.liftCatch (catch t)
 
 instance MonadExcept tag e m => MonadExcept tag e (Trans.M.MaybeT m) where
-    throw proxy = lift . throw proxy
-    catch proxy = Trans.M.liftCatch (catch proxy)
+    throw t = lift . throw t
+    catch t = Trans.M.liftCatch (catch t)
 
 instance MonadExcept tag e m => MonadExcept tag e (Trans.R.ReaderT r m) where
-    throw proxy = lift . throw proxy
-    catch proxy = Trans.R.liftCatch (catch proxy)
+    throw t = lift . throw t
+    catch t = Trans.R.liftCatch (catch t)
 
 instance MonadExcept tag e m => MonadExcept tag e (Trans.S.Lazy.StateT s m) where
-    throw proxy = lift . throw proxy
-    catch proxy = Trans.S.Lazy.liftCatch (catch proxy)
+    throw t = lift . throw t
+    catch t = Trans.S.Lazy.liftCatch (catch t)
 
 instance MonadExcept tag e m => MonadExcept tag e (Trans.S.Strict.StateT s m) where
-    throw proxy = lift . throw proxy
-    catch proxy = Trans.S.Strict.liftCatch (catch proxy)
+    throw t = lift . throw t
+    catch t = Trans.S.Strict.liftCatch (catch t)
 
 instance (Monoid w, MonadExcept tag e m) => MonadExcept tag e (Trans.W.Lazy.WriterT w m) where
-    throw proxy = lift . throw proxy
-    catch proxy = Trans.W.Lazy.liftCatch (catch proxy)
+    throw t = lift . throw t
+    catch t = Trans.W.Lazy.liftCatch (catch t)
 
 instance (Monoid w, MonadExcept tag e m) => MonadExcept tag e (Trans.W.Strict.WriterT w m) where
-    throw proxy = lift . throw proxy
-    catch proxy = Trans.W.Strict.liftCatch (catch proxy)
+    throw t = lift . throw t
+    catch t = Trans.W.Strict.liftCatch (catch t)

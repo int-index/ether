@@ -10,6 +10,7 @@ module Control.Monad.Trans.Ether.State
     (
     -- * The State monad
       State
+    , state
     , runState
     , evalState
     , execState
@@ -20,11 +21,17 @@ module Control.Monad.Trans.Ether.State
     , evalStateT
     , execStateT
     , mapStateT
+    -- * State operations
+    , get
+    , put
     -- * Litfing other operations
     , liftCatch
     , liftCallCC'
     , liftListen
     , liftPass
+    -- * Wrapping operations
+    , tagWrap
+    , tagUnwrap
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -67,63 +74,82 @@ newtype StateT tag s m a = StateT (Trans.StateT s m a)
 
 type instance Tags (StateT tag r m) = tag ': Tags m
 
+tagWrap :: proxy tag -> Trans.StateT s m a -> StateT tag s m a
+tagWrap _ = StateT
+
+tagUnwrap :: proxy tag -> StateT tag s m a -> Trans.StateT s m a
+tagUnwrap _ (StateT a) = a
+
 -- | Constructor for computations in the state monad transformer.
 stateT :: proxy tag -> (s -> m (a, s)) -> StateT tag s m a
-stateT _proxy = StateT . Trans.StateT
+stateT t = tagWrap t . Trans.StateT
+
+-- | Constructor for computations in the state monad
+-- (the inverse of 'runState').
+state :: Monad m => proxy tag -> (s -> (a, s)) -> StateT tag s m a
+state t = tagWrap t . Trans.state
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns both the final value and the final state.
 runStateT :: proxy tag -> StateT tag s m a  -> s -> m (a, s)
-runStateT _proxy (StateT (Trans.StateT f)) = f
+runStateT t = Trans.runStateT . tagUnwrap t
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns the final value, discarding the final state.
-evalStateT :: Functor m => proxy tag -> StateT tag s m a  -> s -> m a
-evalStateT proxy m s = fmap fst (runStateT proxy m s)
+evalStateT :: Monad m => proxy tag -> StateT tag s m a  -> s -> m a
+evalStateT t = Trans.evalStateT . tagUnwrap t
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns the final state, discarding the final value.
-execStateT :: Functor m => proxy tag -> StateT tag s m a  -> s -> m s
-execStateT proxy m s = fmap snd (runStateT proxy m s)
+execStateT :: Monad m => proxy tag -> StateT tag s m a  -> s -> m s
+execStateT t = Trans.execStateT . tagUnwrap t
 
 -- | Runs a 'State' with the given initial state
 -- and returns both the final value and the final state.
-runState :: proxy tag -> State tag s a  -> s -> (a, s)
-runState proxy m s = runIdentity (runStateT proxy m s)
+runState :: proxy tag -> State tag s a -> s -> (a, s)
+runState t = Trans.runState . tagUnwrap t
 
 -- | Runs a 'State' with the given initial state
 -- and returns the final value, discarding the final state.
-evalState :: proxy tag -> State tag s a  -> s -> a
-evalState proxy m s = runIdentity (evalStateT proxy m s)
+evalState :: proxy tag -> State tag s a -> s -> a
+evalState t = Trans.evalState . tagUnwrap t
 
 -- | Runs a 'State' with the given initial state
 -- and returns the final state, discarding the final value.
-execState :: proxy tag -> State tag s a  -> s -> s
-execState proxy m s = runIdentity (execStateT proxy m s)
+execState :: proxy tag -> State tag s a -> s -> s
+execState t = Trans.execState . tagUnwrap t
 
 -- | Transform the computation inside a 'StateT'.
 --
 -- * @'runStateT' tag ('mapStateT' tag f m) = f . 'runStateT' tag m@
 mapStateT :: proxy tag -> (m (a, s) -> n (b, s)) -> StateT tag s m a -> StateT tag s n b
-mapStateT _proxy f m = StateT $ Trans.mapStateT f (coerce m)
+mapStateT t f m = tagWrap t $ Trans.mapStateT f (coerce m)
+
+-- | Fetch the current value of the state within the monad.
+get :: Monad m => proxy tag -> StateT tag s m s
+get t = tagWrap t Trans.get
+
+-- | Set the value of the state within the monad.
+put :: Monad m => proxy tag -> s -> StateT tag s m ()
+put t = tagWrap t . Trans.put
 
 -- | Lift a @catchE@ operation to the new monad.
 liftCatch :: proxy tag -> Sig.Catch e m (a, s) -> Sig.Catch e (StateT tag s m) a
-liftCatch _proxy f m h = StateT $ Trans.liftCatch f (coerce m) (coerce h)
+liftCatch t f m h = tagWrap t $ Trans.liftCatch f (coerce m) (coerce h)
 
 -- | Lift a @listen@ operation to the new monad.
 liftListen :: Monad m => proxy tag -> Sig.Listen w m (a, s) -> Sig.Listen w (StateT tag s m) a
-liftListen _proxy listen m = StateT $ Trans.liftListen listen (coerce m)
+liftListen t listen m = tagWrap t $ Trans.liftListen listen (coerce m)
 
 -- | In-situ lifting of a @callCC@ operation to the new monad.
 -- This version uses the current state on entering the continuation.
 -- It does not satisfy the uniformity property (see "Control.Monad.Signatures").
 liftCallCC' :: proxy tag -> Sig.CallCC m (a, s) (b, s) -> Sig.CallCC (StateT tag s m) a b
-liftCallCC' _proxy callCC f = StateT $ Trans.liftCallCC' callCC (coerce f)
+liftCallCC' t callCC f = tagWrap t $ Trans.liftCallCC' callCC (coerce f)
 
 -- | Lift a @pass@ operation to the new monad.
 liftPass :: Monad m => proxy tag -> Sig.Pass w m (a,s) -> Sig.Pass w (StateT tag s m) a
-liftPass _proxy pass m = StateT $ Trans.liftPass pass (coerce m)
+liftPass t pass m = tagWrap t $ Trans.liftPass pass (coerce m)
 
 -- Instances for mtl classes
 
