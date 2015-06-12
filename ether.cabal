@@ -35,6 +35,7 @@ library
                        Control.Monad.Ether.Implicit.Reader
                        Control.Monad.Ether.Implicit.State
                        Control.Monad.Ether.Implicit.Except
+                       Control.Monad.Ether.Implicit.Except.TH
 
   build-depends:       base >=4.8 && <4.9
                ,       transformers >=0.4.0.3

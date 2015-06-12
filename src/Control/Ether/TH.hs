@@ -1,5 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Control.Ether.TH (ethereal) where
+module Control.Ether.TH
+    ( ethereal
+    , fmapN
+    , deepN
+    ) where
 
 import qualified Language.Haskell.TH as TH
 
@@ -33,3 +37,11 @@ ethereal strTagName strTagProxyName = do
     tagDecl <- emptyDataDecl tagName
     (tagProxySig, tagProxyVal) <- proxySimple tagProxyName tag
     return [tagDecl, tagProxySig, tagProxyVal]
+
+fmapN :: Int -> TH.ExpQ
+fmapN 0 = [|id|]
+fmapN n = TH.infixApp [|fmap|] [|(.)|] (fmapN (n - 1))
+
+deepN :: Int -> TH.ExpQ -> TH.ExpQ
+deepN 0 _ = [|id|]
+deepN n f = [| $(fmapN n) $f $(deepN (n-1) f) |]
