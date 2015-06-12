@@ -22,9 +22,13 @@ module Control.Monad.Trans.Ether.Writer
     , mapWriterT
     -- * Writer operations
     , tell
+    , listen
+    , pass
     -- * Lifting other operations
     , liftCallCC
     , liftCatch
+    , liftListen
+    , liftPass
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -113,6 +117,12 @@ mapWriterT t f m = tagged t $ Trans.mapWriterT f (coerce m)
 -- | Appends a value to the accumulator within the monad.
 tell :: Monad m => proxy tag -> w -> WriterT tag w m ()
 tell t w = writer t ((), w)
+
+listen :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m a -> WriterT tag w m (a, w)
+listen t m = tagged t $ Trans.listen (coerce m)
+
+pass :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
+pass t m = tagged t $ Trans.pass (coerce m)
 
 -- | Lift a @catchE@ operation to the new monad.
 liftCatch :: proxy tag -> Sig.Catch e m (a, w) -> Sig.Catch e (WriterT tag w m) a

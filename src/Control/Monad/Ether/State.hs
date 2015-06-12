@@ -33,6 +33,7 @@ module Control.Monad.Ether.State
 import Control.Monad.Trans (lift)
 
 import Control.Monad.Trans.Ether.Reader (ReaderT)
+import Control.Monad.Trans.Ether.Writer (WriterT)
 import Control.Monad.Trans.Ether.Except (ExceptT)
 import Control.Monad.Trans.Ether.State hiding (state, get, put)
 import qualified Control.Monad.Trans.Ether.State as S
@@ -90,6 +91,11 @@ instance MonadState tag s m => MonadState tag s (StateT tag' s' m) where
 -- Instances for other tagged transformers
 
 instance (MonadState tag s m) => MonadState tag s (ReaderT tag' r m) where
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
+
+instance (Monoid w, MonadState tag s m) => MonadState tag s (WriterT tag' w m) where
     get t = lift (get t)
     put t = lift . put t
     state t = lift . state t

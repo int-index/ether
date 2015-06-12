@@ -27,13 +27,15 @@ module Control.Monad.Ether.Except
 import Data.Proxy (Proxy(Proxy))
 import Control.Monad.Trans (lift)
 
-import qualified Control.Monad.Trans.Ether.Reader as Reader
-import qualified Control.Monad.Trans.Ether.State  as State
 import Control.Monad.Trans.Ether.Except hiding (throw, catch)
 import qualified Control.Monad.Trans.Ether.Except as E
+import qualified Control.Monad.Trans.Ether.Reader as R
+import qualified Control.Monad.Trans.Ether.Writer as W
+import qualified Control.Monad.Trans.Ether.State  as S
+import qualified Control.Ether.Util as Util
 
 -- for mtl instances
-import qualified Control.Monad.Trans.Except        as Trans (ExceptT(..), runExceptT)
+import qualified Control.Monad.Trans.Except        as Trans.E
 import qualified Control.Monad.Trans.Identity      as Trans.I
 import qualified Control.Monad.Trans.List          as Trans.L
 import qualified Control.Monad.Trans.Maybe         as Trans.M
@@ -62,20 +64,24 @@ instance MonadExcept tag e m => MonadExcept tag e (ExceptT tag' e' m) where
 
 -- Instances for other tagged transformers
 
-instance MonadExcept tag e m => MonadExcept tag e (Reader.ReaderT tag' r m) where
+instance MonadExcept tag e m => MonadExcept tag e (R.ReaderT tag' r m) where
     throw t = lift . throw t
-    catch t = Reader.liftCatch Proxy (catch t)
+    catch t = R.liftCatch Proxy (catch t)
 
-instance MonadExcept tag e m => MonadExcept tag e (State.StateT tag' s m) where
+instance (Monoid w, MonadExcept tag e m) => MonadExcept tag e (W.WriterT tag' w m) where
     throw t = lift . throw t
-    catch t = State.liftCatch Proxy (catch t)
+    catch t = W.liftCatch Proxy (catch t)
+
+instance MonadExcept tag e m => MonadExcept tag e (S.StateT tag' s m) where
+    throw t = lift . throw t
+    catch t = S.liftCatch Proxy (catch t)
 
 
 -- Instances for mtl transformers
 
-instance MonadExcept tag e m => MonadExcept tag e (Trans.ExceptT e' m) where
+instance MonadExcept tag e m => MonadExcept tag e (Trans.E.ExceptT e' m) where
     throw t = lift . throw t
-    catch t m h = Trans.ExceptT $ catch t (Trans.runExceptT m) (Trans.runExceptT . h)
+    catch t = Util.liftCatch_ExceptT (catch t)
 
 instance MonadExcept tag e m => MonadExcept tag e (Trans.I.IdentityT m) where
     throw t = lift . throw t

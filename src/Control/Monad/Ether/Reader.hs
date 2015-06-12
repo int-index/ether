@@ -28,6 +28,7 @@ module Control.Monad.Ether.Reader
 import Data.Proxy (Proxy(Proxy))
 import Control.Monad.Trans (lift)
 
+import Control.Monad.Trans.Ether.Writer (WriterT, mapWriterT)
 import Control.Monad.Trans.Ether.State  (StateT , mapStateT)
 import Control.Monad.Trans.Ether.Except (ExceptT, mapExceptT)
 import Control.Monad.Trans.Ether.Reader hiding (reader, ask, local)
@@ -89,6 +90,10 @@ instance MonadReader tag r m => MonadReader tag r (ReaderT tag' r' m) where
     local t = mapReaderT Proxy . local t
 
 -- Instances for other tagged transformers
+
+instance (Monoid w, MonadReader tag r m) => MonadReader tag r (WriterT tag' w m) where
+    ask t = lift (ask t)
+    local t = mapWriterT Proxy . local t
 
 instance (MonadReader tag r m) => MonadReader tag r (StateT tag' s m) where
     ask t = lift (ask t)
