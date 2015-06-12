@@ -4,8 +4,12 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 module Control.Ether.Tags
-    ( Tags
+    ( Taggable(..)
+    , Tagged(..)
+    , Tags
     , UniqueTag
     , UniqueTags
     , ensureUniqueTags
@@ -58,32 +62,79 @@ type family UniqueTags (m :: * -> *) :: Constraint where
 ensureUniqueTags :: UniqueTags m => m a -> m a
 ensureUniqueTags = id
 
--- |
--- The 'Tags' type family returns a type-level list of all tags of its argument
--- @m@. Simple monads have no tags, monad transformers propagate the tags of
--- their inner monads, and tagged monad transformers also add their own tag.
-type family Tags (m :: * -> *) :: [*]
+type family MaybeToList (mt :: Maybe *) :: [*] where
+    MaybeToList 'Nothing = '[]
+    MaybeToList ('Just t) = '[t]
 
-type instance Tags IO = '[]
-type instance Tags Identity = '[]
-type instance Tags [] = '[]
-type instance Tags Maybe = '[]
-type instance Tags Last = '[]
-type instance Tags First = '[]
-type instance Tags ((->) r) = '[]
-type instance Tags STM = '[]
-type instance Tags (Either e) = '[]
-type instance Tags Proxy = '[]
-type instance Tags (Strict.ST s) = '[]
-type instance Tags (Lazy.ST s) = '[]
+type family (as :: [*]) ++ (bs :: [*]) :: [*] where
+    '[] ++ bs = bs
+    (a ': as) ++ bs = a ': (as ++ bs)
 
-type instance Tags (Trans.ContT r m) = Tags m
-type instance Tags (Trans.ExceptT e m) = Tags m
-type instance Tags (Trans.IdentityT m) = Tags m
-type instance Tags (Trans.ListT m) = Tags m
-type instance Tags (Trans.MaybeT m) = Tags m
-type instance Tags (Trans.ReaderT r m) = Tags m
-type instance Tags (Trans.Lazy.StateT s m) = Tags m
-type instance Tags (Trans.Strict.StateT s m) = Tags m
-type instance Tags (Trans.Lazy.WriterT w m) = Tags m
-type instance Tags (Trans.Strict.WriterT w m) = Tags m
+-- | The 'Taggable' class defines the type families to manage tags in monad
+-- transformer stacks. Its kind is restricted to @* -> *@ to prevent incorrect
+-- instances.
+class Taggable (m :: * -> *) where
+
+    -- | The 'Tag' type family equals @Nothing@ for most types, but for tagged
+    -- monad transformers it equals @Just tag@.
+    type Tag m :: Maybe *
+    type instance Tag m = 'Nothing
+
+    -- | The 'Tags'' type family returns a type-level list of the inner monad
+    -- of a monad transformer. Instances should be defined by passing the inner
+    -- monad to the 'Tags' type function.
+    type Tags' m :: [*]
+    type instance Tags' m = '[]
+
+instance Taggable IO
+instance Taggable Identity
+
+instance Taggable Maybe
+instance Taggable Last
+instance Taggable First
+instance Taggable ((->) r)
+instance Taggable STM
+instance Taggable (Either e)
+instance Taggable Proxy
+instance Taggable (Strict.ST s)
+instance Taggable (Lazy.ST s)
+
+instance Taggable (Trans.ContT r m) where
+    type Tags' (Trans.ContT r m) = Tags m
+
+instance Taggable (Trans.ExceptT e m) where
+    type Tags' (Trans.ExceptT e m) = Tags m
+
+instance Taggable (Trans.IdentityT m) where
+    type Tags' (Trans.IdentityT m) = Tags m
+
+instance Taggable (Trans.ListT m) where
+    type Tags' (Trans.ListT m) = Tags m
+
+instance Taggable (Trans.MaybeT m) where
+    type Tags' (Trans.MaybeT m) = Tags m
+
+instance Taggable (Trans.ReaderT r m) where
+    type Tags' (Trans.ReaderT r m) = Tags m
+
+instance Taggable (Trans.Lazy.StateT s m) where
+    type Tags' (Trans.Lazy.StateT s m) = Tags m
+
+instance Taggable (Trans.Strict.StateT s m) where
+    type Tags' (Trans.Strict.StateT s m) = Tags m
+
+instance Taggable (Trans.Lazy.WriterT w m) where
+    type Tags' (Trans.Lazy.WriterT w m) = Tags m
+
+instance Taggable (Trans.Strict.WriterT w m) where
+    type Tags' (Trans.Strict.WriterT w m) = Tags m
+
+-- | The 'Tags' type function combines the results of 'Tag' and 'Tags''.
+type Tags (m :: * -> *) = MaybeToList (Tag m) ++ Tags' m
+
+-- | The 'Tagged' type class establishes a relationship between a tagged
+-- monad transformer and its untagged counterpart.
+class (Taggable m, Tag m ~ 'Just tag) => Tagged m tag | m -> tag where
+    type Untagged m :: * -> *
+    tagged :: proxy tag -> Untagged m a -> m a
+    untagged :: proxy tag -> m a -> Untagged m a
