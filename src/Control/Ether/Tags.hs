@@ -62,9 +62,13 @@ type family UniqueTags (m :: * -> *) :: Constraint where
 ensureUniqueTags :: UniqueTags m => m a -> m a
 ensureUniqueTags = id
 
-type family MaybeToList (mt :: Maybe *) :: [*] where
+type family MaybeToList (mt :: Maybe k) :: [k] where
     MaybeToList 'Nothing = '[]
     MaybeToList ('Just t) = '[t]
+
+type family MaybeMapTag (as :: Maybe (* -> *)) :: Maybe * where
+    MaybeMapTag 'Nothing  = 'Nothing
+    MaybeMapTag ('Just a) = Tag a
 
 type family (as :: [*]) ++ (bs :: [*]) :: [*] where
     '[] ++ bs = bs
@@ -80,11 +84,10 @@ class Taggable (m :: * -> *) where
     type Tag m :: Maybe *
     type instance Tag m = 'Nothing
 
-    -- | The 'Tags'' type family returns a type-level list of the inner monad
-    -- of a monad transformer. Instances should be defined by passing the inner
-    -- monad to the 'Tags' type function.
-    type Tags' m :: [*]
-    type instance Tags' m = '[]
+    -- | The 'Inner' type family equals @Nothing@ for most types, but for
+    -- monad transformers with inner monad @m@ it equals @Just m@.
+    type Inner m :: Maybe (* -> *)
+    type instance Inner m = 'Nothing
 
 instance Taggable IO
 instance Taggable Identity
@@ -100,37 +103,36 @@ instance Taggable (Strict.ST s)
 instance Taggable (Lazy.ST s)
 
 instance Taggable (Trans.ContT r m) where
-    type Tags' (Trans.ContT r m) = Tags m
+    type Inner (Trans.ContT r m) = 'Just m
 
 instance Taggable (Trans.ExceptT e m) where
-    type Tags' (Trans.ExceptT e m) = Tags m
+    type Inner (Trans.ExceptT e m) = 'Just m
 
 instance Taggable (Trans.IdentityT m) where
-    type Tags' (Trans.IdentityT m) = Tags m
+    type Inner (Trans.IdentityT m) = 'Just m
 
 instance Taggable (Trans.ListT m) where
-    type Tags' (Trans.ListT m) = Tags m
+    type Inner (Trans.ListT m) = 'Just m
 
 instance Taggable (Trans.MaybeT m) where
-    type Tags' (Trans.MaybeT m) = Tags m
+    type Inner (Trans.MaybeT m) = 'Just m
 
 instance Taggable (Trans.ReaderT r m) where
-    type Tags' (Trans.ReaderT r m) = Tags m
+    type Inner (Trans.ReaderT r m) = 'Just m
 
 instance Taggable (Trans.Lazy.StateT s m) where
-    type Tags' (Trans.Lazy.StateT s m) = Tags m
+    type Inner (Trans.Lazy.StateT s m) = 'Just m
 
 instance Taggable (Trans.Strict.StateT s m) where
-    type Tags' (Trans.Strict.StateT s m) = Tags m
+    type Inner (Trans.Strict.StateT s m) = 'Just m
 
 instance Taggable (Trans.Lazy.WriterT w m) where
-    type Tags' (Trans.Lazy.WriterT w m) = Tags m
+    type Inner (Trans.Lazy.WriterT w m) = 'Just m
 
 instance Taggable (Trans.Strict.WriterT w m) where
-    type Tags' (Trans.Strict.WriterT w m) = Tags m
+    type Inner (Trans.Strict.WriterT w m) = 'Just m
 
--- | The 'Tags' type function combines the results of 'Tag' and 'Tags''.
-type Tags (m :: * -> *) = MaybeToList (Tag m) ++ Tags' m
+type Tags (m :: * -> *) = MaybeToList (Tag m) ++ MaybeToList (MaybeMapTag (Inner m))
 
 -- | The 'Tagged' type class establishes a relationship between a tagged
 -- monad transformer and its untagged counterpart.

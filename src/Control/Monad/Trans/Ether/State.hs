@@ -39,7 +39,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
-import Control.Ether.Tags (Taggable(..), Tagged(..), Tags)
+import Control.Ether.Tags (Taggable(..), Tagged(..))
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.State.Lazy as Trans
@@ -72,7 +72,7 @@ newtype StateT tag s m a = StateT (Trans.StateT s m a)
 
 instance Taggable (StateT tag s m) where
     type Tag (StateT tag s m) = 'Just tag
-    type Tags' (StateT tag s m) = Tags m
+    type Inner (StateT tag s m) = 'Just m
 
 instance Tagged (StateT tag s m) tag where
     type Untagged (StateT tag s m) = Trans.StateT s m

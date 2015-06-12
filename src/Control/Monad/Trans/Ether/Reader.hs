@@ -34,7 +34,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
-import Control.Ether.Tags (Taggable(..), Tagged(..), Tags)
+import Control.Ether.Tags (Taggable(..), Tagged(..))
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Reader as Trans
@@ -64,7 +64,7 @@ newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
 
 instance Taggable (ReaderT tag r m) where
     type Tag (ReaderT tag r m) = 'Just tag
-    type Tags' (ReaderT tag r m) = Tags m
+    type Inner (ReaderT tag r m) = 'Just m
 
 instance Tagged (ReaderT tag r m) tag where
     type Untagged (ReaderT tag r m) = Trans.ReaderT r m

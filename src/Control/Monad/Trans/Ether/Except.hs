@@ -35,7 +35,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
-import Control.Ether.Tags (Taggable(..), Tagged(..), Tags)
+import Control.Ether.Tags (Taggable(..), Tagged(..))
 import qualified Control.Ether.Util as Util
 
 import qualified Control.Monad.Signatures as Sig
@@ -71,7 +71,7 @@ newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
 
 instance Taggable (ExceptT tag e m) where
     type Tag (ExceptT tag e m) = 'Just tag
-    type Tags' (ExceptT tag e m) = Tags m
+    type Inner (ExceptT tag e m) = 'Just m
 
 instance Tagged (ExceptT tag e m) tag where
     type Untagged (ExceptT tag e m) = Trans.ExceptT e m
