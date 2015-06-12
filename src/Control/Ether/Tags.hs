@@ -13,6 +13,7 @@ module Control.Ether.Tags
     ( Taggable(..)
     , Tagged(..)
     , Tags
+    , Inners
     , UniqueTag
     , UniqueTags
     , ensureUniqueTags
@@ -26,6 +27,7 @@ import qualified Control.Monad.ST.Lazy   as Lazy   (ST)
 import GHC.Conc (STM)
 import GHC.Exts (Constraint)
 import qualified Control.Newtype as NT
+import Control.Ether.Util (type (++), MaybeToList)
 
 import qualified Control.Monad.Trans.Cont          as Trans
 import qualified Control.Monad.Trans.Except        as Trans
@@ -66,17 +68,9 @@ type family UniqueTags (m :: * -> *) :: Constraint where
 ensureUniqueTags :: UniqueTags m => m a -> m a
 ensureUniqueTags = id
 
-type family MaybeToList (mt :: Maybe k) :: [k] where
-    MaybeToList 'Nothing = '[]
-    MaybeToList ('Just t) = '[t]
-
-type family MaybeMapTag (as :: Maybe (* -> *)) :: Maybe * where
-    MaybeMapTag 'Nothing  = 'Nothing
-    MaybeMapTag ('Just a) = Tag a
-
-type family (as :: [*]) ++ (bs :: [*]) :: [*] where
-    '[] ++ bs = bs
-    (a ': as) ++ bs = a ': (as ++ bs)
+type family ListMapTag (as :: [* -> *]) :: [*] where
+    ListMapTag '[] = '[]
+    ListMapTag (a ': as) = MaybeToList (Tag a) ++ ListMapTag as
 
 -- | The 'Taggable' class defines the type families to manage tags in monad
 -- transformer stacks. Its kind is restricted to @* -> *@ to prevent incorrect
@@ -92,6 +86,12 @@ class Taggable (m :: * -> *) where
     -- monad transformers with inner monad @m@ it equals @Just m@.
     type Inner m :: Maybe (* -> *)
     type instance Inner m = 'Nothing
+
+type family Inners' m where
+    Inners' 'Nothing = '[]
+    Inners' ('Just n) = n ': Inners n
+
+type Inners m = Inners' (Inner m)
 
 instance Taggable IO
 instance Taggable Identity
@@ -136,7 +136,9 @@ instance Taggable (Trans.Lazy.WriterT w m) where
 instance Taggable (Trans.Strict.WriterT w m) where
     type Inner (Trans.Strict.WriterT w m) = 'Just m
 
-type Tags (m :: * -> *) = MaybeToList (Tag m) ++ MaybeToList (MaybeMapTag (Inner m))
+-- | The 'Tags' type function returns a type-level list of all tags in
+-- a monad transformer stack. Requires 'Taggable' instances.
+type Tags (m :: * -> *) = MaybeToList (Tag m) ++ ListMapTag (Inners m)
 
 -- | The 'Tagged' type class establishes a relationship between a tagged
 -- monad transformer and its untagged counterpart.
@@ -145,13 +147,9 @@ class (Taggable m, Tag m ~ 'Just tag) => Tagged m tag | m -> tag where
     type Untagged m :: * -> *
 
     tagged :: proxy tag -> Untagged m a -> m a
-    default tagged
-        :: (NT.Newtype (m a), NT.O (m a) ~ Untagged m a)
-        => proxy tag -> Untagged m a -> m a
+    default tagged :: NT.Newtype (m a) => proxy tag -> NT.O (m a) -> m a
     tagged _ = NT.pack
 
     untagged :: proxy tag -> m a -> Untagged m a
-    default untagged
-        :: (NT.Newtype (m a), NT.O (m a) ~ Untagged m a)
-        => proxy tag -> m a -> Untagged m a
+    default untagged :: NT.Newtype (m a) => proxy tag -> m a -> NT.O (m a)
     untagged _ = NT.unpack
