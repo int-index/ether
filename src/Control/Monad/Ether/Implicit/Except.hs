@@ -26,7 +26,7 @@ throw = Explicit.throw (Proxy :: Proxy e)
 catch :: forall e m a . MonadExcept e m => m a -> (e -> m a) -> m a
 catch = Explicit.catch (Proxy :: Proxy e)
 
-type Except  e = Explicit.Except  e e
+type Except e = Explicit.Except e e
 
 runExcept :: Except e a -> Either e a
 runExcept = Explicit.runExcept Proxy
