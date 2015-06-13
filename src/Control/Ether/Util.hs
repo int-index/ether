@@ -1,4 +1,5 @@
-{-# LANGUAGE DataKinds, PolyKinds #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 module Control.Ether.Util
