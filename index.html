@@ -272,8 +272,8 @@ summator xs <span class="kw">=</span> do
 
 summator
     <span class="kw">:: (</span> Num a
-       <span class="kw">,</span> MonadWriter (Sum a)
-       <span class="kw">,</span> Ether.MonadWriter Foo (Sum a)
+       <span class="kw">,</span> MonadWriter (Sum a) m
+       <span class="kw">,</span> Ether.MonadWriter Foo (Sum a) m
        ) <span class="kw">=&gt;</span> [a] <span class="kw">-&gt;</span> m ()
 summator xs <span class="kw">=</span> do
     for_ xs <span class="kw">$ \</span>x <span class="kw">-&gt; do</span>
