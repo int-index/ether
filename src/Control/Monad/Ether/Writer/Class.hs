@@ -21,7 +21,8 @@ import Control.Monad.Trans (lift)
 
 import Control.Monad.Trans.Ether.Writer hiding (writer, tell, listen, pass)
 import qualified Control.Monad.Trans.Ether.Reader as R
-import qualified Control.Monad.Trans.Ether.State  as S
+import qualified Control.Monad.Trans.Ether.State.Lazy   as S.L
+import qualified Control.Monad.Trans.Ether.State.Strict as S.S
 import qualified Control.Monad.Trans.Ether.Except as E
 import qualified Control.Monad.Trans.Ether.Writer as W
 import qualified Control.Ether.Util as Util
@@ -93,11 +94,17 @@ instance (MonadWriter tag w m) => MonadWriter tag w (E.ExceptT tag' e m) where
     listen t = E.liftListen Proxy (listen t)
     pass   t = E.liftPass Proxy (pass t)
 
-instance (MonadWriter tag w m) => MonadWriter tag w (S.StateT tag' e m) where
+instance (MonadWriter tag w m) => MonadWriter tag w (S.L.StateT tag' e m) where
     writer t = lift . writer t
     tell   t = lift . tell t
-    listen t = S.liftListen Proxy (listen t)
-    pass   t = S.liftPass Proxy (pass t)
+    listen t = S.L.liftListen Proxy (listen t)
+    pass   t = S.L.liftPass Proxy (pass t)
+
+instance (MonadWriter tag w m) => MonadWriter tag w (S.S.StateT tag' e m) where
+    writer t = lift . writer t
+    tell   t = lift . tell t
+    listen t = S.S.liftListen Proxy (listen t)
+    pass   t = S.S.liftPass Proxy (pass t)
 
 -- Instances for mtl transformers
 

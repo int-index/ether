@@ -39,7 +39,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
-import Control.Ether.Tags (Taggable(..), Tagged(..))
+import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import qualified Control.Ether.Util as Util
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
@@ -134,11 +134,11 @@ liftCallCC t callCC f = tagged t $ Trans.liftCallCC callCC (coerce f)
 
 -- | Lift a @listen@ operation to the new monad.
 liftListen :: Monad m => proxy tag -> Sig.Listen w' m (a, w) -> Sig.Listen w' (WriterT tag w m) a
-liftListen t listen m = tagged t $ Util.liftListen_WriterT listen (coerce m)
+liftListen t f m = tagged t $ Util.liftListen_WriterT f (coerce m)
 
 -- | Lift a @pass@ operation to the new monad.
 liftPass :: Monad m => proxy tag -> Sig.Pass w' m (a, w) -> Sig.Pass w' (WriterT tag w m) a
-liftPass t pass m = tagged t $ Util.liftPass_WriterT pass (coerce m)
+liftPass t f m = tagged t $ Util.liftPass_WriterT f (coerce m)
 
 instance (Monoid w, Class.MonadCont m) => Class.MonadCont (WriterT tag w m) where
     callCC = liftCallCC Proxy Class.callCC

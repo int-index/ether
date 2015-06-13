@@ -35,7 +35,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
-import Control.Ether.Tags (Taggable(..), Tagged(..))
+import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 

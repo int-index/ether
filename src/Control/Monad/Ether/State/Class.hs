@@ -21,8 +21,8 @@ import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Ether.Reader (ReaderT)
 import Control.Monad.Trans.Ether.Writer (WriterT)
 import Control.Monad.Trans.Ether.Except (ExceptT)
-import Control.Monad.Trans.Ether.State hiding (state, get, put)
-import qualified Control.Monad.Trans.Ether.State as S
+import qualified Control.Monad.Trans.Ether.State.Lazy   as S.L
+import qualified Control.Monad.Trans.Ether.State.Strict as S.S
 
 -- for mtl instances
 import qualified Control.Monad.Trans.Cont          as Trans        (ContT)
@@ -64,12 +64,22 @@ modify t f = state t (\s -> ((), f s))
 gets :: MonadState tag s m => proxy tag -> (s -> a) -> m a
 gets t f = fmap f (get t)
 
-instance {-# OVERLAPPING #-} Monad m => MonadState tag s (StateT tag s m) where
-    get = S.get
-    put = S.put
-    state = S.state
+instance {-# OVERLAPPING #-} Monad m => MonadState tag s (S.L.StateT tag s m) where
+    get = S.L.get
+    put = S.L.put
+    state = S.L.state
 
-instance MonadState tag s m => MonadState tag s (StateT tag' s' m) where
+instance MonadState tag s m => MonadState tag s (S.L.StateT tag' s' m) where
+    get t = lift (get t)
+    put t = lift . put t
+    state t = lift . state t
+
+instance {-# OVERLAPPING #-} Monad m => MonadState tag s (S.S.StateT tag s m) where
+    get = S.S.get
+    put = S.S.put
+    state = S.S.state
+
+instance MonadState tag s m => MonadState tag s (S.S.StateT tag' s' m) where
     get t = lift (get t)
     put t = lift . put t
     state t = lift . state t

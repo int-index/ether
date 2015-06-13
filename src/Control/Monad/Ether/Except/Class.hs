@@ -21,7 +21,8 @@ import Control.Monad.Trans.Ether.Except hiding (throw, catch)
 import qualified Control.Monad.Trans.Ether.Except as E
 import qualified Control.Monad.Trans.Ether.Reader as R
 import qualified Control.Monad.Trans.Ether.Writer as W
-import qualified Control.Monad.Trans.Ether.State  as S
+import qualified Control.Monad.Trans.Ether.State.Lazy   as S.L
+import qualified Control.Monad.Trans.Ether.State.Strict as S.S
 import qualified Control.Ether.Util as Util
 
 -- for mtl instances
@@ -62,9 +63,13 @@ instance (Monoid w, MonadExcept tag e m) => MonadExcept tag e (W.WriterT tag' w 
     throw t = lift . throw t
     catch t = W.liftCatch Proxy (catch t)
 
-instance MonadExcept tag e m => MonadExcept tag e (S.StateT tag' s m) where
+instance MonadExcept tag e m => MonadExcept tag e (S.L.StateT tag' s m) where
     throw t = lift . throw t
-    catch t = S.liftCatch Proxy (catch t)
+    catch t = S.L.liftCatch Proxy (catch t)
+
+instance MonadExcept tag e m => MonadExcept tag e (S.S.StateT tag' s m) where
+    throw t = lift . throw t
+    catch t = S.S.liftCatch Proxy (catch t)
 
 
 -- Instances for mtl transformers

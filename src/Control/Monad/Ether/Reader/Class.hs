@@ -19,10 +19,11 @@ import Data.Proxy (Proxy(Proxy))
 import Control.Monad.Trans (lift)
 
 import Control.Monad.Trans.Ether.Writer (WriterT, mapWriterT)
-import Control.Monad.Trans.Ether.State  (StateT , mapStateT)
 import Control.Monad.Trans.Ether.Except (ExceptT, mapExceptT)
 import Control.Monad.Trans.Ether.Reader hiding (reader, ask, local)
 import qualified Control.Monad.Trans.Ether.Reader as R
+import qualified Control.Monad.Trans.Ether.State.Lazy   as S.L
+import qualified Control.Monad.Trans.Ether.State.Strict as S.S
 
 -- for mtl instances
 import qualified Control.Monad.Trans.Cont          as Trans        (ContT    , liftLocal)
@@ -85,9 +86,13 @@ instance (Monoid w, MonadReader tag r m) => MonadReader tag r (WriterT tag' w m)
     ask t = lift (ask t)
     local t = mapWriterT Proxy . local t
 
-instance (MonadReader tag r m) => MonadReader tag r (StateT tag' s m) where
+instance (MonadReader tag r m) => MonadReader tag r (S.L.StateT tag' s m) where
     ask t = lift (ask t)
-    local t = mapStateT Proxy . local t
+    local t = S.L.mapStateT Proxy . local t
+
+instance (MonadReader tag r m) => MonadReader tag r (S.S.StateT tag' s m) where
+    ask t = lift (ask t)
+    local t = S.S.mapStateT Proxy . local t
 
 instance (MonadReader tag r m) => MonadReader tag r (ExceptT tag' e m) where
     ask t = lift (ask t)

@@ -1,15 +1,21 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Control.Monad.Ether.Implicit.Reader
-    ( ReaderT
-    , Reader
-    , MonadReader
-    , runReaderT
-    , runReader
+    (
+    -- * MonadReader class
+      MonadReader
     , local
     , ask
     , reader
     , asks
+    -- * The Reader monad
+    , Reader
+    , runReader
+    -- * The ReaderT monad transformer
+    , ReaderT
+    , readerT
+    , runReaderT
+    , mapReaderT
     ) where
 
 import Data.Proxy
@@ -18,11 +24,17 @@ import qualified Control.Monad.Ether.Reader as Explicit
 type ReaderT r = Explicit.ReaderT r r
 type Reader  r = Explicit.Reader  r r
 
+readerT :: (r -> m a) -> ReaderT r m a
+readerT = Explicit.readerT Proxy
+
 runReaderT :: ReaderT r m a -> r -> m a
 runReaderT = Explicit.runReaderT Proxy
 
 runReader :: Reader r a -> r -> a
 runReader = Explicit.runReader Proxy
+
+mapReaderT :: (m a -> n b) -> ReaderT r m a -> ReaderT r n b
+mapReaderT = Explicit.mapReaderT Proxy
 
 type MonadReader r = Explicit.MonadReader r r
 

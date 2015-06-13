@@ -9,7 +9,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE DefaultSignatures #-}
-module Control.Ether.Tags
+module Control.Ether.Tagged
     ( Taggable(..)
     , Tagged(..)
     , Tags

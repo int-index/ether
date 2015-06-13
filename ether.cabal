@@ -23,12 +23,14 @@ source-repository head
 
 library
 
-  exposed-modules:     Control.Ether.Tags
-                       Control.Ether.TH
+  exposed-modules:     Control.Ether.Tagged
                        Control.Ether.Wrapped
+                       Control.Ether.TH
                        Control.Monad.Trans.Ether.Reader
                        Control.Monad.Trans.Ether.Writer
                        Control.Monad.Trans.Ether.State
+                       Control.Monad.Trans.Ether.State.Lazy
+                       Control.Monad.Trans.Ether.State.Strict
                        Control.Monad.Trans.Ether.Except
                        Control.Monad.Ether.Reader
                        Control.Monad.Ether.Reader.Class
@@ -36,11 +38,15 @@ library
                        Control.Monad.Ether.Writer.Class
                        Control.Monad.Ether.State
                        Control.Monad.Ether.State.Class
+                       Control.Monad.Ether.State.Lazy
+                       Control.Monad.Ether.State.Strict
                        Control.Monad.Ether.Except
                        Control.Monad.Ether.Except.Class
                        Control.Monad.Ether.Implicit.Reader
                        Control.Monad.Ether.Implicit.Writer
                        Control.Monad.Ether.Implicit.State
+                       Control.Monad.Ether.Implicit.State.Lazy
+                       Control.Monad.Ether.Implicit.State.Strict
                        Control.Monad.Ether.Implicit.Except
                        Control.Monad.Ether.Implicit.Except.TH
 

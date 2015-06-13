@@ -8,7 +8,7 @@
 module Main where
 
 import Data.Functor.Identity
-import Control.Ether.Tags
+import Control.Ether.Tagged
 import Control.Ether.TH
 import Control.Ether.Wrapped
 import Control.Monad.Ether.Reader
