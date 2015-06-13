@@ -59,8 +59,23 @@ library
                ,       template-haskell >=2.10
                ,       newtype-generics >=0.4.1
 
-  hs-source-dirs:      src
   default-language:    Haskell2010
+  other-extensions:    DeriveGeneric
+                       MultiParamTypeClasses
+                       TypeFamilies
+                       FlexibleInstances
+                       UndecidableInstances
+                       DataKinds
+                       GeneralizedNewtypeDeriving
+                       FunctionalDependencies
+                       ConstraintKinds
+                       ScopedTypeVariables
+                       TemplateHaskell
+                       PolyKinds
+                       TypeOperators
+                       DefaultSignatures
+
+  hs-source-dirs:      src
   ghc-options:         -Wall
 
 
