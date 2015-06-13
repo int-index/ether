@@ -7,6 +7,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- | See "Control.Monad.Trans.Writer".
+
 module Control.Monad.Trans.Ether.Writer
     (
     -- * The Writer monad
@@ -118,9 +121,12 @@ mapWriterT t f m = tagged t $ Trans.mapWriterT f (coerce m)
 tell :: Monad m => proxy tag -> w -> WriterT tag w m ()
 tell t w = writer t ((), w)
 
+-- | Executes an action and adds its accumulator to the value of the computation.
 listen :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m a -> WriterT tag w m (a, w)
 listen t m = tagged t $ Trans.listen (coerce m)
 
+-- | Executes an action which returns a value and a function, and returns the
+-- value, applying the function to the accumulator.
 pass :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
 pass t m = tagged t $ Trans.pass (coerce m)
 

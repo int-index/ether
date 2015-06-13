@@ -1,3 +1,6 @@
+
+-- | See "Control.Monad.State.Strict".
+
 module Control.Monad.Ether.State.Strict
     (
     -- * MonadState class

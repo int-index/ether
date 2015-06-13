@@ -7,6 +7,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- | See "Control.Monad.Trans.State.Lazy".
+
 module Control.Monad.Trans.Ether.State.Lazy
     (
     -- * The State monad

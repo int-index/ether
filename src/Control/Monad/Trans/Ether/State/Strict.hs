@@ -7,6 +7,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- | See "Control.Monad.Trans.State.Strict".
+
 module Control.Monad.Trans.Ether.State.Strict
     (
     -- * The State monad

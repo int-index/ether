@@ -1,3 +1,6 @@
+
+-- | See "Control.Monad.Except".
+
 module Control.Monad.Ether.Except
     (
     -- * MonadExcept class

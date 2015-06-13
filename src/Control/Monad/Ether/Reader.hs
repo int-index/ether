@@ -1,3 +1,6 @@
+
+-- | See "Control.Monad.Reader".
+
 module Control.Monad.Ether.Reader
     (
     -- * MonadReader class

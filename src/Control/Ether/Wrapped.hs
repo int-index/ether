@@ -4,7 +4,28 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Control.Ether.Wrapped where
+
+{- |
+Annotating monads with tags to turn untagged constraints into tagged ones.
+
+> import qualified Control.Monad.State as T
+> import Control.Ether.TH (ethereal)
+> import Control.Monad.Ether.State (MonadState)
+> import Control.Ether.Wrapped (ethered)
+>
+> ethereal "Foo" "foo"
+>
+> f :: T.MonadState Int m => m String
+> f = fmap show T.get
+> 
+> g :: MonadState Foo Int m => m String
+> g = ethered foo f
+-}
+
+module Control.Ether.Wrapped
+    ( WrappedEther(..)
+    , ethered
+    ) where
 
 import Data.Proxy (Proxy(Proxy))
 import Control.Applicative (Alternative)
@@ -21,9 +42,14 @@ import qualified Control.Monad.State  as Class
 import qualified Control.Monad.Except as Class
 import qualified Control.Monad.Writer as Class
 
+-- | Wrap a monad to attach a tag to it.
 newtype WrappedEther tag m a = WrapEther { unwrapEther :: m a }
     deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadIO )
+
+-- | Annotate a polymorphic monadic computation with a tag.
+ethered :: proxy tag -> WrappedEther tag m a -> m a
+ethered _proxy = unwrapEther
 
 instance MonadReader tag r m => Class.MonadReader r (WrappedEther tag m) where
     ask = WrapEther $ ask (Proxy :: Proxy tag)
@@ -58,6 +84,3 @@ instance MonadWriter tag w m => MonadWriter tag w (WrappedEther tag' m) where
     tell t = WrapEther . tell t
     listen t = WrapEther . listen t . unwrapEther
     pass t = WrapEther . pass t . unwrapEther
-
-ethered :: proxy tag -> WrappedEther tag m a -> m a
-ethered _proxy = unwrapEther

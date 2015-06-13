@@ -7,6 +7,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- | See "Control.Monad.Trans.Reader".
+
 module Control.Monad.Trans.Ether.Reader
     (
     -- * The Reader monad

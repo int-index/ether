@@ -10,6 +10,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- | See "Control.Monad.Reader.Class".
+
 module Control.Monad.Ether.Reader.Class
     ( MonadReader(..)
     , asks
@@ -37,6 +40,7 @@ import qualified Control.Monad.Trans.State.Strict  as Trans.Strict (StateT   , m
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy   (WriterT  , mapWriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict (WriterT  , mapWriterT)
 
+-- | See 'Control.Monad.Reader.MonadReader'.
 class Monad m => MonadReader tag r m | m tag -> r where
 
     {-# MINIMAL (ask | reader), local #-}

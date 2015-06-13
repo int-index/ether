@@ -1,3 +1,6 @@
+
+-- | See "Control.Monad.Writer".
+
 module Control.Monad.Ether.Writer
     (
     -- * MonadWriter class

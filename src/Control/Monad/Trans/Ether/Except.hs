@@ -7,6 +7,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- | See "Control.Monad.Trans.Except".
+
 module Control.Monad.Trans.Ether.Except
     (
     -- * The Except monad
@@ -105,9 +108,11 @@ mapExceptT
     -> ExceptT tag e' n b
 mapExceptT t f m = tagged t $ Trans.mapExceptT f (coerce m)
 
+-- | Is used within a monadic computation to begin exception processing.
 throw :: Monad m => proxy tag -> e -> ExceptT tag e m a
 throw t = tagged t . Trans.throwE
 
+-- | A handler function to handle previous exceptions and return to normal execution.
 catch :: Monad m => proxy tag -> ExceptT tag e m a -> (e -> ExceptT tag e m a) -> ExceptT tag e m a
 catch t m h = tagged t $ Trans.catchE (coerce m) (coerce . h)
 

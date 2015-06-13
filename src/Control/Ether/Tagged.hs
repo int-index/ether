@@ -9,6 +9,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE DefaultSignatures #-}
+
+-- | Type-level machinery for tag manipulation.
+
 module Control.Ether.Tagged
     ( Taggable(..)
     , Tagged(..)
@@ -43,7 +46,7 @@ import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict
 -- |
 -- The main purpose of the 'UniqueTag' class is to provide clear error
 -- messages when the tag uniqueness property is violated. You should never
--- provide instances for it unless you know what you're doing.
+-- write instances for it unless you know what you're doing.
 class UniqueTag a
 
 type family IsUnique (x :: k) (as :: [k]) :: Constraint where
@@ -91,6 +94,8 @@ type family Inners' m where
     Inners' 'Nothing = '[]
     Inners' ('Just n) = n ': Inners n
 
+-- | The 'Inners' type function recursively applies 'Inner' and returns the
+-- results in a type-level list.
 type Inners m = Inners' (Inner m)
 
 instance Taggable IO

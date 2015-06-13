@@ -10,6 +10,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- | See "Control.Monad.Except".
+
 module Control.Monad.Ether.Except.Class
     ( MonadExcept(..)
     ) where
@@ -36,6 +39,8 @@ import qualified Control.Monad.Trans.State.Strict  as Trans.S.Strict
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.W.Lazy
 import qualified Control.Monad.Trans.Writer.Strict as Trans.W.Strict
 
+
+-- | See 'Control.Monad.Except.MonadError'.
 class Monad m => MonadExcept tag e m | m tag -> e where
 
     -- | Is used within a monadic computation to begin exception processing.

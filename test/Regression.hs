@@ -153,22 +153,19 @@ factorial' a = factorial (a :: Int)
 
 data DivideByZero = DivideByZero
     deriving (Show)
-data NegativeLog = NegativeLog
+data NegativeLog a = NegativeLog a
     deriving (Show)
 
 exceptCore
     :: ( Floating a, Ord a
        , I.MonadExcept DivideByZero m
-       , I.MonadExcept NegativeLog m
+       , I.MonadExcept (NegativeLog a) m
        ) => a -> a -> m a
 exceptCore a b = do
-    if b == 0
-      then I.throw DivideByZero
-      else
-        let d = a /b
-        in if d < 0
-             then I.throw NegativeLog
-             else return $ log (a / b)
+    T.when (b == 0) (I.throw DivideByZero)
+    let d = a /b
+    T.when (d < 0) (I.throw (NegativeLog d))
+    return (log d)
 
 try0 :: m a -> m a
 try0 = $(try 0)
@@ -186,7 +183,7 @@ exceptCore' :: Double -> Double -> String
 exceptCore' a b = runIdentity $ do
     $(try 2)
         (show <$> exceptCore a b)
-        (\NegativeLog -> "nl")
+        (\(NegativeLog (x::Double)) -> "nl: " ++ show x)
         (\DivideByZero -> "dz")
 
 summatorCore

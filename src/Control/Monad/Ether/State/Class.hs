@@ -10,6 +10,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- | See "Control.Monad.State.Class".
+
 module Control.Monad.Ether.State.Class
     ( MonadState(..)
     , modify
@@ -36,6 +39,7 @@ import qualified Control.Monad.Trans.State.Strict  as Trans.Strict (StateT)
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.Lazy   (WriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict (WriterT)
 
+-- | See 'Control.Monad.State.MonadState'.
 class Monad m => MonadState tag s m | m tag -> s where
 
     {-# MINIMAL state | get, put #-}

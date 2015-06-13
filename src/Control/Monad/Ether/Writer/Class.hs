@@ -10,6 +10,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- | See "Control.Monad.Writer.Class".
+
 module Control.Monad.Ether.Writer.Class
     ( MonadWriter(..)
     , listens
@@ -36,6 +39,7 @@ import qualified Control.Monad.Trans.State.Lazy    as Trans.S.Lazy
 import qualified Control.Monad.Trans.State.Strict  as Trans.S.Strict
 import qualified Control.Monad.Trans.Writer.Lazy   as Trans.W.Lazy
 
+-- | See 'Control.Monad.Writer.MonadWriter'.
 class (Monoid w, Monad m) => MonadWriter tag w m | m tag -> w where
 
     {-# MINIMAL (writer | tell), listen, pass #-}
@@ -58,11 +62,14 @@ class (Monoid w, Monad m) => MonadWriter tag w m | m tag -> w where
     -- and return the value, applying the function to the accumulator.
     pass :: proxy tag -> m (a, w -> w) -> m a
 
+-- | Execute an action and add the result of applying the given function to
+-- its accumulator to the value of the computation.
 listens :: MonadWriter tag w m => proxy tag -> (w -> b) -> m a -> m (a, b)
 listens t f m = do
     ~(a, w) <- listen t m
     return (a, f w)
 
+-- | Execute an action and apply a function to its accumulator.
 censor :: MonadWriter tag w m => proxy tag -> (w -> w) -> m a -> m a
 censor t f m = pass t $ do
     a <- m

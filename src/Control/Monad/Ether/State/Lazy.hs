@@ -1,3 +1,6 @@
+
+-- | See "Control.Monad.State.Lazy".
+
 module Control.Monad.Ether.State.Lazy
     (
     -- * MonadState class
