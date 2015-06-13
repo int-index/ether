@@ -174,11 +174,29 @@ body > footer {
             </p>
             <h1>Features</h1>
             <ul>
-              <li> Mix tagged and untagged effects with no effort. </li>
-              <li> Turn untagged effects into tagged ones by wrapping them. </li>
-              <li> Different tagging styles: explicit and implicit. </li>
-              <li> Simulate Java's checked exceptions, only better. </li>
-              <li> Ensure tag uniqueness for extra safety. </li>
+              <li>
+                Tagged effects&mdash;now you can have multiple
+                <code>MonadState</code>s, <code>MonadReader</code>s,
+                <code>MonadWriter</code>s and <code>MonadExcept</code>s in
+                your monad transformer stack.
+              </li>
+              <li>
+                Mix tagged and untagged effects with no effort&mdash;regular
+                transformers and classes can remain in your monad transformer stack.
+              </li>
+              <li>
+                Turn untagged effects into tagged ones by wrapping them&mdash;no
+                need to rewrite functions that use mtl.
+              </li>
+              <li>
+                Different tagging styles (explicit and implicit)&mdash;no
+                need to bother with tags if your types are unique.
+              </li>
+              <li>
+                Simulate Java's checked exceptions, only better&mdash;list all
+                exceptions your function can throw in its signature and handle
+                them one by one.
+              </li>
             </ul>
             <h1>The Code</h1>
             <blockquote>
