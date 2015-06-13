@@ -169,6 +169,8 @@ body > footer {
               <li>Blog post <a href='http://blog.sigfpe.com/2010/02/tagging-monad-transformer-layers.html'>Tagging Monad Transformer Layers</a> by Dan Piponi</li>
               <li>Paper <span class="hint">PDF</span> <a href='http://muddsnyder.com/pubs/monadfactory.pdf'>Monad Factory: Type-Indexed Monads</a> by Mark Snyder, Perry Alexander</li>
             </ul>
+              See also Roman Cheplyaka's blog post <a href='https://ro-che.info/articles/2014-06-11-problem-with-mtl'>The problem with mtl</a>
+              to see what exactly is the problem we're solving here.
             </p>
             <h1>Features</h1>
             <ul>
@@ -266,7 +268,7 @@ summator xs <span class="kw">=</span> do
             </p>
             <p>
               What if you have two functions, both requiring a <code>MonadState</code>,
-              but it's different <code>MonadState</code>s! There's no way you could
+              but it's different <code>MonadState</code>s? There's no way you could
               use those functions in one monad transformer stack with mtl, thus
               <em>mtl is antimodular!</em>
               However, Ether comes to the rescue with its wrapping mechanism:
@@ -342,7 +344,6 @@ logDiv x y <span class="kw">=</span> do
               no one else wrote such a package, as I am not the first one to
               discover the solution.
             </p>
-             
         </div>
         </section>
       </main>
