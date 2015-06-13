@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
     <head>
-        <link href='https://fonts.googleapis.com/css?family=Ubuntu:400,700|Source+Code+Pro' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Ubuntu+Mono|Ubuntu&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
         <style>
 html, body {
     margin: 0;
@@ -19,8 +19,8 @@ body {
     color: #444;
 }
 pre, code {
-    font-family: 'Source Code Pro', monospace;
-    font-size: 0.8em;
+    font-family: 'Ubuntu Mono', monospace;
+    font-size: 0.9em;
 }
 h1 {
     margin-top: 2em;
@@ -175,6 +175,7 @@ body > footer {
               <li> Mix tagged and untagged effects with no effort. </li>
               <li> Turn untagged effects into tagged ones by wrapping them. </li>
               <li> Different tagging styles: explicit and implicit. </li>
+              <li> Simulate Java's checked exceptions, only better. </li>
               <li> Ensure tag uniqueness for extra safety. </li>
             </ul>
             <h1>The Code</h1>
@@ -219,11 +220,129 @@ n <span class="kw">=</span> runReader foo (runReaderT bar add 10) 20
               Here we can see that <code>MonadReader</code>, <code>ask</code>,
               <code>runReader</code> and <code>runReaderT</code> are used just
               like the ones from mtl, only with a tag. As you might expect,
-              <code>n</code> here equals <code>30</code> (or <code>30.0</code>
-              &mdash;the reader environment can be polymorphic).
+              <code>n</code> here equals <code>30</code> (or
+              <code>30.0</code>&mdash;the reader environment can be
+              polymorphic).
             </p>
-            <p> <em> Work in progress... </em>
+            <p>
+              Tagged versions of <code>MonadState</code>, <code>MonadWriter</code>
+              and <code>MonadExcept</code> are provided as well. There's no
+              tagged <code>MonadCont</code> because I couldn't think of a use
+              case for multiple <code>MonadCont</code>s in a monad transformer
+              stack.
             </p>
+            <p>
+              Ether's classes are fully compatible with ones from mtl's,
+              meaning that you can use Ether with your existing code without
+              unnecessary changes. Consider the following code snippet:
+<pre class="source">
+summator
+    <span class="kw">::</span> ( Num a
+       <span class="kw">,</span> MonadWriter (Sum a) m
+       ) <span class="kw">=&gt;</span> [a] <span class="kw">-&gt;</span> m ()
+summator xs <span class="kw">=</span> do
+    for_ xs <span class="kw">$ \</span>x <span class="kw">-&gt;</span> tell (Sum x)
+</pre>
+              Now, say you want to add another <code>MonadWriter</code> to count
+              how many numbers you've summed up. As we know, it's impossible
+              with mtl alone, but you can combine the existing untagged
+              <code>MonadWriter</code> with a tagged one:
+<pre class="source">
+<span class="kw">import qualified</span> Control.Monad.Ether.Writer <span class="kw">as</span> Ether
+
+summator
+    <span class="kw">:: (</span> Num a
+       <span class="kw">,</span> MonadWriter (Sum a)
+       <span class="kw">,</span> Ether.MonadWriter Foo (Sum a)
+       ) <span class="kw">=&gt;</span> [a] <span class="kw">-&gt;</span> m ()
+summator xs <span class="kw">=</span> do
+    for_ xs <span class="kw">$ \</span>x <span class="kw">-&gt; do</span>
+        tell (Sum x)
+        Ether.tell foo (Sum 1)
+</pre>
+              Easy, right? Untagged classes can be considered a special case of
+              tagged ones, and any mix of them should Just Work&trade;. But
+              wait, there's more...
+            </p>
+            <p>
+              What if you have two functions, both requiring a <code>MonadState</code>,
+              but it's different <code>MonadState</code>s! There's no way you could
+              use those functions in one monad transformer stack with mtl, thus
+              <em>mtl is antimodular!</em>
+              However, Ether comes to the rescue with its wrapping mechanism:
+<pre class="source">
+f <span class="kw">::</span> MonadState Int m <span class="kw">=&gt;</span> m String
+f <span class="kw">= </span><em>omitted</em>
+
+g <span class="kw">::</span> MonadState Bool m <span class="kw">=&gt;</span> m String
+g <span class="kw">= </span><em>omitted</em>
+
+useboth
+    <span class="kw">:: (</span> Ether.MonadState Foo Int  m
+       <span class="kw">,</span> Ether.MonadState Bar Bool m
+       ) <span class="kw">=&gt;</span> m String
+useboth <span class="kw">=</span> do
+    a <span class="kw">&lt;-</span> ethered foo f
+    b <span class="kw">&lt;-</span> ethered bar g
+    return (a <span class="kw">++</span> b)
+</pre>
+              Here we use the <code>ethered</code> function
+              from <code>Control.Ether.Wrapped</code>
+              to turn untagged transformers into tagged ones.
+            </p>
+            <p>
+              On this wave of modularity features I'd like to present you another
+              one: simulating checked exceptions from Java. It's as simple as
+              having one <code>MonadExcept</code> per exception:
+<pre class="source">
+<span class="kw">data</span> DivideByZero <span class="kw">=</span> DivideByZero
+<span class="kw">data</span> NegativeLog  <span class="kw">=</span> NegativeLog
+
+logDiv
+    ( Floating a
+    <span class="kw">,</span> Ord a
+    <span class="kw">,</span> MonadExcept Foo DivideByZero m
+    <span class="kw">,</span> MonadExcept Bar NegativeLog  m
+    ) <span class="kw">=&gt;</span> a <span class="kw">-&gt;</span> a <span class="kw">-&gt;</span> m a
+logDiv x y <span class="kw">=</span> do
+    when (b <span class="kw">==</span> 0) (throw foo DivideByZero)
+    let d <span class="kw">=</span> a<span class="kw">/</span>b
+    when (d <span class="kw">&lt;</span> 0) (throw bar NegativeLog)
+    return (log d) 
+</pre>
+              Now we can handle those exceptions one by one with <code>runExceptT</code>.
+              However, this tagging business starts to become unmanagable. Do we
+              also need to create a tag per exception? The answer, fortunately,
+              is no: since exceptions tend to be monomorphic, we can use them
+              as tags for their classes. This feature is called implicit
+              tagging, and we can rewrite the example above like so:
+<pre class="source">
+<span class="kw">import qualified</span> Control.Monad.Ether.Implicit.Except as I
+
+logDiv
+    ( Floating a
+    <span class="kw">,</span> Ord a
+    <span class="kw">,</span> MonadExcept DivideByZero m
+    <span class="kw">,</span> MonadExcept NegativeLog  m
+    ) <span class="kw">=&gt;</span> a <span class="kw">-&gt;</span> a <span class="kw">-&gt;</span> m a
+logDiv x y <span class="kw">=</span> do
+    when (b <span class="kw">==</span> 0) (I.throw DivideByZero)
+    let d <span class="kw">=</span> a<span class="kw">/</span>b
+    when (d <span class="kw">&lt;</span> 0) (I.throw NegativeLog)
+    return (log d) 
+</pre>
+            That's better. In fact, implicit tagging can be used with polymorphic
+            tags too, but its behavior can be sometimes unobvious. You also may
+            need to use type annotations when using implicit tagging, so for
+            anything polymorphic prefer the explicit style.
+            </p>
+            <h1>&mdash; This is magic!</h1>
+            <p>
+              I agree. Now go get it, it's on Hackage. I have no idea why
+              no one else wrote such a package, as I am not the first one to
+              discover the solution.
+            </p>
+             
         </div>
         </section>
       </main>
