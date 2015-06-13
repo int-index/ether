@@ -8,16 +8,20 @@
 module Main where
 
 import Data.Functor.Identity
+import Data.Monoid
+import Data.Foldable
 import Control.Ether.Tagged
 import Control.Ether.TH
 import Control.Ether.Wrapped
 import Control.Monad.Ether.Reader
 import Control.Monad.Ether.State
+import Control.Monad.Ether.Writer
 import Control.Monad.Ether.Implicit.Except.TH
 import qualified Control.Monad.Ether.Implicit.Reader as I
 import qualified Control.Monad.Ether.Implicit.State  as I
 import qualified Control.Monad.Ether.Implicit.Except as I
 import qualified Control.Monad.Reader as T
+import qualified Control.Monad.Writer as T
 import qualified Control.Monad.State  as T
 
 import Test.Tasty
@@ -27,6 +31,7 @@ import Test.QuickCheck.Function
 ethereal "R1" "r1"
 ethereal "R2" "r2"
 ethereal "S1" "s1"
+ethereal "Foo" "foo"
 
 main :: IO ()
 main = defaultMain suite
@@ -182,3 +187,16 @@ exceptCore' a b = runIdentity $ do
         (show <$> exceptCore a b)
         (\NegativeLog -> "nl")
         (\DivideByZero -> "dz")
+
+summatorCore
+    :: ( Num a
+       , T.MonadWriter (Sum a) m
+       , MonadWriter Foo (Sum a) m
+       ) => [a] -> m ()
+summatorCore xs = do
+    for_ xs $ \x -> do
+        T.tell (Sum x)
+        tell foo (Sum 1)
+
+summatorCore' :: Num a => [a] -> (Sum a, Sum a)
+summatorCore' = runWriter foo . T.execWriterT . summatorCore
