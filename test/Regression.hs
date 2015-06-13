@@ -32,6 +32,7 @@ ethereal "R1" "r1"
 ethereal "R2" "r2"
 ethereal "S1" "s1"
 ethereal "Foo" "foo"
+ethereal "Bar" "bar"
 
 main :: IO ()
 main = defaultMain suite
@@ -200,3 +201,43 @@ summatorCore xs = do
 
 summatorCore' :: Num a => [a] -> (Sum a, Sum a)
 summatorCore' = runWriter foo . T.execWriterT . summatorCore
+
+wrapState_f :: T.MonadState Int m => m String
+wrapState_f = fmap show T.get
+
+wrapState_g :: T.MonadState Bool m => m String
+wrapState_g = fmap show T.get
+
+wrapState_useboth
+    :: ( MonadState Foo Int  m
+       , MonadState Bar Bool m
+       ) => m String
+wrapState_useboth = do
+    a <- ethered foo wrapState_f
+    b <- ethered bar wrapState_g
+    return (a ++ b)
+
+wrapStateCore :: Int -> Bool -> String
+wrapStateCore int bool = evalState foo (evalStateT bar wrapState_useboth bool) int
+
+wrapStateBad1_g :: MonadState Foo Int m => m ()
+wrapStateBad1_g = modify foo (*100)
+
+wrapStateBad1_useboth :: MonadState Foo Int m => m String
+wrapStateBad1_useboth = do
+    wrapStateBad1_g
+    ethered foo wrapState_f
+
+wrapStateBad1 :: Int -> String
+wrapStateBad1 = evalState foo wrapStateBad1_useboth
+
+wrapStateBad2
+    :: ( T.MonadState Int m
+       , MonadState Foo Int m
+       ) => m Int
+wrapStateBad2 = do
+    modify foo (*100)
+    T.get
+
+wrapStateBad2Core :: Int -> Int
+wrapStateBad2Core = evalState foo (ensureUniqueTags $ ethered foo wrapStateBad2)
