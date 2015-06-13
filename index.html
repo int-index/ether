@@ -325,8 +325,8 @@ logDiv
     <span class="kw">,</span> MonadExcept Bar NegativeLog  m
     ) <span class="kw">=&gt;</span> a <span class="kw">-&gt;</span> a <span class="kw">-&gt;</span> m a
 logDiv x y <span class="kw">=</span> do
-    when (b <span class="kw">==</span> 0) (throw foo DivideByZero)
-    let d <span class="kw">=</span> a<span class="kw">/</span>b
+    when (y <span class="kw">==</span> 0) (throw foo DivideByZero)
+    let d <span class="kw">=</span> x<span class="kw">/</span>y
     when (d <span class="kw">&lt;</span> 0) (throw bar NegativeLog)
     return (log d) 
 </pre>
@@ -346,8 +346,8 @@ logDiv
     <span class="kw">,</span> MonadExcept NegativeLog  m
     ) <span class="kw">=&gt;</span> a <span class="kw">-&gt;</span> a <span class="kw">-&gt;</span> m a
 logDiv x y <span class="kw">=</span> do
-    when (b <span class="kw">==</span> 0) (I.throw DivideByZero)
-    let d <span class="kw">=</span> a<span class="kw">/</span>b
+    when (y <span class="kw">==</span> 0) (I.throw DivideByZero)
+    let d <span class="kw">=</span> x<span class="kw">/</span>y
     when (d <span class="kw">&lt;</span> 0) (I.throw NegativeLog)
     return (log d) 
 </pre>
