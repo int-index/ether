@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -32,10 +33,14 @@ module Control.Monad.Trans.Ether.Writer
     , liftPass
     ) where
 
+#if __GLASGOW_HASKELL__ < 710
+import Data.Monoid
+#endif
+
 import Data.Proxy (Proxy(Proxy))
 import Data.Functor.Identity (Identity(..))
 import Data.Coerce (coerce)
-import Control.Applicative (Alternative)
+import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)

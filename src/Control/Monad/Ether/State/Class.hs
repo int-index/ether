@@ -1,7 +1,14 @@
+{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
+
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE OverlappingInstances #-}
+#endif
 
 -- | See "Control.Monad.State.Class".
 
@@ -11,6 +18,10 @@ module Control.Monad.Ether.State.Class
     , gets
     ) where
 
+#if __GLASGOW_HASKELL__ < 710
+import Data.Monoid
+#endif
+
 import Control.Monad.Trans (lift)
 
 import Control.Monad.Trans.Ether.Reader (ReaderT)
@@ -18,6 +29,7 @@ import Control.Monad.Trans.Ether.Writer (WriterT)
 import Control.Monad.Trans.Ether.Except (ExceptT)
 import qualified Control.Monad.Trans.Ether.State.Lazy   as S.L
 import qualified Control.Monad.Trans.Ether.State.Strict as S.S
+import qualified Control.Ether.Util as Util
 
 -- for mtl instances
 import qualified Control.Monad.Trans.Cont          as Trans        (ContT)
@@ -58,7 +70,7 @@ modify t f = state t (\s -> ((), f s))
 
 -- | Gets specific component of the state, using a projection function supplied.
 gets :: MonadState tag s m => proxy tag -> (s -> a) -> m a
-gets t f = fmap f (get t)
+gets t f = Util.fmap f (get t)
 
 instance {-# OVERLAPPING #-} Monad m => MonadState tag s (S.L.StateT tag s m) where
     get = S.L.get

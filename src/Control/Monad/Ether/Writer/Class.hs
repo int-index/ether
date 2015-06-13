@@ -1,7 +1,14 @@
+{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
+
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE OverlappingInstances #-}
+#endif
 
 -- | See "Control.Monad.Writer.Class".
 
@@ -10,6 +17,10 @@ module Control.Monad.Ether.Writer.Class
     , listens
     , censor
     ) where
+
+#if __GLASGOW_HASKELL__ < 710
+import Data.Monoid
+#endif
 
 import Data.Proxy (Proxy(Proxy))
 import Control.Monad.Trans (lift)

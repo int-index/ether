@@ -9,7 +9,7 @@ module Main where
 
 import Data.Functor.Identity
 import Data.Monoid
-import Data.Foldable
+import Control.Monad
 import Control.Ether.Tagged
 import Control.Ether.TH
 import Control.Ether.Wrapped
@@ -182,7 +182,7 @@ try3 = $(try 3)
 exceptCore' :: Double -> Double -> String
 exceptCore' a b = runIdentity $ do
     $(try 2)
-        (show <$> exceptCore a b)
+        (liftM show (exceptCore a b))
         (\(NegativeLog (x::Double)) -> "nl: " ++ show x)
         (\DivideByZero -> "dz")
 
@@ -192,7 +192,7 @@ summatorCore
        , MonadWriter Foo (Sum a) m
        ) => [a] -> m ()
 summatorCore xs = do
-    for_ xs $ \x -> do
+    forM_ xs $ \x -> do
         T.tell (Sum x)
         tell foo (Sum 1)
 
@@ -200,10 +200,10 @@ summatorCore' :: Num a => [a] -> (Sum a, Sum a)
 summatorCore' = runWriter foo . T.execWriterT . summatorCore
 
 wrapState_f :: T.MonadState Int m => m String
-wrapState_f = fmap show T.get
+wrapState_f = liftM show T.get
 
 wrapState_g :: T.MonadState Bool m => m String
-wrapState_g = fmap show T.get
+wrapState_g = liftM show T.get
 
 wrapState_useboth
     :: ( MonadState Foo Int  m

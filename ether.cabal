@@ -74,6 +74,7 @@ library
                        PolyKinds
                        TypeOperators
                        DefaultSignatures
+                       CPP
 
   hs-source-dirs:      src
   ghc-options:         -Wall
