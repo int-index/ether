@@ -319,7 +319,7 @@ logDiv x y <span class="kw">=</span> do
               as tags for their classes. This feature is called implicit
               tagging, and we can rewrite the example above like so:
 <pre class="source">
-<span class="kw">import qualified</span> Control.Monad.Ether.Implicit.Except as I
+<span class="kw">import qualified</span> Control.Monad.Ether.Implicit.Except <span class="kw">as</span> I
 
 logDiv
     ( Floating a
@@ -340,9 +340,9 @@ logDiv x y <span class="kw">=</span> do
             </p>
             <h1>&mdash; This is magic!</h1>
             <p>
-              I agree. Now go get it, it's on Hackage. I have no idea why
-              no one else wrote such a package, as I am not the first one to
-              discover the solution.
+              I agree. Now go get it, <a href="https://hackage.haskell.org/package/ether">it's on Hackage</a>.
+              I have no idea why no one else wrote such a package, as I am
+              not the first one to discover the solution.
             </p>
         </div>
         </section>
