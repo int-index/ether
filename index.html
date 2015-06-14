@@ -342,8 +342,8 @@ logDiv x y <span class="kw">=</span> do
 logDiv
     ( Floating a
     <span class="kw">,</span> Ord a
-    <span class="kw">,</span> MonadExcept DivideByZero m
-    <span class="kw">,</span> MonadExcept NegativeLog  m
+    <span class="kw">,</span> I.MonadExcept DivideByZero m
+    <span class="kw">,</span> I.MonadExcept NegativeLog  m
     ) <span class="kw">=&gt;</span> a <span class="kw">-&gt;</span> a <span class="kw">-&gt;</span> m a
 logDiv x y <span class="kw">=</span> do
     when (y <span class="kw">==</span> 0) (I.throw DivideByZero)
