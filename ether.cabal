@@ -51,7 +51,6 @@ library
                        Control.Monad.Ether.Implicit.State.Lazy
                        Control.Monad.Ether.Implicit.State.Strict
                        Control.Monad.Ether.Implicit.Except
-                       Control.Monad.Ether.Implicit.Except.TH
 
   other-modules:       Control.Ether.Util
 

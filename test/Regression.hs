@@ -7,7 +7,6 @@
 {-# LANGUAGE LambdaCase #-}
 module Main where
 
-import Data.Functor.Identity
 import Data.Monoid
 import Control.Monad
 import Control.Ether.Tagged
@@ -16,7 +15,6 @@ import Control.Ether.Wrapped
 import Control.Monad.Ether.Reader
 import Control.Monad.Ether.State
 import Control.Monad.Ether.Writer
-import Control.Monad.Ether.Implicit.Except.TH
 import qualified Control.Monad.Ether.Implicit.Reader as I
 import qualified Control.Monad.Ether.Implicit.State  as I
 import qualified Control.Monad.Ether.Implicit.Except as I
@@ -167,24 +165,14 @@ exceptCore a b = do
     T.when (d < 0) (I.throw (NegativeLog d))
     return (log d)
 
-try0 :: m a -> m a
-try0 = $(try 0)
-
-try1 :: Functor m => I.ExceptT e m a -> (e -> a) -> m a
-try1 = $(try 1)
-
-try2 :: Functor m => I.ExceptT e1 (I.ExceptT e2 m) a -> (e1 -> a) -> (e2 -> a) -> m a
-try2 = $(try 2)
-
-try3 :: Functor m => I.ExceptT e1 (I.ExceptT e2 (I.ExceptT e3 m)) a -> (e1 -> a) -> (e2 -> a) -> (e3 -> a) -> m a
-try3 = $(try 3)
+(&) :: a -> (a -> c) -> c
+(&) = flip ($)
 
 exceptCore' :: Double -> Double -> String
-exceptCore' a b = runIdentity $ do
-    $(try 2)
-        (liftM show (exceptCore a b))
-        (\(NegativeLog (x::Double)) -> "nl: " ++ show x)
-        (\DivideByZero -> "dz")
+exceptCore' a b = do
+    liftM show (exceptCore a b)
+    &I.handleT (\(NegativeLog (x::Double)) -> "nl: " ++ show x)
+    &I.handle  (\DivideByZero -> "dz")
 
 summatorCore
     :: ( Num a
