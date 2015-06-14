@@ -27,7 +27,7 @@ module Control.Ether.Wrapped
     ) where
 
 import Data.Proxy (Proxy(Proxy))
-import Control.Applicative (Alternative)
+import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO)

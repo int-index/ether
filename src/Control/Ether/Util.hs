@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE TypeOperators #-}
@@ -8,11 +9,19 @@ module Control.Ether.Util
     , liftPass_WriterT
     , type (++)
     , MaybeToList
+    , fmap
     ) where
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Except as Trans
 import qualified Control.Monad.Trans.Writer as Trans
+import Prelude hiding (fmap)
+
+#if __GLASGOW_HASKELL__ < 710
+import qualified Control.Monad
+#else
+import qualified Prelude
+#endif
 
 type family (as :: [*]) ++ (bs :: [*]) :: [*] where
     '[] ++ bs = bs
@@ -36,3 +45,13 @@ liftPass_WriterT :: Monad m => Sig.Pass w' m (a, w) -> Sig.Pass w' (Trans.Writer
 liftPass_WriterT pass m = Trans.WriterT $ pass $ do
     ~((a, f), w) <- Trans.runWriterT m
     return ((a, w), f)
+
+#if __GLASGOW_HASKELL__ < 710
+fmap :: Monad f => (a -> b) -> f a -> f b
+fmap = Control.Monad.liftM 
+#else
+fmap :: Functor f => (a -> b) -> f a -> f b
+fmap = Prelude.fmap 
+#endif
+
+{-# INLINE fmap #-}

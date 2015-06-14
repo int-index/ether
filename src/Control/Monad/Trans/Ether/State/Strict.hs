@@ -36,7 +36,7 @@ module Control.Monad.Trans.Ether.State.Strict
 import Data.Proxy (Proxy(Proxy))
 import Data.Functor.Identity (Identity(..))
 import Data.Coerce (coerce)
-import Control.Applicative (Alternative)
+import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
