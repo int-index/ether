@@ -1,7 +1,7 @@
 0.1.1.0
 -------
 
-* Convenience modules Control.Monad.Ether and Control.Monad.Ether.Implicit
+* Convenience modules `Control.Monad.Ether` and `Control.Monad.Ether.Implicit`.
 
 
 0.1.0.1

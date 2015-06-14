@@ -5,15 +5,15 @@
 module Control.Monad.Ether.Implicit
     ( module Control.Monad
     , module Control.Monad.Fix
-    , module Control.Monad.Ether.Reader.Implicit
-    , module Control.Monad.Ether.Writer.Implicit
-    , module Control.Monad.Ether.State.Implicit
-    , module Control.Monad.Ether.Except.Implicit
+    , module Control.Monad.Ether.Implicit.Reader
+    , module Control.Monad.Ether.Implicit.Writer
+    , module Control.Monad.Ether.Implicit.State
+    , module Control.Monad.Ether.Implicit.Except
     ) where
 
 import Control.Monad
 import Control.Monad.Fix
-import Control.Monad.Ether.Reader.Implicit
-import Control.Monad.Ether.Writer.Implicit
-import Control.Monad.Ether.State.Implicit
-import Control.Monad.Ether.Except.Implicit
+import Control.Monad.Ether.Implicit.Reader
+import Control.Monad.Ether.Implicit.Writer
+import Control.Monad.Ether.Implicit.State
+import Control.Monad.Ether.Implicit.Except
