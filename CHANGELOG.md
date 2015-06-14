@@ -2,3 +2,4 @@
 -------
 
 * Fix `transformers` lower bound.
+* Remove unused language extensions.
