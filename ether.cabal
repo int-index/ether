@@ -1,5 +1,5 @@
 name:                ether
-version:             0.1.0.1
+version:             0.1.1.0
 synopsis:            Monad transformers and classes
 description:
     Ether is a Haskell library that extends @mtl@ and @transformers@ with
@@ -33,6 +33,7 @@ library
                        Control.Monad.Trans.Ether.State.Lazy
                        Control.Monad.Trans.Ether.State.Strict
                        Control.Monad.Trans.Ether.Except
+                       Control.Monad.Ether
                        Control.Monad.Ether.Reader
                        Control.Monad.Ether.Reader.Class
                        Control.Monad.Ether.Writer
@@ -43,6 +44,7 @@ library
                        Control.Monad.Ether.State.Strict
                        Control.Monad.Ether.Except
                        Control.Monad.Ether.Except.Class
+                       Control.Monad.Ether.Implicit
                        Control.Monad.Ether.Implicit.Reader
                        Control.Monad.Ether.Implicit.Writer
                        Control.Monad.Ether.Implicit.State
