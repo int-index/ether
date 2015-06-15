@@ -4,6 +4,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE LambdaCase #-}
 module Main where
 
@@ -12,12 +14,13 @@ import Control.Monad
 import Control.Ether.Tagged
 import Control.Ether.TH
 import Control.Ether.Wrapped
-import Control.Monad.Ether.Reader
-import Control.Monad.Ether.State
-import Control.Monad.Ether.Writer
-import qualified Control.Monad.Ether.Implicit.Reader as I
-import qualified Control.Monad.Ether.Implicit.State  as I
-import qualified Control.Monad.Ether.Implicit.Except as I
+
+import Control.Monad.Ether
+import Control.Ether.Abbr
+
+import qualified Control.Monad.Ether.Implicit as I
+import qualified Control.Ether.Implicit.Abbr as I
+
 import qualified Control.Monad.Reader as T
 import qualified Control.Monad.Writer as T
 import qualified Control.Monad.State  as T
@@ -59,7 +62,7 @@ layeredLocalRight k f a1 a2 = property (direct == run indirect)
     (direct, indirect) = layeredLocalCore' k f a1 a2
 
 layeredLocalCore
-    :: (MonadReader R1 r1 m, MonadReader R2 r2 m)
+    :: Ether '[R1 --> r1, R2 --> r2] m
     => (r2 -> r2) -> (r1 -> r2 -> a) -> m a
 layeredLocalCore f g = do
     n <- ask r1
@@ -67,7 +70,7 @@ layeredLocalCore f g = do
     return (g n m)
 
 layeredLocalCore'
-    :: (MonadReader R1 Int m, MonadReader R2 Integer m)
+    :: Ether '[R1 --> Int, R2 --> Integer] m
     => Fun (Int, Integer) Integer
     -> Fun Integer Integer
     -> Int -> Integer -> (Integer, m Integer)
@@ -76,27 +79,20 @@ layeredLocalCore' k f a1 a2 = (direct, indirect)
     direct = apply k (fromIntegral a1, apply f a2)
     indirect = layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
 
-implicitCore :: (I.MonadReader Int m, I.MonadReader Bool m) => m String
+implicitCore :: Ether '[I.R Int, I.R Bool] m => m String
 implicitCore = I.local (succ :: Int -> Int) $ do
     n :: Int <- I.ask
     b <- I.local not I.ask
     return (if b then "" else show n)
 
-wrapCore
-    :: ( T.MonadReader Int m
-       , T.MonadState  Int m
-       ) => m Int
+wrapCore :: (T.MonadReader Int m, T.MonadState Int m) => m Int
 wrapCore = do
     b <- T.get
     a <- T.ask
     T.put (a + b)
     return (a * b)
 
-wrapCore'
-    :: ( MonadReader S1 Int m
-       , MonadState S1 Int m
-       , MonadReader R1 Int m
-       ) => m Int
+wrapCore' :: Ether '[S1 --> Int, S1 <-> Int, R1 --> Int] m => m Int
 wrapCore' = do
     a <- ethered s1 wrapCore
     c <- ask r1
@@ -121,16 +117,14 @@ uniqueTagsCore = flip (runReaderT r1) (1 :: Int)
                         print b
                         print c
 
-stateCore :: ( MonadState  S1 Int m
-             , MonadReader R1 Int m
-             , UniqueTags m ) => m ()
-stateCore = do
+stateCore :: (Ether '[S1 <-> Int, R1 --> Int] m, UniqueTags m) => m ()
+stateCore = ensureUniqueTags $ do
     a <- ask r1
     n <- get s1
     put s1 (n * a)
     modify s1 (subtract 1)
 
-recurseCore :: (Num a, Ord a) => (I.MonadReader a m, I.MonadState Int m)  => m a
+recurseCore :: (Num a, Ord a) => Ether '[I.R a, I.S Int]m => m a
 recurseCore = do
     a <- I.ask
     if (a <= 0)
@@ -156,8 +150,7 @@ data NegativeLog a = NegativeLog a
 
 exceptCore
     :: ( Floating a, Ord a
-       , I.MonadExcept DivideByZero m
-       , I.MonadExcept (NegativeLog a) m
+       , Ether '[I.E DivideByZero, I.E (NegativeLog a)] m
        ) => a -> a -> m a
 exceptCore a b = do
     T.when (b == 0) (I.throw DivideByZero)
@@ -193,10 +186,7 @@ wrapState_f = liftM show T.get
 wrapState_g :: T.MonadState Bool m => m String
 wrapState_g = liftM show T.get
 
-wrapState_useboth
-    :: ( MonadState Foo Int  m
-       , MonadState Bar Bool m
-       ) => m String
+wrapState_useboth :: Ether '[Foo <-> Int, Bar <-> Bool] m => m String
 wrapState_useboth = do
     a <- ethered foo wrapState_f
     b <- ethered bar wrapState_g
@@ -216,10 +206,7 @@ wrapStateBad1_useboth = do
 wrapStateBad1 :: Int -> String
 wrapStateBad1 = evalState foo wrapStateBad1_useboth
 
-wrapStateBad2
-    :: ( T.MonadState Int m
-       , MonadState Foo Int m
-       ) => m Int
+wrapStateBad2 :: (T.MonadState Int m , MonadState Foo Int m) => m Int
 wrapStateBad2 = do
     modify foo (*100)
     T.get
