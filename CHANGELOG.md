@@ -1,3 +1,9 @@
+0.2.1.0
+-------
+
+* Constraint abbreviations: `Control.Ether.Abbr` and `Control.Ether.Implicit.Abbr`.
+
+
 0.2.0.0
 -------
 

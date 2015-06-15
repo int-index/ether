@@ -1,5 +1,5 @@
 name:                ether
-version:             0.2.0.0
+version:             0.2.1.0
 synopsis:            Monad transformers and classes
 description:
     Ether is a Haskell library that extends @mtl@ and @transformers@ with
