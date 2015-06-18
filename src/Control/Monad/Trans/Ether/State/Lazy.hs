@@ -27,7 +27,6 @@ module Control.Monad.Trans.Ether.State.Lazy
     , get
     , put
     -- * Litfing other operations
-    , liftCatch
     , liftCallCC'
     , liftListen
     , liftPass
@@ -146,10 +145,6 @@ get t = tagged t Trans.get
 put :: Monad m => proxy tag -> s -> StateT tag s m ()
 put t = tagged t . Trans.put
 
--- | Lift a @catchE@ operation to the new monad.
-liftCatch :: proxy tag -> Sig.Catch e m (a, s) -> Sig.Catch e (StateT tag s m) a
-liftCatch t f m h = tagged t $ Trans.liftCatch f (coerce m) (coerce h)
-
 -- | Lift a @listen@ operation to the new monad.
 liftListen :: Monad m => proxy tag -> Sig.Listen w m (a, s) -> Sig.Listen w (StateT tag s m) a
 liftListen t listen m = tagged t $ Trans.liftListen listen (coerce m)
@@ -187,4 +182,4 @@ instance Class.MonadWriter w m => Class.MonadWriter w (StateT tag s m) where
 
 instance Class.MonadError e m => Class.MonadError e (StateT tag s m) where
     throwError = lift . Class.throwError
-    catchError = liftCatch Proxy Class.catchError
+    catchError = Lift.liftCatch Class.catchError

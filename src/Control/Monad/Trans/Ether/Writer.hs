@@ -28,7 +28,6 @@ module Control.Monad.Trans.Ether.Writer
     , pass
     -- * Lifting other operations
     , liftCallCC
-    , liftCatch
     , liftListen
     , liftPass
     ) where
@@ -145,10 +144,6 @@ listen t m = tagged t $ Trans.listen (coerce m)
 pass :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
 pass t m = tagged t $ Trans.pass (coerce m)
 
--- | Lift a @catchE@ operation to the new monad.
-liftCatch :: proxy tag -> Sig.Catch e m (a, w) -> Sig.Catch e (WriterT tag w m) a
-liftCatch t f m h = tagged t $ Trans.liftCatch f (coerce m) (coerce h)
-
 -- | Lift a @callCC@ operation to the new monad.
 liftCallCC :: Monoid w => proxy tag -> Sig.CallCC m (a, w) (b, w) -> Sig.CallCC (WriterT tag w m) a b
 liftCallCC t callCC f = tagged t $ Trans.liftCallCC callCC (coerce f)
@@ -182,4 +177,4 @@ instance (Monoid w, Class.MonadWriter w' m) => Class.MonadWriter w' (WriterT tag
 
 instance (Monoid w, Class.MonadError e m) => Class.MonadError e (WriterT tag w m) where
     throwError = lift . Class.throwError
-    catchError = liftCatch Proxy Class.catchError
+    catchError = Lift.liftCatch Class.catchError

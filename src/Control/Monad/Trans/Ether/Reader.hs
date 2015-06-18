@@ -24,7 +24,6 @@ module Control.Monad.Trans.Ether.Reader
     , ask
     , local
     -- * Lifting other operations
-    , liftCatch
     , liftCallCC
     ) where
 
@@ -126,10 +125,6 @@ withReaderT
     -> ReaderT tag r' m a
 withReaderT t f m = tagged t $ Trans.withReaderT f (coerce m)
 
--- | Lift a @catchE@ operation to the new monad.
-liftCatch :: proxy tag -> Sig.Catch e m a -> Sig.Catch e (ReaderT tag r m) a
-liftCatch t f m h = tagged t $ Trans.liftCatch f (coerce m) (coerce h)
-
 -- | Lift a @callCC@ operation to the new monad.
 liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (ReaderT tag r m) a b
 liftCallCC t callCC f = tagged t $ Trans.liftCallCC callCC (coerce f)
@@ -174,4 +169,4 @@ instance Class.MonadWriter w m => Class.MonadWriter w (ReaderT tag r m) where
 
 instance Class.MonadError e m => Class.MonadError e (ReaderT tag r m) where
     throwError = lift . Class.throwError
-    catchError = liftCatch Proxy Class.catchError
+    catchError = Lift.liftCatch Class.catchError
