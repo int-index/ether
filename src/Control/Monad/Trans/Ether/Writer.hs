@@ -45,6 +45,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import qualified Control.Ether.Util as Util
 import GHC.Generics (Generic)
@@ -52,6 +53,7 @@ import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Writer.Lazy as Trans
+import qualified Control.Monad.Trans.Lift.Local as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -74,9 +76,11 @@ type Writer tag w = WriterT tag w Identity
 newtype WriterT tag w m a = WriterT (Trans.WriterT w m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
-             , MonadFix, MonadTrans, MonadIO )
+             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
 
 instance NT.Newtype (WriterT tag w m a)
+
+instance Monoid w => Lift.LiftLocal (WriterT tag w)
 
 instance Taggable (WriterT tag w m) where
     type Tag (WriterT tag w m) = 'Just tag

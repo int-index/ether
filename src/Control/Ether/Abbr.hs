@@ -28,7 +28,7 @@ type family ReifyAbbr (abbr :: *) (m :: * -> *) :: Constraint
 data tag --> r
 type instance ReifyAbbr (tag --> r) m = MonadReader tag r m
 
--- | Denotes 'MonadWriter'. The mnemonic is that you write values of @w@
+-- | Denotes 'MonadWriter'. The mnemonic is that you write values of type @w@
 -- to the writer accumulator tagged by @tag@, thus the arrows points
 -- from @w@ to @tag@.
 data tag <-- w

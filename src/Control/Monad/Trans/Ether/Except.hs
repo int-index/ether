@@ -37,6 +37,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import qualified Control.Ether.Util as Util
 import GHC.Generics (Generic)
@@ -44,6 +45,7 @@ import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Except as Trans
+import qualified Control.Monad.Trans.Lift.Local as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -72,9 +74,11 @@ runExcept t = Trans.runExcept . untagged t
 newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
-             , MonadFix, MonadTrans, MonadIO )
+             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
 
 instance NT.Newtype (ExceptT tag e m a)
+
+instance Lift.LiftLocal (ExceptT tag e)
 
 instance Taggable (ExceptT tag e m) where
     type Tag (ExceptT tag e m) = 'Just tag

@@ -36,12 +36,14 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Reader as Trans
+import qualified Control.Monad.Trans.Lift.Local as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -65,9 +67,11 @@ type Reader tag r = ReaderT tag r Identity
 newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
-             , MonadFix, MonadTrans, MonadIO )
+             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
 
 instance NT.Newtype (ReaderT tag r m a)
+
+instance Lift.LiftLocal (ReaderT tag r)
 
 instance Taggable (ReaderT tag r m) where
     type Tag (ReaderT tag r m) = 'Just tag
