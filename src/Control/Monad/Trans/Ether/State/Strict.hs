@@ -47,8 +47,10 @@ import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
+import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.State.Strict as Trans
 import qualified Control.Monad.Trans.Lift.Local as Lift
+import qualified Control.Monad.Trans.Lift.Catch as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -76,7 +78,13 @@ newtype StateT tag s m a = StateT (Trans.StateT s m a)
 
 instance NT.Newtype (StateT tag s m a)
 
+instance MC.MonadTransControl (StateT tag s) where
+    type StT (StateT tag s) a = MC.StT (Trans.StateT s) a
+    liftWith f = StateT $ MC.liftWith (f . coerce)
+    restoreT = StateT . MC.restoreT
+
 instance Lift.LiftLocal (StateT tag s)
+instance Lift.LiftCatch (StateT tag s)
 
 instance Taggable (StateT tag s m) where
     type Tag (StateT tag s m) = 'Just tag

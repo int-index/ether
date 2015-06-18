@@ -42,8 +42,10 @@ import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
+import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Reader as Trans
 import qualified Control.Monad.Trans.Lift.Local as Lift
+import qualified Control.Monad.Trans.Lift.Catch as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -71,7 +73,13 @@ newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
 
 instance NT.Newtype (ReaderT tag r m a)
 
+instance MC.MonadTransControl (ReaderT tag r) where
+    type StT (ReaderT tag r) a = MC.StT (Trans.ReaderT r) a
+    liftWith f = ReaderT $ MC.liftWith (f . coerce)
+    restoreT = ReaderT . MC.restoreT
+
 instance Lift.LiftLocal (ReaderT tag r)
+instance Lift.LiftCatch (ReaderT tag r)
 
 instance Taggable (ReaderT tag r m) where
     type Tag (ReaderT tag r m) = 'Just tag

@@ -61,6 +61,7 @@ library
                ,       transformers-lift >=0.1
                ,       mtl >=2.2.1
                ,       mmorph >=1.0.4
+               ,       monad-control >=1.0.0.4
                ,       template-haskell >=2.9
                ,       newtype-generics >=0.4.1
 

@@ -26,7 +26,6 @@ module Control.Monad.Trans.Ether.Except
     , liftCallCC
     , liftListen
     , liftPass
-    , liftCatch
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -39,13 +38,14 @@ import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Ether.Tagged (Taggable(..), Tagged(..))
-import qualified Control.Ether.Util as Util
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
+import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Except as Trans
 import qualified Control.Monad.Trans.Lift.Local as Lift
+import qualified Control.Monad.Trans.Lift.Catch as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -78,7 +78,13 @@ newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
 
 instance NT.Newtype (ExceptT tag e m a)
 
+instance MC.MonadTransControl (ExceptT tag e) where
+    type StT (ExceptT tag e) a = MC.StT (Trans.ExceptT e) a
+    liftWith f = ExceptT $ MC.liftWith (f . coerce)
+    restoreT = ExceptT . MC.restoreT
+
 instance Lift.LiftLocal (ExceptT tag e)
+instance Lift.LiftCatch (ExceptT tag e)
 
 instance Taggable (ExceptT tag e m) where
     type Tag (ExceptT tag e m) = 'Just tag
@@ -130,10 +136,6 @@ liftListen t listen m = tagged t $ Trans.liftListen listen (coerce m)
 liftPass :: Monad m => proxy tag -> Sig.Pass w m (Either e a) -> Sig.Pass w (ExceptT tag e m) a
 liftPass t pass m = tagged t $ Trans.liftPass pass (coerce m)
 
--- | Lift a @catchE@ operation to the new monad.
-liftCatch :: proxy tag -> Sig.Catch e m (Either e' a) -> Sig.Catch e (ExceptT tag e' m) a
-liftCatch t catchE m h = tagged t $ Util.liftCatch_ExceptT catchE (coerce m) (coerce h)
-
 instance Class.MonadCont m => Class.MonadCont (ExceptT tag e m) where
     callCC = liftCallCC Proxy Class.callCC
 
@@ -155,4 +157,4 @@ instance Class.MonadWriter w m => Class.MonadWriter w (ExceptT tag e m) where
 
 instance Class.MonadError e' m => Class.MonadError e' (ExceptT tag e m) where
     throwError = lift . Class.throwError
-    catchError = liftCatch Proxy Class.catchError
+    catchError = Lift.liftCatch Class.catchError

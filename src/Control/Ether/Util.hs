@@ -4,8 +4,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 module Control.Ether.Util
-    ( liftCatch_ExceptT
-    , liftListen_WriterT
+    ( liftListen_WriterT
     , liftPass_WriterT
     , type (++)
     , MaybeToList
@@ -13,7 +12,6 @@ module Control.Ether.Util
     ) where
 
 import qualified Control.Monad.Signatures as Sig
-import qualified Control.Monad.Trans.Except as Trans
 import qualified Control.Monad.Trans.Writer as Trans
 import Prelude hiding (fmap)
 
@@ -30,9 +28,6 @@ type family (as :: [*]) ++ (bs :: [*]) :: [*] where
 type family MaybeToList (mt :: Maybe k) :: [k] where
     MaybeToList 'Nothing = '[]
     MaybeToList ('Just t) = '[t]
-
-liftCatch_ExceptT :: Sig.Catch e m (Either e' a) -> Sig.Catch e (Trans.ExceptT e' m) a
-liftCatch_ExceptT catchE m h = Trans.ExceptT $ catchE (Trans.runExceptT m) (Trans.runExceptT . h)
 
 -- TODO: Not sure if correct
 liftListen_WriterT :: Monad m => Sig.Listen w' m (a, w) -> Sig.Listen w' (Trans.WriterT w m) a

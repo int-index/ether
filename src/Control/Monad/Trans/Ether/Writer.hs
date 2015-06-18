@@ -52,8 +52,10 @@ import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
+import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Writer.Lazy as Trans
 import qualified Control.Monad.Trans.Lift.Local as Lift
+import qualified Control.Monad.Trans.Lift.Catch as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -80,7 +82,13 @@ newtype WriterT tag w m a = WriterT (Trans.WriterT w m a)
 
 instance NT.Newtype (WriterT tag w m a)
 
+instance Monoid w => MC.MonadTransControl (WriterT tag w) where
+    type StT (WriterT tag w) a = MC.StT (Trans.WriterT w) a
+    liftWith f = WriterT $ MC.liftWith (f . coerce)
+    restoreT = WriterT . MC.restoreT
+
 instance Monoid w => Lift.LiftLocal (WriterT tag w)
+instance Monoid w => Lift.LiftCatch (WriterT tag w)
 
 instance Taggable (WriterT tag w m) where
     type Tag (WriterT tag w m) = 'Just tag
