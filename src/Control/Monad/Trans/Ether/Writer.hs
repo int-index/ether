@@ -86,10 +86,10 @@ instance Monoid w => Lift.LiftLocal (WriterT tag w)
 instance Monoid w => Lift.LiftCatch (WriterT tag w)
 
 instance Monoid w' => Lift.LiftListen (WriterT tag w') where
-    liftListen listen m = WriterT $ Lift.liftListen listen (coerce m)
+    liftListen listen' m = WriterT $ Lift.liftListen listen' (coerce m)
 
 instance Monoid w' => Lift.LiftPass (WriterT tag w') where
-    liftPass pass m = WriterT $ Lift.liftPass pass (coerce m)
+    liftPass pass' m = WriterT $ Lift.liftPass pass' (coerce m)
 
 instance Monoid w => Lift.LiftCallCC (WriterT tag w) where
     liftCallCC callCC f = WriterT $ Lift.liftCallCC callCC (coerce f)

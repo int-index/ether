@@ -9,8 +9,6 @@ module Control.Ether.Util
     , fmap
     ) where
 
-import qualified Control.Monad.Signatures as Sig
-import qualified Control.Monad.Trans.Writer as Trans
 import Prelude hiding (fmap)
 
 #if __GLASGOW_HASKELL__ < 710
