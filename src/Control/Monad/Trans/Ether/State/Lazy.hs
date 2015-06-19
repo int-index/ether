@@ -22,14 +22,11 @@ module Control.Monad.Trans.Ether.State.Lazy
     , runStateT
     , evalStateT
     , execStateT
-    , mapStateT
     -- * State operations
     , get
     , put
     -- * Litfing other operations
     , liftCallCC'
-    , liftListen
-    , liftPass
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -48,8 +45,11 @@ import qualified Control.Newtype as NT
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.State.Lazy as Trans
-import qualified Control.Monad.Trans.Lift.Local as Lift
-import qualified Control.Monad.Trans.Lift.Catch as Lift
+
+import qualified Control.Monad.Trans.Lift.Local  as Lift
+import qualified Control.Monad.Trans.Lift.Catch  as Lift
+import qualified Control.Monad.Trans.Lift.Listen as Lift
+import qualified Control.Monad.Trans.Lift.Pass   as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -84,6 +84,12 @@ instance MC.MonadTransControl (StateT tag s) where
 
 instance Lift.LiftLocal (StateT tag s)
 instance Lift.LiftCatch (StateT tag s)
+
+instance Lift.LiftListen (StateT tag s) where
+    liftListen listen m = StateT $ Lift.liftListen listen (coerce m)
+
+instance Lift.LiftPass (StateT tag s) where
+    liftPass pass m = StateT $ Lift.liftPass pass (coerce m)
 
 instance Taggable (StateT tag s m) where
     type Tag (StateT tag s m) = 'Just tag
@@ -131,12 +137,6 @@ evalState t = Trans.evalState . untagged t
 execState :: proxy tag -> State tag s a -> s -> s
 execState t = Trans.execState . untagged t
 
--- | Transform the computation inside a 'StateT'.
---
--- * @'runStateT' tag ('mapStateT' tag f m) = f . 'runStateT' tag m@
-mapStateT :: proxy tag -> (m (a, s) -> n (b, s)) -> StateT tag s m a -> StateT tag s n b
-mapStateT t f m = tagged t $ Trans.mapStateT f (coerce m)
-
 -- | Fetch the current value of the state within the monad.
 get :: Monad m => proxy tag -> StateT tag s m s
 get t = tagged t Trans.get
@@ -145,19 +145,11 @@ get t = tagged t Trans.get
 put :: Monad m => proxy tag -> s -> StateT tag s m ()
 put t = tagged t . Trans.put
 
--- | Lift a @listen@ operation to the new monad.
-liftListen :: Monad m => proxy tag -> Sig.Listen w m (a, s) -> Sig.Listen w (StateT tag s m) a
-liftListen t listen m = tagged t $ Trans.liftListen listen (coerce m)
-
 -- | In-situ lifting of a @callCC@ operation to the new monad.
 -- This version uses the current state on entering the continuation.
 -- It does not satisfy the uniformity property (see "Control.Monad.Signatures").
 liftCallCC' :: proxy tag -> Sig.CallCC m (a, s) (b, s) -> Sig.CallCC (StateT tag s m) a b
 liftCallCC' t callCC f = tagged t $ Trans.liftCallCC' callCC (coerce f)
-
--- | Lift a @pass@ operation to the new monad.
-liftPass :: Monad m => proxy tag -> Sig.Pass w m (a,s) -> Sig.Pass w (StateT tag s m) a
-liftPass t pass m = tagged t $ Trans.liftPass pass (coerce m)
 
 -- Instances for mtl classes
 
@@ -166,7 +158,7 @@ instance Class.MonadCont m => Class.MonadCont (StateT tag s m) where
 
 instance Class.MonadReader r m => Class.MonadReader r (StateT tag s m) where
     ask = lift Class.ask
-    local = mapStateT Proxy . Class.local
+    local = Lift.liftLocal Class.ask Class.local
     reader = lift . Class.reader
 
 instance Class.MonadState s' m => Class.MonadState s' (StateT tag s m) where
@@ -177,8 +169,8 @@ instance Class.MonadState s' m => Class.MonadState s' (StateT tag s m) where
 instance Class.MonadWriter w m => Class.MonadWriter w (StateT tag s m) where
     writer = lift . Class.writer
     tell   = lift . Class.tell
-    listen = liftListen Proxy Class.listen
-    pass   = liftPass Proxy Class.pass
+    listen = Lift.liftListen Class.listen
+    pass   = Lift.liftPass Class.pass
 
 instance Class.MonadError e m => Class.MonadError e (StateT tag s m) where
     throwError = lift . Class.throwError

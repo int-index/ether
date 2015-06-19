@@ -16,7 +16,6 @@ module Control.Monad.Ether.Implicit.Except
     , ExceptT
     , exceptT
     , runExceptT
-    , mapExceptT
     -- * Handle functions
     , handle
     , handleT
@@ -53,11 +52,6 @@ exceptT = Explicit.exceptT Proxy
 -- | See 'Control.Monad.Ether.Except.runExceptT'.
 runExceptT :: ExceptT e m a -> m (Either e a)
 runExceptT = Explicit.runExceptT Proxy
-
--- | See 'Control.Monad.Ether.Except.mapExceptT'.
--- Note that due to implicit tagging the exception type cannot be changed.
-mapExceptT :: (m (Either e a) -> n (Either e b)) -> ExceptT e m a -> ExceptT e n b
-mapExceptT = Explicit.mapExceptT Proxy
 
 -- | See 'Control.Monad.Ether.Except.handle'.
 handle :: (e -> a) -> Except e a -> a

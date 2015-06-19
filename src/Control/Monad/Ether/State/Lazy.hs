@@ -18,7 +18,6 @@ module Control.Monad.Ether.State.Lazy
     , runStateT
     , evalStateT
     , execStateT
-    , mapStateT
     ) where
 
 import Control.Monad.Ether.State.Class

@@ -18,8 +18,6 @@ module Control.Monad.Trans.Ether.Reader
     , ReaderT
     , readerT
     , runReaderT
-    , mapReaderT
-    , withReaderT
     -- * Reader operations
     , ask
     , local
@@ -43,8 +41,11 @@ import qualified Control.Newtype as NT
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Reader as Trans
-import qualified Control.Monad.Trans.Lift.Local as Lift
-import qualified Control.Monad.Trans.Lift.Catch as Lift
+
+import qualified Control.Monad.Trans.Lift.Local  as Lift
+import qualified Control.Monad.Trans.Lift.Catch  as Lift
+import qualified Control.Monad.Trans.Lift.Listen as Lift
+import qualified Control.Monad.Trans.Lift.Pass   as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -80,6 +81,12 @@ instance MC.MonadTransControl (ReaderT tag r) where
 instance Lift.LiftLocal (ReaderT tag r)
 instance Lift.LiftCatch (ReaderT tag r)
 
+instance Lift.LiftListen (ReaderT tag r) where
+    liftListen listen m = ReaderT $ Lift.liftListen listen (coerce m)
+
+instance Lift.LiftPass (ReaderT tag r) where
+    liftPass pass m = ReaderT $ Lift.liftPass pass (coerce m)
+
 instance Taggable (ReaderT tag r m) where
     type Tag (ReaderT tag r m) = 'Just tag
     type Inner (ReaderT tag r m) = 'Just m
@@ -106,25 +113,6 @@ runReaderT t = Trans.runReaderT . untagged t
 runReader :: proxy tag -> Reader tag r a -> r -> a
 runReader t = Trans.runReader . untagged t
 
--- | Transform the computation inside a 'ReaderT'.
---
--- * @'runReaderT' tag ('mapReaderT' tag f m) = f . 'runReaderT' tag m@
-mapReaderT :: proxy tag -> (m a -> n b) -> ReaderT tag r m a -> ReaderT tag r n b
-mapReaderT t f m = tagged t $ Trans.mapReaderT f (coerce m)
-
--- | Execute a computation in a modified environment
--- (a more general version of 'local').
---
--- * @'runReaderT' tag ('withReaderT' tag f m) = 'runReaderT' tag m . f@
-withReaderT
-    :: proxy tag
-    -> (r' -> r)
-    -- ^ The function to modify the environment.
-    -> ReaderT tag r  m a
-    -- ^ Computation to run in the modified environment.
-    -> ReaderT tag r' m a
-withReaderT t f m = tagged t $ Trans.withReaderT f (coerce m)
-
 -- | Lift a @callCC@ operation to the new monad.
 liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (ReaderT tag r m) a b
 liftCallCC t callCC f = tagged t $ Trans.liftCallCC callCC (coerce f)
@@ -144,7 +132,7 @@ local
     -> ReaderT tag r m a
     -- ^ Computation to run in the modified environment.
     -> ReaderT tag r m a
-local = withReaderT
+local t f m = tagged t $ Trans.withReaderT f (coerce m)
 
 -- Instances for mtl classes
 
@@ -153,7 +141,7 @@ instance Class.MonadCont m => Class.MonadCont (ReaderT tag r m) where
 
 instance Class.MonadReader r' m => Class.MonadReader r' (ReaderT tag r m) where
     ask = lift Class.ask
-    local = mapReaderT Proxy . Class.local
+    local = Lift.liftLocal Class.ask Class.local
     reader = lift . Class.reader
 
 instance Class.MonadState s m => Class.MonadState s (ReaderT tag r m) where
@@ -164,8 +152,8 @@ instance Class.MonadState s m => Class.MonadState s (ReaderT tag r m) where
 instance Class.MonadWriter w m => Class.MonadWriter w (ReaderT tag r m) where
     writer = lift . Class.writer
     tell   = lift . Class.tell
-    listen = mapReaderT Proxy Class.listen
-    pass   = mapReaderT Proxy Class.pass
+    listen = Lift.liftListen Class.listen
+    pass   = Lift.liftPass Class.pass
 
 instance Class.MonadError e m => Class.MonadError e (ReaderT tag r m) where
     throwError = lift . Class.throwError

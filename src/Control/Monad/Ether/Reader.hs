@@ -13,7 +13,6 @@ module Control.Monad.Ether.Reader
     , ReaderT
     , readerT
     , runReaderT
-    , mapReaderT
     ) where
 
 import Control.Monad.Ether.Reader.Class

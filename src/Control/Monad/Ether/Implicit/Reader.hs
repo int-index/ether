@@ -18,7 +18,6 @@ module Control.Monad.Ether.Implicit.Reader
     , ReaderT
     , readerT
     , runReaderT
-    , mapReaderT
     ) where
 
 import Data.Proxy
@@ -41,10 +40,6 @@ runReaderT = Explicit.runReaderT Proxy
 -- | See 'Control.Monad.Ether.Reader.runReader'.
 runReader :: Reader r a -> r -> a
 runReader = Explicit.runReader Proxy
-
--- | See 'Control.Monad.Ether.Reader.mapReaderT'.
-mapReaderT :: (m a -> n b) -> ReaderT r m a -> ReaderT r n b
-mapReaderT = Explicit.mapReaderT Proxy
 
 -- | See 'Control.Monad.Ether.Reader.MonadReader'.
 type MonadReader r = Explicit.MonadReader r r

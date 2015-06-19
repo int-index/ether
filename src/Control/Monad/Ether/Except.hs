@@ -12,7 +12,6 @@ module Control.Monad.Ether.Except
     , ExceptT
     , exceptT
     , runExceptT
-    , mapExceptT
     -- * Handle functions
     , handleT
     , handle

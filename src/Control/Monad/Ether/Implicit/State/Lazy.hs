@@ -23,7 +23,6 @@ module Control.Monad.Ether.Implicit.State.Lazy
     , runStateT
     , evalStateT
     , execStateT
-    , mapStateT
     ) where
 
 import Data.Proxy
@@ -62,10 +61,6 @@ execStateT = Explicit.execStateT Proxy
 -- | See 'Control.Monad.Ether.State.Lazy.execState'.
 execState :: State s a -> s -> s
 execState = Explicit.execState Proxy
-
--- | See 'Control.Monad.Ether.State.Lazy.mapStateT'.
-mapStateT :: (m (a, s) -> n (b, s)) -> StateT s m a -> StateT s n b
-mapStateT = Explicit.mapStateT Proxy
 
 -- | See 'Control.Monad.Ether.State.Lazy.MonadState'.
 type MonadState s = Explicit.MonadState s s

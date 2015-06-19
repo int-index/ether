@@ -16,7 +16,6 @@ module Control.Monad.Ether.Writer
     , writerT
     , runWriterT
     , execWriterT
-    , mapWriterT
     ) where
 
 import Control.Monad.Ether.Writer.Class

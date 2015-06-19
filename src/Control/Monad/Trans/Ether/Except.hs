@@ -18,14 +18,11 @@ module Control.Monad.Trans.Ether.Except
     , ExceptT
     , exceptT
     , runExceptT
-    , mapExceptT
     -- * Exception operations
     , throw
     , catch
     -- * Lifting other operations
     , liftCallCC
-    , liftListen
-    , liftPass
     ) where
 
 import Data.Proxy (Proxy(Proxy))
@@ -44,8 +41,11 @@ import qualified Control.Newtype as NT
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Except as Trans
-import qualified Control.Monad.Trans.Lift.Local as Lift
-import qualified Control.Monad.Trans.Lift.Catch as Lift
+
+import qualified Control.Monad.Trans.Lift.Local  as Lift
+import qualified Control.Monad.Trans.Lift.Catch  as Lift
+import qualified Control.Monad.Trans.Lift.Listen as Lift
+import qualified Control.Monad.Trans.Lift.Pass   as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -86,6 +86,12 @@ instance MC.MonadTransControl (ExceptT tag e) where
 instance Lift.LiftLocal (ExceptT tag e)
 instance Lift.LiftCatch (ExceptT tag e)
 
+instance Lift.LiftListen (ExceptT tag e) where
+    liftListen listen m = ExceptT $ Lift.liftListen listen (coerce m)
+
+instance Lift.LiftPass (ExceptT tag e) where
+    liftPass pass m = ExceptT $ Lift.liftPass pass (coerce m)
+
 instance Taggable (ExceptT tag e m) where
     type Tag (ExceptT tag e m) = 'Just tag
     type Inner (ExceptT tag e m) = 'Just m
@@ -106,16 +112,6 @@ except t = exceptT t . return
 runExceptT :: proxy tag -> ExceptT tag e m a -> m (Either e a)
 runExceptT t = Trans.runExceptT . untagged t
 
--- | Transforms the computation inside an 'ExceptT'.
---
--- * @'runExceptT' tag ('mapExceptT' tag f m) = f ('runExceptT' tag m)@
-mapExceptT
-    :: proxy tag
-    -> (m (Either e a) -> n (Either e' b))
-    -> ExceptT tag e  m a
-    -> ExceptT tag e' n b
-mapExceptT t f m = tagged t $ Trans.mapExceptT f (coerce m)
-
 -- | Is used within a monadic computation to begin exception processing.
 throw :: Monad m => proxy tag -> e -> ExceptT tag e m a
 throw t = tagged t . Trans.throwE
@@ -128,20 +124,12 @@ catch t m h = tagged t $ Trans.catchE (coerce m) (coerce . h)
 liftCallCC :: proxy tag -> Sig.CallCC m (Either e a) (Either e b) -> Sig.CallCC (ExceptT tag e m) a b
 liftCallCC t callCC f = tagged t $ Trans.liftCallCC callCC (coerce f)
 
--- | Lift a @listen@ operation to the new monad.
-liftListen :: Monad m => proxy tag -> Sig.Listen w m (Either e a) -> Sig.Listen w (ExceptT tag e m) a
-liftListen t listen m = tagged t $ Trans.liftListen listen (coerce m)
-
--- | Lift a @pass@ operation to the new monad.
-liftPass :: Monad m => proxy tag -> Sig.Pass w m (Either e a) -> Sig.Pass w (ExceptT tag e m) a
-liftPass t pass m = tagged t $ Trans.liftPass pass (coerce m)
-
 instance Class.MonadCont m => Class.MonadCont (ExceptT tag e m) where
     callCC = liftCallCC Proxy Class.callCC
 
 instance Class.MonadReader r m => Class.MonadReader r (ExceptT tag e m) where
     ask = lift Class.ask
-    local = mapExceptT Proxy . Class.local
+    local = Lift.liftLocal Class.ask Class.local
     reader = lift . Class.reader
 
 instance Class.MonadState s m => Class.MonadState s (ExceptT tag e m) where
@@ -152,8 +140,8 @@ instance Class.MonadState s m => Class.MonadState s (ExceptT tag e m) where
 instance Class.MonadWriter w m => Class.MonadWriter w (ExceptT tag e m) where
     writer = lift . Class.writer
     tell   = lift . Class.tell
-    listen = liftListen Proxy Class.listen
-    pass   = liftPass Proxy Class.pass
+    listen = Lift.liftListen Class.listen
+    pass   = Lift.liftPass Class.pass
 
 instance Class.MonadError e' m => Class.MonadError e' (ExceptT tag e m) where
     throwError = lift . Class.throwError

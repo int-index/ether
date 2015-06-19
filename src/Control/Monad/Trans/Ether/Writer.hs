@@ -21,15 +21,12 @@ module Control.Monad.Trans.Ether.Writer
     , writerT
     , runWriterT
     , execWriterT
-    , mapWriterT
     -- * Writer operations
     , tell
     , listen
     , pass
     -- * Lifting other operations
     , liftCallCC
-    , liftListen
-    , liftPass
     ) where
 
 #if __GLASGOW_HASKELL__ < 710
@@ -46,15 +43,17 @@ import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Ether.Tagged (Taggable(..), Tagged(..))
-import qualified Control.Ether.Util as Util
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
 import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Writer.Lazy as Trans
-import qualified Control.Monad.Trans.Lift.Local as Lift
-import qualified Control.Monad.Trans.Lift.Catch as Lift
+
+import qualified Control.Monad.Trans.Lift.Local  as Lift
+import qualified Control.Monad.Trans.Lift.Catch  as Lift
+import qualified Control.Monad.Trans.Lift.Listen as Lift
+import qualified Control.Monad.Trans.Lift.Pass   as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -88,6 +87,12 @@ instance Monoid w => MC.MonadTransControl (WriterT tag w) where
 
 instance Monoid w => Lift.LiftLocal (WriterT tag w)
 instance Monoid w => Lift.LiftCatch (WriterT tag w)
+
+instance Monoid w' => Lift.LiftListen (WriterT tag w') where
+    liftListen listen m = WriterT $ Lift.liftListen listen (coerce m)
+
+instance Monoid w' => Lift.LiftPass (WriterT tag w') where
+    liftPass pass m = WriterT $ Lift.liftPass pass (coerce m)
 
 instance Taggable (WriterT tag w m) where
     type Tag (WriterT tag w m) = 'Just tag
@@ -127,9 +132,6 @@ execWriter t = Trans.execWriter . untagged t
 
 -- | Transform the computation inside a 'WriterT'.
 --
--- * @'runWriterT' tag ('mapWriterT' tag f m) = f ('runWriterT' tag m)@
-mapWriterT :: proxy tag -> (m (a, w) -> n (b, w')) -> WriterT tag w m a -> WriterT tag w' n b
-mapWriterT t f m = tagged t $ Trans.mapWriterT f (coerce m)
 
 -- | Appends a value to the accumulator within the monad.
 tell :: Monad m => proxy tag -> w -> WriterT tag w m ()
@@ -148,20 +150,12 @@ pass t m = tagged t $ Trans.pass (coerce m)
 liftCallCC :: Monoid w => proxy tag -> Sig.CallCC m (a, w) (b, w) -> Sig.CallCC (WriterT tag w m) a b
 liftCallCC t callCC f = tagged t $ Trans.liftCallCC callCC (coerce f)
 
--- | Lift a @listen@ operation to the new monad.
-liftListen :: Monad m => proxy tag -> Sig.Listen w' m (a, w) -> Sig.Listen w' (WriterT tag w m) a
-liftListen t f m = tagged t $ Util.liftListen_WriterT f (coerce m)
-
--- | Lift a @pass@ operation to the new monad.
-liftPass :: Monad m => proxy tag -> Sig.Pass w' m (a, w) -> Sig.Pass w' (WriterT tag w m) a
-liftPass t f m = tagged t $ Util.liftPass_WriterT f (coerce m)
-
 instance (Monoid w, Class.MonadCont m) => Class.MonadCont (WriterT tag w m) where
     callCC = liftCallCC Proxy Class.callCC
 
 instance (Monoid w, Class.MonadReader r m) => Class.MonadReader r (WriterT tag w m) where
     ask = lift Class.ask
-    local = mapWriterT Proxy . Class.local
+    local = Lift.liftLocal Class.ask Class.local
     reader = lift . Class.reader
 
 instance (Monoid w, Class.MonadState s m) => Class.MonadState s (WriterT tag w m) where
@@ -172,8 +166,8 @@ instance (Monoid w, Class.MonadState s m) => Class.MonadState s (WriterT tag w m
 instance (Monoid w, Class.MonadWriter w' m) => Class.MonadWriter w' (WriterT tag w m) where
     writer = lift . Class.writer
     tell   = lift . Class.tell
-    listen = liftListen Proxy Class.listen
-    pass   = liftPass Proxy Class.pass
+    listen = Lift.liftListen Class.listen
+    pass   = Lift.liftPass Class.pass
 
 instance (Monoid w, Class.MonadError e m) => Class.MonadError e (WriterT tag w m) where
     throwError = lift . Class.throwError
