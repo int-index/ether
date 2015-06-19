@@ -21,11 +21,8 @@ module Control.Monad.Trans.Ether.Except
     -- * Exception operations
     , throw
     , catch
-    -- * Lifting other operations
-    , liftCallCC
     ) where
 
-import Data.Proxy (Proxy(Proxy))
 import Data.Functor.Identity (Identity(..))
 import Data.Coerce (coerce)
 import Control.Applicative
@@ -38,7 +35,6 @@ import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
-import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Except as Trans
 
@@ -46,6 +42,7 @@ import qualified Control.Monad.Trans.Lift.Local  as Lift
 import qualified Control.Monad.Trans.Lift.Catch  as Lift
 import qualified Control.Monad.Trans.Lift.Listen as Lift
 import qualified Control.Monad.Trans.Lift.Pass   as Lift
+import qualified Control.Monad.Trans.Lift.CallCC as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -92,6 +89,9 @@ instance Lift.LiftListen (ExceptT tag e) where
 instance Lift.LiftPass (ExceptT tag e) where
     liftPass pass m = ExceptT $ Lift.liftPass pass (coerce m)
 
+instance Lift.LiftCallCC (ExceptT tag e) where
+    liftCallCC callCC f = ExceptT $ Lift.liftCallCC callCC (coerce f)
+
 instance Taggable (ExceptT tag e m) where
     type Tag (ExceptT tag e m) = 'Just tag
     type Inner (ExceptT tag e m) = 'Just m
@@ -120,12 +120,8 @@ throw t = tagged t . Trans.throwE
 catch :: Monad m => proxy tag -> ExceptT tag e m a -> (e -> ExceptT tag e m a) -> ExceptT tag e m a
 catch t m h = tagged t $ Trans.catchE (coerce m) (coerce . h)
 
--- | Lift a @callCC@ operation to the new monad.
-liftCallCC :: proxy tag -> Sig.CallCC m (Either e a) (Either e b) -> Sig.CallCC (ExceptT tag e m) a b
-liftCallCC t callCC f = tagged t $ Trans.liftCallCC callCC (coerce f)
-
 instance Class.MonadCont m => Class.MonadCont (ExceptT tag e m) where
-    callCC = liftCallCC Proxy Class.callCC
+    callCC = Lift.liftCallCC Class.callCC
 
 instance Class.MonadReader r m => Class.MonadReader r (ExceptT tag e m) where
     ask = lift Class.ask

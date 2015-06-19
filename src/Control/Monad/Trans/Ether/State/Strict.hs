@@ -25,11 +25,8 @@ module Control.Monad.Trans.Ether.State.Strict
     -- * State operations
     , get
     , put
-    -- * Litfing other operations
-    , liftCallCC'
     ) where
 
-import Data.Proxy (Proxy(Proxy))
 import Data.Functor.Identity (Identity(..))
 import Data.Coerce (coerce)
 import Control.Applicative
@@ -42,7 +39,6 @@ import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
-import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.State.Strict as Trans
 
@@ -50,6 +46,7 @@ import qualified Control.Monad.Trans.Lift.Local  as Lift
 import qualified Control.Monad.Trans.Lift.Catch  as Lift
 import qualified Control.Monad.Trans.Lift.Listen as Lift
 import qualified Control.Monad.Trans.Lift.Pass   as Lift
+import qualified Control.Monad.Trans.Lift.CallCC as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -90,6 +87,10 @@ instance Lift.LiftListen (StateT tag s) where
 
 instance Lift.LiftPass (StateT tag s) where
     liftPass pass m = StateT $ Lift.liftPass pass (coerce m)
+
+instance Lift.LiftCallCC (StateT tag s) where
+    liftCallCC  callCC f = StateT $ Lift.liftCallCC  callCC (coerce f)
+    liftCallCC' callCC f = StateT $ Lift.liftCallCC' callCC (coerce f)
 
 instance Taggable (StateT tag s m) where
     type Tag (StateT tag s m) = 'Just tag
@@ -145,16 +146,10 @@ get t = tagged t Trans.get
 put :: Monad m => proxy tag -> s -> StateT tag s m ()
 put t = tagged t . Trans.put
 
--- | In-situ lifting of a @callCC@ operation to the new monad.
--- This version uses the current state on entering the continuation.
--- It does not satisfy the uniformity property (see "Control.Monad.Signatures").
-liftCallCC' :: proxy tag -> Sig.CallCC m (a, s) (b, s) -> Sig.CallCC (StateT tag s m) a b
-liftCallCC' t callCC f = tagged t $ Trans.liftCallCC' callCC (coerce f)
-
 -- Instances for mtl classes
 
 instance Class.MonadCont m => Class.MonadCont (StateT tag s m) where
-    callCC = liftCallCC' Proxy Class.callCC
+    callCC = Lift.liftCallCC' Class.callCC
 
 instance Class.MonadReader r m => Class.MonadReader r (StateT tag s m) where
     ask = lift Class.ask

@@ -21,11 +21,8 @@ module Control.Monad.Trans.Ether.Reader
     -- * Reader operations
     , ask
     , local
-    -- * Lifting other operations
-    , liftCallCC
     ) where
 
-import Data.Proxy (Proxy(Proxy))
 import Data.Functor.Identity (Identity(..))
 import Data.Coerce (coerce)
 import Control.Applicative
@@ -38,7 +35,6 @@ import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
-import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Reader as Trans
 
@@ -46,6 +42,7 @@ import qualified Control.Monad.Trans.Lift.Local  as Lift
 import qualified Control.Monad.Trans.Lift.Catch  as Lift
 import qualified Control.Monad.Trans.Lift.Listen as Lift
 import qualified Control.Monad.Trans.Lift.Pass   as Lift
+import qualified Control.Monad.Trans.Lift.CallCC as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -87,6 +84,9 @@ instance Lift.LiftListen (ReaderT tag r) where
 instance Lift.LiftPass (ReaderT tag r) where
     liftPass pass m = ReaderT $ Lift.liftPass pass (coerce m)
 
+instance Lift.LiftCallCC (ReaderT tag r) where
+    liftCallCC callCC f = ReaderT $ Lift.liftCallCC callCC (coerce f)
+
 instance Taggable (ReaderT tag r m) where
     type Tag (ReaderT tag r m) = 'Just tag
     type Inner (ReaderT tag r m) = 'Just m
@@ -113,10 +113,6 @@ runReaderT t = Trans.runReaderT . untagged t
 runReader :: proxy tag -> Reader tag r a -> r -> a
 runReader t = Trans.runReader . untagged t
 
--- | Lift a @callCC@ operation to the new monad.
-liftCallCC :: proxy tag -> Sig.CallCC m a b -> Sig.CallCC (ReaderT tag r m) a b
-liftCallCC t callCC f = tagged t $ Trans.liftCallCC callCC (coerce f)
-
 -- | Fetch the value of the environment.
 ask :: Monad m => proxy tag -> ReaderT tag r m r
 ask t = tagged t Trans.ask
@@ -137,7 +133,7 @@ local t f m = tagged t $ Trans.withReaderT f (coerce m)
 -- Instances for mtl classes
 
 instance Class.MonadCont m => Class.MonadCont (ReaderT tag r m) where
-    callCC = liftCallCC Proxy Class.callCC
+    callCC = Lift.liftCallCC Class.callCC
 
 instance Class.MonadReader r' m => Class.MonadReader r' (ReaderT tag r m) where
     ask = lift Class.ask

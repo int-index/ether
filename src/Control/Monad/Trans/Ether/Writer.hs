@@ -25,15 +25,12 @@ module Control.Monad.Trans.Ether.Writer
     , tell
     , listen
     , pass
-    -- * Lifting other operations
-    , liftCallCC
     ) where
 
 #if __GLASGOW_HASKELL__ < 710
 import Data.Monoid
 #endif
 
-import Data.Proxy (Proxy(Proxy))
 import Data.Functor.Identity (Identity(..))
 import Data.Coerce (coerce)
 import Control.Applicative
@@ -46,7 +43,6 @@ import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
-import qualified Control.Monad.Signatures as Sig
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Writer.Lazy as Trans
 
@@ -54,6 +50,7 @@ import qualified Control.Monad.Trans.Lift.Local  as Lift
 import qualified Control.Monad.Trans.Lift.Catch  as Lift
 import qualified Control.Monad.Trans.Lift.Listen as Lift
 import qualified Control.Monad.Trans.Lift.Pass   as Lift
+import qualified Control.Monad.Trans.Lift.CallCC as Lift
 
 import qualified Control.Monad.Cont.Class    as Class
 import qualified Control.Monad.Reader.Class  as Class
@@ -94,6 +91,9 @@ instance Monoid w' => Lift.LiftListen (WriterT tag w') where
 instance Monoid w' => Lift.LiftPass (WriterT tag w') where
     liftPass pass m = WriterT $ Lift.liftPass pass (coerce m)
 
+instance Monoid w => Lift.LiftCallCC (WriterT tag w) where
+    liftCallCC callCC f = WriterT $ Lift.liftCallCC callCC (coerce f)
+
 instance Taggable (WriterT tag w m) where
     type Tag (WriterT tag w m) = 'Just tag
     type Inner (WriterT tag w m) = 'Just m
@@ -130,9 +130,6 @@ execWriterT t = Trans.execWriterT . untagged t
 execWriter :: proxy tag -> Writer tag w a -> w
 execWriter t = Trans.execWriter . untagged t
 
--- | Transform the computation inside a 'WriterT'.
---
-
 -- | Appends a value to the accumulator within the monad.
 tell :: Monad m => proxy tag -> w -> WriterT tag w m ()
 tell t w = writer t ((), w)
@@ -146,12 +143,8 @@ listen t m = tagged t $ Trans.listen (coerce m)
 pass :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
 pass t m = tagged t $ Trans.pass (coerce m)
 
--- | Lift a @callCC@ operation to the new monad.
-liftCallCC :: Monoid w => proxy tag -> Sig.CallCC m (a, w) (b, w) -> Sig.CallCC (WriterT tag w m) a b
-liftCallCC t callCC f = tagged t $ Trans.liftCallCC callCC (coerce f)
-
 instance (Monoid w, Class.MonadCont m) => Class.MonadCont (WriterT tag w m) where
-    callCC = liftCallCC Proxy Class.callCC
+    callCC = Lift.liftCallCC Class.callCC
 
 instance (Monoid w, Class.MonadReader r m) => Class.MonadReader r (WriterT tag w m) where
     ask = lift Class.ask
