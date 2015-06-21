@@ -28,7 +28,6 @@ module Control.Monad.Trans.Ether.State.Lazy
     ) where
 
 import Data.Functor.Identity (Identity(..))
-import Data.Coerce (coerce)
 import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
@@ -67,7 +66,7 @@ type State tag r = StateT tag r Identity
 --
 -- The 'return' function leaves the state unchanged, while '>>=' uses
 -- the final state of the first computation as the initial state of the second.
-newtype StateT tag s m a = StateT (Trans.StateT s m a)
+newtype StateT tag s m a = ST { runST :: Trans.StateT s m a }
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor )
@@ -76,21 +75,19 @@ instance NT.Newtype (StateT tag s m a)
 
 instance MC.MonadTransControl (StateT tag s) where
     type StT (StateT tag s) a = MC.StT (Trans.StateT s) a
-    liftWith f = StateT $ MC.liftWith (f . coerce)
-    restoreT = StateT . MC.restoreT
+    liftWith = MC.defaultLiftWith ST runST
+    restoreT = MC.defaultRestoreT ST
 
-instance Lift.LiftLocal (StateT tag s)
-instance Lift.LiftCatch (StateT tag s)
-
-instance Lift.LiftListen (StateT tag s) where
-    liftListen listen m = StateT $ Lift.liftListen listen (coerce m)
+instance Lift.LiftLocal  (StateT tag s)
+instance Lift.LiftCatch  (StateT tag s)
+instance Lift.LiftListen (StateT tag s)
 
 instance Lift.LiftPass (StateT tag s) where
-    liftPass pass m = StateT $ Lift.liftPass pass (coerce m)
+    liftPass pass m = ST $ Lift.liftPass pass (runST m)
 
 instance Lift.LiftCallCC (StateT tag s) where
-    liftCallCC  callCC f = StateT $ Lift.liftCallCC  callCC (coerce f)
-    liftCallCC' callCC f = StateT $ Lift.liftCallCC' callCC (coerce f)
+    liftCallCC  callCC f = ST $ Lift.liftCallCC  callCC (\g -> (runST . f) (ST . g))
+    liftCallCC' callCC f = ST $ Lift.liftCallCC' callCC (\g -> (runST . f) (ST . g))
 
 instance Taggable (StateT tag s m) where
     type Tag (StateT tag s m) = 'Just tag

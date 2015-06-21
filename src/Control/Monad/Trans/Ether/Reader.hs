@@ -24,7 +24,6 @@ module Control.Monad.Trans.Ether.Reader
     ) where
 
 import Data.Functor.Identity (Identity(..))
-import Data.Coerce (coerce)
 import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
@@ -63,7 +62,7 @@ type Reader tag r = ReaderT tag r Identity
 --
 -- The 'return' function ignores the environment, while '>>=' passes
 -- the inherited environment to both subcomputations.
-newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
+newtype ReaderT tag r m a = RT { runRT :: Trans.ReaderT r m a }
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
@@ -72,20 +71,18 @@ instance NT.Newtype (ReaderT tag r m a)
 
 instance MC.MonadTransControl (ReaderT tag r) where
     type StT (ReaderT tag r) a = MC.StT (Trans.ReaderT r) a
-    liftWith f = ReaderT $ MC.liftWith (f . coerce)
-    restoreT = ReaderT . MC.restoreT
+    liftWith = MC.defaultLiftWith RT runRT
+    restoreT = MC.defaultRestoreT RT
 
 instance Lift.LiftLocal (ReaderT tag r)
 instance Lift.LiftCatch (ReaderT tag r)
-
-instance Lift.LiftListen (ReaderT tag r) where
-    liftListen listen m = ReaderT $ Lift.liftListen listen (coerce m)
+instance Lift.LiftListen (ReaderT tag r)
 
 instance Lift.LiftPass (ReaderT tag r) where
-    liftPass pass m = ReaderT $ Lift.liftPass pass (coerce m)
+    liftPass pass m = RT $ Lift.liftPass pass (runRT m)
 
 instance Lift.LiftCallCC (ReaderT tag r) where
-    liftCallCC callCC f = ReaderT $ Lift.liftCallCC callCC (coerce f)
+    liftCallCC callCC f = RT $ Lift.liftCallCC callCC (\g -> (runRT . f) (RT . g))
 
 instance Taggable (ReaderT tag r m) where
     type Tag (ReaderT tag r m) = 'Just tag
@@ -128,7 +125,7 @@ local
     -> ReaderT tag r m a
     -- ^ Computation to run in the modified environment.
     -> ReaderT tag r m a
-local t f m = tagged t $ Trans.withReaderT f (coerce m)
+local t f m = tagged t $ Trans.withReaderT f (untagged t m)
 
 -- Instances for mtl classes
 

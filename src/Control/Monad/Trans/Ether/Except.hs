@@ -24,7 +24,6 @@ module Control.Monad.Trans.Ether.Except
     ) where
 
 import Data.Functor.Identity (Identity(..))
-import Data.Coerce (coerce)
 import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
@@ -68,7 +67,7 @@ runExcept t = Trans.runExcept . untagged t
 -- The 'return' function returns a normal value, while '>>=' exits on
 -- the first exception.
 
-newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
+newtype ExceptT tag e m a = ET { runET :: Trans.ExceptT e m a }
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
@@ -77,20 +76,18 @@ instance NT.Newtype (ExceptT tag e m a)
 
 instance MC.MonadTransControl (ExceptT tag e) where
     type StT (ExceptT tag e) a = MC.StT (Trans.ExceptT e) a
-    liftWith f = ExceptT $ MC.liftWith (f . coerce)
-    restoreT = ExceptT . MC.restoreT
+    liftWith = MC.defaultLiftWith ET runET
+    restoreT = MC.defaultRestoreT ET
 
-instance Lift.LiftLocal (ExceptT tag e)
-instance Lift.LiftCatch (ExceptT tag e)
-
-instance Lift.LiftListen (ExceptT tag e) where
-    liftListen listen m = ExceptT $ Lift.liftListen listen (coerce m)
+instance Lift.LiftLocal  (ExceptT tag e)
+instance Lift.LiftCatch  (ExceptT tag e)
+instance Lift.LiftListen (ExceptT tag e)
 
 instance Lift.LiftPass (ExceptT tag e) where
-    liftPass pass m = ExceptT $ Lift.liftPass pass (coerce m)
+    liftPass pass m = ET $ Lift.liftPass pass (runET m)
 
 instance Lift.LiftCallCC (ExceptT tag e) where
-    liftCallCC callCC f = ExceptT $ Lift.liftCallCC callCC (coerce f)
+    liftCallCC callCC f = ET $ Lift.liftCallCC callCC (\g -> (runET . f) (ET . g))
 
 instance Taggable (ExceptT tag e m) where
     type Tag (ExceptT tag e m) = 'Just tag
@@ -118,7 +115,7 @@ throw t = tagged t . Trans.throwE
 
 -- | A handler function to handle previous exceptions and return to normal execution.
 catch :: Monad m => proxy tag -> ExceptT tag e m a -> (e -> ExceptT tag e m a) -> ExceptT tag e m a
-catch t m h = tagged t $ Trans.catchE (coerce m) (coerce . h)
+catch t m h = tagged t $ Trans.catchE (untagged t m) (untagged t . h)
 
 instance Class.MonadCont m => Class.MonadCont (ExceptT tag e m) where
     callCC = Lift.liftCallCC Class.callCC

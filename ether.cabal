@@ -58,7 +58,7 @@ library
 
   build-depends:       base >=4.7 && <4.9
                ,       transformers >=0.4.2
-               ,       transformers-lift >=0.1
+               ,       transformers-lift >=0.0
                ,       mtl >=2.2.1
                ,       mmorph >=1.0.4
                ,       monad-control >=1.0.0.4

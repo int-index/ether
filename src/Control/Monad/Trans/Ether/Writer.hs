@@ -32,7 +32,6 @@ import Data.Monoid
 #endif
 
 import Data.Functor.Identity (Identity(..))
-import Data.Coerce (coerce)
 import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
@@ -70,7 +69,7 @@ type Writer tag w = WriterT tag w Identity
 --
 -- The 'return' function produces the output 'mempty', while '>>=' combines
 -- the outputs of the subcomputations using 'mappend'.
-newtype WriterT tag w m a = WriterT (Trans.WriterT w m a)
+newtype WriterT tag w m a = WT { runWT :: Trans.WriterT w m a }
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
@@ -79,20 +78,18 @@ instance NT.Newtype (WriterT tag w m a)
 
 instance Monoid w => MC.MonadTransControl (WriterT tag w) where
     type StT (WriterT tag w) a = MC.StT (Trans.WriterT w) a
-    liftWith f = WriterT $ MC.liftWith (f . coerce)
-    restoreT = WriterT . MC.restoreT
+    liftWith = MC.defaultLiftWith WT runWT
+    restoreT = MC.defaultRestoreT WT
 
-instance Monoid w => Lift.LiftLocal (WriterT tag w)
-instance Monoid w => Lift.LiftCatch (WriterT tag w)
-
-instance Monoid w' => Lift.LiftListen (WriterT tag w') where
-    liftListen listen' m = WriterT $ Lift.liftListen listen' (coerce m)
+instance Monoid w => Lift.LiftLocal  (WriterT tag w)
+instance Monoid w => Lift.LiftCatch  (WriterT tag w)
+instance Monoid w => Lift.LiftListen (WriterT tag w)
 
 instance Monoid w' => Lift.LiftPass (WriterT tag w') where
-    liftPass pass' m = WriterT $ Lift.liftPass pass' (coerce m)
+    liftPass pass' m = WT $ Lift.liftPass pass' (runWT m)
 
 instance Monoid w => Lift.LiftCallCC (WriterT tag w) where
-    liftCallCC callCC f = WriterT $ Lift.liftCallCC callCC (coerce f)
+    liftCallCC callCC f = WT $ Lift.liftCallCC callCC (\g -> (runWT . f) (WT . g))
 
 instance Taggable (WriterT tag w m) where
     type Tag (WriterT tag w m) = 'Just tag
@@ -136,12 +133,12 @@ tell t w = writer t ((), w)
 
 -- | Executes an action and adds its accumulator to the value of the computation.
 listen :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m a -> WriterT tag w m (a, w)
-listen t m = tagged t $ Trans.listen (coerce m)
+listen t m = tagged t $ Trans.listen (untagged t m)
 
 -- | Executes an action which returns a value and a function, and returns the
 -- value, applying the function to the accumulator.
 pass :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
-pass t m = tagged t $ Trans.pass (coerce m)
+pass t m = tagged t $ Trans.pass (untagged t m)
 
 instance (Monoid w, Class.MonadCont m) => Class.MonadCont (WriterT tag w m) where
     callCC = Lift.liftCallCC Class.callCC
