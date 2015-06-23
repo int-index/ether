@@ -49,7 +49,7 @@ import qualified Control.Monad.Trans.Writer.Strict as Trans.Strict
 class UniqueTag a
 
 type family IsUnique (x :: k) (as :: [k]) :: Constraint where
-    IsUnique x (x ': as) = UniqueTag x
+    IsUnique x (x ': as) = (UniqueTag x, IsUnique x as)
     IsUnique x (a ': as) = IsUnique x as
     IsUnique x '[] = ()
 
