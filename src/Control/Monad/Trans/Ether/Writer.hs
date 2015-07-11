@@ -42,6 +42,7 @@ import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
+import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Writer.Lazy as Trans
 
@@ -77,10 +78,18 @@ newtype WriterT tag w m a = WriterT (Trans.WriterT w m a)
 
 instance NT.Newtype (WriterT tag w m a)
 
+instance (Monoid w, MB.MonadBase b m) => MB.MonadBase b (WriterT tag w m) where
+    liftBase = MB.liftBaseDefault
+
 instance Monoid w => MC.MonadTransControl (WriterT tag w) where
     type StT (WriterT tag w) a = MC.StT (Trans.WriterT w) a
     liftWith = MC.defaultLiftWith NT.pack NT.unpack
     restoreT = MC.defaultRestoreT NT.pack
+
+instance (Monoid w, MC.MonadBaseControl b m) => MC.MonadBaseControl b (WriterT tag w m) where
+    type StM (WriterT tag w m) a = MC.ComposeSt (WriterT tag w) m a
+    liftBaseWith = MC.defaultLiftBaseWith
+    restoreM = MC.defaultRestoreM
 
 type instance Lift.StT (WriterT tag w) a = MC.StT (WriterT tag w) a
 
@@ -97,8 +106,8 @@ instance Monoid w' => Lift.LiftPass (WriterT tag w') where
     liftPass = Lift.defaultLiftPass NT.pack NT.unpack
 
 instance Monoid w => Lift.LiftCallCC (WriterT tag w) where
-    liftCallCC  = Lift.defaultLiftCallCC WT runWT
-    liftCallCC' = Lift.defaultLiftCallCC WT runWT
+    liftCallCC  = Lift.defaultLiftCallCC NT.pack NT.unpack
+    liftCallCC' = Lift.defaultLiftCallCC NT.pack NT.unpack
 
 instance Taggable (WriterT tag w m) where
     type Tag (WriterT tag w m) = 'Just tag

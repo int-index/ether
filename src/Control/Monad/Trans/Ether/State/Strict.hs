@@ -38,6 +38,7 @@ import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
+import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.State.Strict as Trans
 
@@ -74,10 +75,18 @@ newtype StateT tag s m a = StateT (Trans.StateT s m a)
 
 instance NT.Newtype (StateT tag s m a)
 
+instance MB.MonadBase b m => MB.MonadBase b (StateT tag s m) where
+    liftBase = MB.liftBaseDefault
+
 instance MC.MonadTransControl (StateT tag s) where
     type StT (StateT tag s) a = MC.StT (Trans.StateT s) a
     liftWith = MC.defaultLiftWith NT.pack NT.unpack
     restoreT = MC.defaultRestoreT NT.pack
+
+instance MC.MonadBaseControl b m => MC.MonadBaseControl b (StateT tag s m) where
+    type StM (StateT tag s m) a = MC.ComposeSt (StateT tag s) m a
+    liftBaseWith = MC.defaultLiftBaseWith
+    restoreM = MC.defaultRestoreM
 
 type instance Lift.StT (StateT tag s) a = MC.StT (StateT tag s) a
 

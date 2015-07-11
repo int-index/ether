@@ -34,6 +34,7 @@ import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import qualified Control.Newtype as NT
 
+import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Reader as Trans
 
@@ -70,10 +71,18 @@ newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
 
 instance NT.Newtype (ReaderT tag r m a)
 
+instance MB.MonadBase b m => MB.MonadBase b (ReaderT tag r m) where
+    liftBase = MB.liftBaseDefault
+
 instance MC.MonadTransControl (ReaderT tag r) where
     type StT (ReaderT tag r) a = MC.StT (Trans.ReaderT r) a
     liftWith = MC.defaultLiftWith NT.pack NT.unpack
     restoreT = MC.defaultRestoreT NT.pack
+
+instance MC.MonadBaseControl b m => MC.MonadBaseControl b (ReaderT tag r m) where
+    type StM (ReaderT tag r m) a = MC.ComposeSt (ReaderT tag r) m a
+    liftBaseWith = MC.defaultLiftBaseWith
+    restoreM = MC.defaultRestoreM
 
 type instance Lift.StT (ReaderT tag r) a = MC.StT (ReaderT tag r) a
 

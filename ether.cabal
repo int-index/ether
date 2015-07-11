@@ -58,10 +58,11 @@ library
 
   build-depends:       base >=4.7 && <4.9
                ,       transformers >=0.4.2
-               ,       transformers-lift >=0.0
+               ,       transformers-lift >=0.1
                ,       mtl >=2.2.1
                ,       mmorph >=1.0.4
                ,       monad-control >=1.0.0.4
+               ,       transformers-base >=0.4.4
                ,       template-haskell >=2.9
                ,       newtype-generics >=0.4.1
 
