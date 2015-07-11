@@ -45,6 +45,7 @@ import qualified Control.Newtype as NT
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Writer.Lazy as Trans
 
+import qualified Control.Monad.Trans.Lift.StT    as Lift
 import qualified Control.Monad.Trans.Lift.Local  as Lift
 import qualified Control.Monad.Trans.Lift.Catch  as Lift
 import qualified Control.Monad.Trans.Lift.Listen as Lift
@@ -69,7 +70,7 @@ type Writer tag w = WriterT tag w Identity
 --
 -- The 'return' function produces the output 'mempty', while '>>=' combines
 -- the outputs of the subcomputations using 'mappend'.
-newtype WriterT tag w m a = WT { runWT :: Trans.WriterT w m a }
+newtype WriterT tag w m a = WriterT (Trans.WriterT w m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
@@ -78,18 +79,26 @@ instance NT.Newtype (WriterT tag w m a)
 
 instance Monoid w => MC.MonadTransControl (WriterT tag w) where
     type StT (WriterT tag w) a = MC.StT (Trans.WriterT w) a
-    liftWith = MC.defaultLiftWith WT runWT
-    restoreT = MC.defaultRestoreT WT
+    liftWith = MC.defaultLiftWith NT.pack NT.unpack
+    restoreT = MC.defaultRestoreT NT.pack
 
-instance Monoid w => Lift.LiftLocal  (WriterT tag w)
-instance Monoid w => Lift.LiftCatch  (WriterT tag w)
-instance Monoid w => Lift.LiftListen (WriterT tag w)
+type instance Lift.StT (WriterT tag w) a = MC.StT (WriterT tag w) a
+
+instance Monoid w => Lift.LiftLocal (WriterT tag w) where
+    liftLocal = Lift.defaultLiftLocal NT.pack NT.unpack
+
+instance Monoid w => Lift.LiftCatch (WriterT tag w) where
+    liftCatch = Lift.defaultLiftCatch NT.pack NT.unpack
+
+instance Monoid w => Lift.LiftListen (WriterT tag w) where
+    liftListen = Lift.defaultLiftListen NT.pack NT.unpack
 
 instance Monoid w' => Lift.LiftPass (WriterT tag w') where
-    liftPass pass' m = WT $ Lift.liftPass pass' (runWT m)
+    liftPass = Lift.defaultLiftPass NT.pack NT.unpack
 
 instance Monoid w => Lift.LiftCallCC (WriterT tag w) where
-    liftCallCC callCC f = WT $ Lift.liftCallCC callCC (\g -> (runWT . f) (WT . g))
+    liftCallCC  = Lift.defaultLiftCallCC WT runWT
+    liftCallCC' = Lift.defaultLiftCallCC WT runWT
 
 instance Taggable (WriterT tag w m) where
     type Tag (WriterT tag w m) = 'Just tag

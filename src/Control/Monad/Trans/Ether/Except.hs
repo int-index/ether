@@ -37,6 +37,7 @@ import qualified Control.Newtype as NT
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Except as Trans
 
+import qualified Control.Monad.Trans.Lift.StT    as Lift
 import qualified Control.Monad.Trans.Lift.Local  as Lift
 import qualified Control.Monad.Trans.Lift.Catch  as Lift
 import qualified Control.Monad.Trans.Lift.Listen as Lift
@@ -66,8 +67,7 @@ runExcept t = Trans.runExcept . untagged t
 --
 -- The 'return' function returns a normal value, while '>>=' exits on
 -- the first exception.
-
-newtype ExceptT tag e m a = ET { runET :: Trans.ExceptT e m a }
+newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
@@ -76,18 +76,26 @@ instance NT.Newtype (ExceptT tag e m a)
 
 instance MC.MonadTransControl (ExceptT tag e) where
     type StT (ExceptT tag e) a = MC.StT (Trans.ExceptT e) a
-    liftWith = MC.defaultLiftWith ET runET
-    restoreT = MC.defaultRestoreT ET
+    liftWith = MC.defaultLiftWith NT.pack NT.unpack
+    restoreT = MC.defaultRestoreT NT.pack
 
-instance Lift.LiftLocal  (ExceptT tag e)
-instance Lift.LiftCatch  (ExceptT tag e)
-instance Lift.LiftListen (ExceptT tag e)
+type instance Lift.StT (ExceptT tag e) a = MC.StT (ExceptT tag e) a
+
+instance Lift.LiftLocal (ExceptT tag e) where
+    liftLocal = Lift.defaultLiftLocal NT.pack NT.unpack
+
+instance Lift.LiftCatch (ExceptT tag e) where
+    liftCatch = Lift.defaultLiftCatch NT.pack NT.unpack
+
+instance Lift.LiftListen (ExceptT tag e) where
+    liftListen = Lift.defaultLiftListen NT.pack NT.unpack
 
 instance Lift.LiftPass (ExceptT tag e) where
-    liftPass pass m = ET $ Lift.liftPass pass (runET m)
+    liftPass = Lift.defaultLiftPass NT.pack NT.unpack
 
 instance Lift.LiftCallCC (ExceptT tag e) where
-    liftCallCC callCC f = ET $ Lift.liftCallCC callCC (\g -> (runET . f) (ET . g))
+    liftCallCC  = Lift.defaultLiftCallCC NT.pack NT.unpack
+    liftCallCC' = Lift.defaultLiftCallCC NT.pack NT.unpack
 
 instance Taggable (ExceptT tag e m) where
     type Tag (ExceptT tag e m) = 'Just tag

@@ -41,6 +41,7 @@ import qualified Control.Newtype as NT
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.State.Lazy as Trans
 
+import qualified Control.Monad.Trans.Lift.StT    as Lift
 import qualified Control.Monad.Trans.Lift.Local  as Lift
 import qualified Control.Monad.Trans.Lift.Catch  as Lift
 import qualified Control.Monad.Trans.Lift.Listen as Lift
@@ -66,7 +67,7 @@ type State tag r = StateT tag r Identity
 --
 -- The 'return' function leaves the state unchanged, while '>>=' uses
 -- the final state of the first computation as the initial state of the second.
-newtype StateT tag s m a = ST { runST :: Trans.StateT s m a }
+newtype StateT tag s m a = StateT (Trans.StateT s m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor )
@@ -75,19 +76,26 @@ instance NT.Newtype (StateT tag s m a)
 
 instance MC.MonadTransControl (StateT tag s) where
     type StT (StateT tag s) a = MC.StT (Trans.StateT s) a
-    liftWith = MC.defaultLiftWith ST runST
-    restoreT = MC.defaultRestoreT ST
+    liftWith = MC.defaultLiftWith NT.pack NT.unpack
+    restoreT = MC.defaultRestoreT NT.pack
 
-instance Lift.LiftLocal  (StateT tag s)
-instance Lift.LiftCatch  (StateT tag s)
-instance Lift.LiftListen (StateT tag s)
+type instance Lift.StT (StateT tag s) a = MC.StT (StateT tag s) a
+
+instance Lift.LiftLocal (StateT tag s) where
+    liftLocal = Lift.defaultLiftLocal NT.pack NT.unpack
+
+instance Lift.LiftCatch (StateT tag s) where
+    liftCatch = Lift.defaultLiftCatch NT.pack NT.unpack
+
+instance Lift.LiftListen (StateT tag s) where
+    liftListen = Lift.defaultLiftListen NT.pack NT.unpack
 
 instance Lift.LiftPass (StateT tag s) where
-    liftPass pass m = ST $ Lift.liftPass pass (runST m)
+    liftPass = Lift.defaultLiftPass NT.pack NT.unpack
 
 instance Lift.LiftCallCC (StateT tag s) where
-    liftCallCC  callCC f = ST $ Lift.liftCallCC  callCC (\g -> (runST . f) (ST . g))
-    liftCallCC' callCC f = ST $ Lift.liftCallCC' callCC (\g -> (runST . f) (ST . g))
+    liftCallCC  = Lift.defaultLiftCallCC  NT.pack NT.unpack
+    liftCallCC' = Lift.defaultLiftCallCC' NT.pack NT.unpack
 
 instance Taggable (StateT tag s m) where
     type Tag (StateT tag s m) = 'Just tag

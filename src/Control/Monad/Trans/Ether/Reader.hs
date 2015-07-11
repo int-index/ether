@@ -37,6 +37,7 @@ import qualified Control.Newtype as NT
 import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Reader as Trans
 
+import qualified Control.Monad.Trans.Lift.StT    as Lift
 import qualified Control.Monad.Trans.Lift.Local  as Lift
 import qualified Control.Monad.Trans.Lift.Catch  as Lift
 import qualified Control.Monad.Trans.Lift.Listen as Lift
@@ -62,7 +63,7 @@ type Reader tag r = ReaderT tag r Identity
 --
 -- The 'return' function ignores the environment, while '>>=' passes
 -- the inherited environment to both subcomputations.
-newtype ReaderT tag r m a = RT { runRT :: Trans.ReaderT r m a }
+newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
@@ -71,18 +72,26 @@ instance NT.Newtype (ReaderT tag r m a)
 
 instance MC.MonadTransControl (ReaderT tag r) where
     type StT (ReaderT tag r) a = MC.StT (Trans.ReaderT r) a
-    liftWith = MC.defaultLiftWith RT runRT
-    restoreT = MC.defaultRestoreT RT
+    liftWith = MC.defaultLiftWith NT.pack NT.unpack
+    restoreT = MC.defaultRestoreT NT.pack
 
-instance Lift.LiftLocal (ReaderT tag r)
-instance Lift.LiftCatch (ReaderT tag r)
-instance Lift.LiftListen (ReaderT tag r)
+type instance Lift.StT (ReaderT tag r) a = MC.StT (ReaderT tag r) a
+
+instance Lift.LiftLocal (ReaderT tag r) where
+    liftLocal = Lift.defaultLiftLocal NT.pack NT.unpack
+
+instance Lift.LiftCatch (ReaderT tag r) where
+    liftCatch = Lift.defaultLiftCatch NT.pack NT.unpack
+
+instance Lift.LiftListen (ReaderT tag r) where
+    liftListen = Lift.defaultLiftListen NT.pack NT.unpack
 
 instance Lift.LiftPass (ReaderT tag r) where
-    liftPass pass m = RT $ Lift.liftPass pass (runRT m)
+    liftPass = Lift.defaultLiftPass NT.pack NT.unpack
 
 instance Lift.LiftCallCC (ReaderT tag r) where
-    liftCallCC callCC f = RT $ Lift.liftCallCC callCC (\g -> (runRT . f) (RT . g))
+    liftCallCC  = Lift.defaultLiftCallCC  NT.pack NT.unpack
+    liftCallCC' = Lift.defaultLiftCallCC' NT.pack NT.unpack
 
 instance Taggable (ReaderT tag r m) where
     type Tag (ReaderT tag r m) = 'Just tag
