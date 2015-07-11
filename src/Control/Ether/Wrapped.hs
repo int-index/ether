@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -31,6 +32,9 @@ import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO)
+import GHC.Generics (Generic)
+import qualified Control.Newtype as NT
+
 import Control.Monad.Ether.Reader.Class
 import Control.Monad.Ether.State.Class
 import Control.Monad.Ether.Except.Class
@@ -43,8 +47,11 @@ import qualified Control.Monad.Writer as Class
 
 -- | Wrap a monad to attach a tag to it.
 newtype WrappedEther tag m a = WrapEther { unwrapEther :: m a }
-    deriving ( Functor, Applicative, Alternative, Monad, MonadPlus
+    deriving ( Generic
+             , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadIO )
+
+instance NT.Newtype (WrappedEther tag m a)
 
 -- | Annotate a polymorphic monadic computation with a tag.
 ethered :: proxy tag -> WrappedEther tag m a -> m a
