@@ -1,3 +1,10 @@
+0.3.0.0
+-------
+
+* `MonadBase`, `MonadControl`, `MonadBaseControl` instances.
+* `MFunctor`, `MMonad` instances.
+* Use `transformers-lift`.
+
 0.2.1.0
 -------
 
