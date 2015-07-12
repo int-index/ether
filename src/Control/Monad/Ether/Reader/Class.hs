@@ -17,10 +17,6 @@ module Control.Monad.Ether.Reader.Class
     , asks
     ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Data.Monoid
-#endif
-
 import Control.Monad.Trans.Ether.Reader hiding (reader, ask, local)
 import qualified Control.Monad.Trans.Ether.Reader as R
 import qualified Control.Monad.Trans.Lift.Local as Lift

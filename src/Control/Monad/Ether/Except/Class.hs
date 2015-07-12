@@ -16,10 +16,6 @@ module Control.Monad.Ether.Except.Class
     ( MonadExcept(..)
     ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Data.Monoid
-#endif
-
 import Control.Monad.Trans.Ether.Except hiding (throw, catch)
 import qualified Control.Monad.Trans.Ether.Except as E
 import qualified Control.Monad.Trans.Lift.Catch as Lift
