@@ -271,7 +271,7 @@ summator xs <span class="kw">=</span> do
 <span class="kw">import qualified</span> Control.Monad.Ether.Writer <span class="kw">as</span> Ether
 
 summator
-    <span class="kw">:: (</span> Num a
+    <span class="kw">:: </span>( Num a
        <span class="kw">,</span> MonadWriter (Sum a) m
        <span class="kw">,</span> Ether.MonadWriter Foo (Sum a) m
        ) <span class="kw">=&gt;</span> [a] <span class="kw">-&gt;</span> m ()
@@ -298,7 +298,7 @@ g <span class="kw">::</span> MonadState Bool m <span class="kw">=&gt;</span> m S
 g <span class="kw">= </span><em>omitted</em>
 
 useboth
-    <span class="kw">:: (</span> Ether.MonadState Foo Int  m
+    <span class="kw">:: </span>( Ether.MonadState Foo Int  m
        <span class="kw">,</span> Ether.MonadState Bar Bool m
        ) <span class="kw">=&gt;</span> m String
 useboth <span class="kw">=</span> do
