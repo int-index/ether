@@ -11,10 +11,13 @@ monad transformers and classes in a compatible way.
 
 ## Installation
 
-Create a Cabal sandbox if you haven't already and install from Hackage:
+You can install `ether 0.3.0.0`
 
-    cabal sandbox init
-    cabal --require-sandbox install ether
+1. using Cabal, from Hackage;
+2. using Stack, from Stackage;
+3. using Portage, from Gentoo Haskell Overlay.
+
+If unsure, use [Stack](https://github.com/commercialhaskell/stack).
 
 ## Getting Started
 
