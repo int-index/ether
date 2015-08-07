@@ -276,7 +276,7 @@ summator
        <span class="kw">,</span> Ether.MonadWriter Foo (Sum a) m
        ) <span class="kw">=&gt;</span> [a] <span class="kw">-&gt;</span> m ()
 summator xs <span class="kw">=</span> do
-    for_ xs <span class="kw">$ \</span>x <span class="kw">-&gt; do</span>
+    for_ xs <span class="kw">$ \</span>x <span class="kw">-&gt; </span>do
         tell (Sum x)
         Ether.tell foo (Sum 1)
 </pre>
