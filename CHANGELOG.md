@@ -1,3 +1,10 @@
+0.3.1.1
+-------
+
+* Fix GHC 7.8 test issue.
+* Remove unused imports.
+
+
 0.3.1.0
 -------
 
