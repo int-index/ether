@@ -63,13 +63,14 @@ censor t f m = pass t $ do
     a <- m
     return (a, f)
 
-instance {-# OVERLAPPING #-} (Monoid w, Monad m) => MonadWriter tag w (WriterT tag w m) where
+instance (Monoid w, Monad m) => MonadWriter tag w (WriterT tag w m) where
     writer = W.writer
     tell = W.tell
     listen = W.listen
     pass = W.pass
 
-instance ( Lift.LiftListen t
+instance {-# OVERLAPPABLE #-}
+         ( Lift.LiftListen t
          , Lift.LiftPass   t
          , Monad (t m)
          , MonadWriter tag w m

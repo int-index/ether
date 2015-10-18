@@ -31,11 +31,12 @@ class Monad m => MonadExcept tag e m | m tag -> e where
     -- normal execution.
     catch :: proxy tag -> m a -> (e -> m a) -> m a
 
-instance {-# OVERLAPPING #-} Monad m => MonadExcept tag e (ExceptT tag e m) where
+instance Monad m => MonadExcept tag e (ExceptT tag e m) where
     throw = E.throw
     catch = E.catch
 
-instance ( Lift.LiftCatch t
+instance {-# OVERLAPPABLE #-}
+         ( Lift.LiftCatch t
          , Monad (t m)
          , MonadExcept tag e m
          ) => MonadExcept tag e (t m) where

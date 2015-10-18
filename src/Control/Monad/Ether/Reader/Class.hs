@@ -57,12 +57,13 @@ asks
     -> m a
 asks = reader
 
-instance {-# OVERLAPPING #-} Monad m => MonadReader tag r (ReaderT tag r m) where
+instance Monad m => MonadReader tag r (ReaderT tag r m) where
     ask = R.ask
     local = R.local
     reader = R.reader
 
-instance ( Lift.LiftLocal t
+instance {-# OVERLAPPABLE #-}
+         ( Lift.LiftLocal t
          , Monad (t m)
          , MonadReader tag r m
          ) => MonadReader tag r (t m) where
