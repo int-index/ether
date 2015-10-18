@@ -215,4 +215,4 @@ wrapStateBad2Core :: Int -> Int
 wrapStateBad2Core = evalState foo (ensureUniqueTags $ ethered foo wrapStateBad2)
 
 wrapReaderCore :: Int -> Int
-wrapReaderCore = runReader foo (ethered foo ((+) <$> T.ask <*> ask foo))
+wrapReaderCore = runReader foo (ethered foo (liftM2 (+) T.ask (ask foo)))
