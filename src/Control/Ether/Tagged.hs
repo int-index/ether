@@ -81,7 +81,7 @@ class Taggable (m :: * -> *) where
 
     -- | The 'Tag' type family equals @Nothing@ for most types, but for tagged
     -- monad transformers it equals @Just tag@.
-    type Tag m :: Maybe *
+    type Tag m :: Maybe k
     type instance Tag m = 'Nothing
 
     -- | The 'Inner' type family equals @Nothing@ for most types, but for
