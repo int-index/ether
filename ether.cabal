@@ -64,7 +64,6 @@ library
                ,       monad-control >=1.0.0.4
                ,       transformers-base >=0.4.4
                ,       template-haskell >=2.9
-               ,       newtype-generics >=0.4.1
 
   default-language:    Haskell2010
   other-extensions:    DeriveGeneric

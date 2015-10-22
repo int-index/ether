@@ -22,6 +22,9 @@ module Control.Monad.Trans.Ether.Except
     -- * Exception operations
     , throw
     , catch
+    -- * Newtype operations
+    , pack
+    , unpack
     ) where
 
 import Data.Functor.Identity (Identity(..))
@@ -33,7 +36,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
-import qualified Control.Newtype as NT
+import Data.Coerce (coerce)
 
 import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
@@ -74,15 +77,21 @@ newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
 
-instance NT.Newtype (ExceptT tag e m a)
+-- | Type-restricted `coerce`.
+pack :: Trans.ExceptT e m a -> ExceptT tag e m a
+pack = coerce
+
+-- | Type-restricted `coerce`.
+unpack :: ExceptT tag e m a -> Trans.ExceptT e m a
+unpack = coerce
 
 instance MB.MonadBase b m => MB.MonadBase b (ExceptT tag e m) where
     liftBase = MB.liftBaseDefault
 
 instance MC.MonadTransControl (ExceptT tag e) where
     type StT (ExceptT tag e) a = MC.StT (Trans.ExceptT e) a
-    liftWith = MC.defaultLiftWith NT.pack NT.unpack
-    restoreT = MC.defaultRestoreT NT.pack
+    liftWith = MC.defaultLiftWith pack unpack
+    restoreT = MC.defaultRestoreT pack
 
 instance MC.MonadBaseControl b m => MC.MonadBaseControl b (ExceptT tag e m) where
     type StM (ExceptT tag e m) a = MC.ComposeSt (ExceptT tag e) m a
@@ -92,20 +101,20 @@ instance MC.MonadBaseControl b m => MC.MonadBaseControl b (ExceptT tag e m) wher
 type instance Lift.StT (ExceptT tag e) a = MC.StT (ExceptT tag e) a
 
 instance Lift.LiftLocal (ExceptT tag e) where
-    liftLocal = Lift.defaultLiftLocal NT.pack NT.unpack
+    liftLocal = Lift.defaultLiftLocal pack unpack
 
 instance Lift.LiftCatch (ExceptT tag e) where
-    liftCatch = Lift.defaultLiftCatch NT.pack NT.unpack
+    liftCatch = Lift.defaultLiftCatch pack unpack
 
 instance Lift.LiftListen (ExceptT tag e) where
-    liftListen = Lift.defaultLiftListen NT.pack NT.unpack
+    liftListen = Lift.defaultLiftListen pack unpack
 
 instance Lift.LiftPass (ExceptT tag e) where
-    liftPass = Lift.defaultLiftPass NT.pack NT.unpack
+    liftPass = Lift.defaultLiftPass pack unpack
 
 instance Lift.LiftCallCC (ExceptT tag e) where
-    liftCallCC  = Lift.defaultLiftCallCC NT.pack NT.unpack
-    liftCallCC' = Lift.defaultLiftCallCC NT.pack NT.unpack
+    liftCallCC  = Lift.defaultLiftCallCC pack unpack
+    liftCallCC' = Lift.defaultLiftCallCC pack unpack
 
 instance Taggable (ExceptT tag e m) where
     type Tag (ExceptT tag e m) = 'Just tag
@@ -113,6 +122,8 @@ instance Taggable (ExceptT tag e m) where
 
 instance Tagged (ExceptT tag e m) tag where
     type Untagged (ExceptT tag e m) = Trans.ExceptT e m
+    tagged   _ = pack
+    untagged _ = unpack
 
 -- | Constructor for computations in the exception monad transformer.
 exceptT :: proxy tag -> m (Either e a) -> ExceptT tag e m a

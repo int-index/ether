@@ -7,7 +7,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE DefaultSignatures #-}
 
 -- | Type-level machinery for tag manipulation.
 
@@ -28,7 +27,6 @@ import qualified Control.Monad.ST.Strict as Strict (ST)
 import qualified Control.Monad.ST.Lazy   as Lazy   (ST)
 import GHC.Conc (STM)
 import GHC.Exts (Constraint)
-import qualified Control.Newtype as NT
 import Control.Ether.Util (type (++), MaybeToList)
 
 import qualified Control.Monad.Trans.Cont          as Trans
@@ -147,13 +145,6 @@ type Tags (m :: * -> *) = MaybeToList (Tag m) ++ ListMapTag (Inners m)
 -- | The 'Tagged' type class establishes a relationship between a tagged
 -- monad transformer and its untagged counterpart.
 class (Taggable m, Tag m ~ 'Just tag) => Tagged m tag | m -> tag where
-
     type Untagged m :: * -> *
-
     tagged :: proxy tag -> Untagged m a -> m a
-    default tagged :: NT.Newtype (m a) => proxy tag -> NT.O (m a) -> m a
-    tagged _ = NT.pack
-
     untagged :: proxy tag -> m a -> Untagged m a
-    default untagged :: NT.Newtype (m a) => proxy tag -> m a -> NT.O (m a)
-    untagged _ = NT.unpack

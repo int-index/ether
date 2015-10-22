@@ -22,6 +22,9 @@ module Control.Monad.Trans.Ether.Reader
     -- * Reader operations
     , ask
     , local
+    -- * Newtype operations
+    , pack
+    , unpack
     ) where
 
 import Data.Functor.Identity (Identity(..))
@@ -33,7 +36,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
-import qualified Control.Newtype as NT
+import Data.Coerce (coerce)
 
 import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
@@ -70,15 +73,21 @@ newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
 
-instance NT.Newtype (ReaderT tag r m a)
+-- | Type-restricted `coerce`.
+pack :: Trans.ReaderT r m a -> ReaderT tag r m a
+pack = coerce
+
+-- | Type-restricted `coerce`.
+unpack :: ReaderT tag r m a -> Trans.ReaderT r m a
+unpack = coerce
 
 instance MB.MonadBase b m => MB.MonadBase b (ReaderT tag r m) where
     liftBase = MB.liftBaseDefault
 
 instance MC.MonadTransControl (ReaderT tag r) where
     type StT (ReaderT tag r) a = MC.StT (Trans.ReaderT r) a
-    liftWith = MC.defaultLiftWith NT.pack NT.unpack
-    restoreT = MC.defaultRestoreT NT.pack
+    liftWith = MC.defaultLiftWith pack unpack
+    restoreT = MC.defaultRestoreT pack
 
 instance MC.MonadBaseControl b m => MC.MonadBaseControl b (ReaderT tag r m) where
     type StM (ReaderT tag r m) a = MC.ComposeSt (ReaderT tag r) m a
@@ -88,20 +97,20 @@ instance MC.MonadBaseControl b m => MC.MonadBaseControl b (ReaderT tag r m) wher
 type instance Lift.StT (ReaderT tag r) a = MC.StT (ReaderT tag r) a
 
 instance Lift.LiftLocal (ReaderT tag r) where
-    liftLocal = Lift.defaultLiftLocal NT.pack NT.unpack
+    liftLocal = Lift.defaultLiftLocal pack unpack
 
 instance Lift.LiftCatch (ReaderT tag r) where
-    liftCatch = Lift.defaultLiftCatch NT.pack NT.unpack
+    liftCatch = Lift.defaultLiftCatch pack unpack
 
 instance Lift.LiftListen (ReaderT tag r) where
-    liftListen = Lift.defaultLiftListen NT.pack NT.unpack
+    liftListen = Lift.defaultLiftListen pack unpack
 
 instance Lift.LiftPass (ReaderT tag r) where
-    liftPass = Lift.defaultLiftPass NT.pack NT.unpack
+    liftPass = Lift.defaultLiftPass pack unpack
 
 instance Lift.LiftCallCC (ReaderT tag r) where
-    liftCallCC  = Lift.defaultLiftCallCC  NT.pack NT.unpack
-    liftCallCC' = Lift.defaultLiftCallCC' NT.pack NT.unpack
+    liftCallCC  = Lift.defaultLiftCallCC  pack unpack
+    liftCallCC' = Lift.defaultLiftCallCC' pack unpack
 
 instance Taggable (ReaderT tag r m) where
     type Tag (ReaderT tag r m) = 'Just tag
@@ -109,6 +118,8 @@ instance Taggable (ReaderT tag r m) where
 
 instance Tagged (ReaderT tag r m) tag where
     type Untagged (ReaderT tag r m) = Trans.ReaderT r m
+    tagged   _ = pack
+    untagged _ = unpack
 
 -- | Constructor for computations in the reader monad transformer.
 readerT :: proxy tag -> (r -> m a) -> ReaderT tag r m a

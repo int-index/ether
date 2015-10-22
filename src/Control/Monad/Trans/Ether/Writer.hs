@@ -26,6 +26,9 @@ module Control.Monad.Trans.Ether.Writer
     , tell
     , listen
     , pass
+    -- * Newtype operations
+    , pack
+    , unpack
     ) where
 
 #if __GLASGOW_HASKELL__ < 710
@@ -41,7 +44,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
-import qualified Control.Newtype as NT
+import Data.Coerce (coerce)
 
 import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
@@ -77,15 +80,21 @@ newtype WriterT tag w m a = WriterT (Trans.WriterT w m a)
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
 
-instance NT.Newtype (WriterT tag w m a)
+-- | Type-restricted `coerce`.
+pack :: Trans.WriterT w m a -> WriterT tag w m a
+pack = coerce
+
+-- | Type-restricted `coerce`.
+unpack :: WriterT tag w m a -> Trans.WriterT w m a
+unpack = coerce
 
 instance (Monoid w, MB.MonadBase b m) => MB.MonadBase b (WriterT tag w m) where
     liftBase = MB.liftBaseDefault
 
 instance Monoid w => MC.MonadTransControl (WriterT tag w) where
     type StT (WriterT tag w) a = MC.StT (Trans.WriterT w) a
-    liftWith = MC.defaultLiftWith NT.pack NT.unpack
-    restoreT = MC.defaultRestoreT NT.pack
+    liftWith = MC.defaultLiftWith pack unpack
+    restoreT = MC.defaultRestoreT pack
 
 instance (Monoid w, MC.MonadBaseControl b m) => MC.MonadBaseControl b (WriterT tag w m) where
     type StM (WriterT tag w m) a = MC.ComposeSt (WriterT tag w) m a
@@ -95,20 +104,20 @@ instance (Monoid w, MC.MonadBaseControl b m) => MC.MonadBaseControl b (WriterT t
 type instance Lift.StT (WriterT tag w) a = MC.StT (WriterT tag w) a
 
 instance Monoid w => Lift.LiftLocal (WriterT tag w) where
-    liftLocal = Lift.defaultLiftLocal NT.pack NT.unpack
+    liftLocal = Lift.defaultLiftLocal pack unpack
 
 instance Monoid w => Lift.LiftCatch (WriterT tag w) where
-    liftCatch = Lift.defaultLiftCatch NT.pack NT.unpack
+    liftCatch = Lift.defaultLiftCatch pack unpack
 
 instance Monoid w => Lift.LiftListen (WriterT tag w) where
-    liftListen = Lift.defaultLiftListen NT.pack NT.unpack
+    liftListen = Lift.defaultLiftListen pack unpack
 
 instance Monoid w' => Lift.LiftPass (WriterT tag w') where
-    liftPass = Lift.defaultLiftPass NT.pack NT.unpack
+    liftPass = Lift.defaultLiftPass pack unpack
 
 instance Monoid w => Lift.LiftCallCC (WriterT tag w) where
-    liftCallCC  = Lift.defaultLiftCallCC NT.pack NT.unpack
-    liftCallCC' = Lift.defaultLiftCallCC NT.pack NT.unpack
+    liftCallCC  = Lift.defaultLiftCallCC pack unpack
+    liftCallCC' = Lift.defaultLiftCallCC pack unpack
 
 instance Taggable (WriterT tag w m) where
     type Tag (WriterT tag w m) = 'Just tag
@@ -116,6 +125,8 @@ instance Taggable (WriterT tag w m) where
 
 instance Tagged (WriterT tag w m) tag where
     type Untagged (WriterT tag w m) = Trans.WriterT w m
+    tagged   _ = pack
+    untagged _ = unpack
 
 -- | Constructor for computations in the writer monad transformer.
 writerT :: proxy tag -> m (a, w) -> WriterT tag w m a

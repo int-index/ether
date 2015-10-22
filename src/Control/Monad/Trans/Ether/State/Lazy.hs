@@ -26,6 +26,9 @@ module Control.Monad.Trans.Ether.State.Lazy
     -- * State operations
     , get
     , put
+    -- * Newtype operations
+    , pack
+    , unpack
     ) where
 
 import Data.Functor.Identity (Identity(..))
@@ -37,7 +40,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor)
 import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
-import qualified Control.Newtype as NT
+import Data.Coerce (coerce)
 
 import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
@@ -74,15 +77,21 @@ newtype StateT tag s m a = StateT (Trans.StateT s m a)
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadTrans, MonadIO, MFunctor )
 
-instance NT.Newtype (StateT tag s m a)
+-- | Type-restricted `coerce`.
+pack :: Trans.StateT s m a -> StateT tag s m a
+pack = coerce
+
+-- | Type-restricted `coerce`.
+unpack :: StateT tag s m a -> Trans.StateT s m a
+unpack = coerce
 
 instance MB.MonadBase b m => MB.MonadBase b (StateT tag s m) where
     liftBase = MB.liftBaseDefault
 
 instance MC.MonadTransControl (StateT tag s) where
     type StT (StateT tag s) a = MC.StT (Trans.StateT s) a
-    liftWith = MC.defaultLiftWith NT.pack NT.unpack
-    restoreT = MC.defaultRestoreT NT.pack
+    liftWith = MC.defaultLiftWith pack unpack
+    restoreT = MC.defaultRestoreT pack
 
 instance MC.MonadBaseControl b m => MC.MonadBaseControl b (StateT tag s m) where
     type StM (StateT tag s m) a = MC.ComposeSt (StateT tag s) m a
@@ -92,20 +101,20 @@ instance MC.MonadBaseControl b m => MC.MonadBaseControl b (StateT tag s m) where
 type instance Lift.StT (StateT tag s) a = MC.StT (StateT tag s) a
 
 instance Lift.LiftLocal (StateT tag s) where
-    liftLocal = Lift.defaultLiftLocal NT.pack NT.unpack
+    liftLocal = Lift.defaultLiftLocal pack unpack
 
 instance Lift.LiftCatch (StateT tag s) where
-    liftCatch = Lift.defaultLiftCatch NT.pack NT.unpack
+    liftCatch = Lift.defaultLiftCatch pack unpack
 
 instance Lift.LiftListen (StateT tag s) where
-    liftListen = Lift.defaultLiftListen NT.pack NT.unpack
+    liftListen = Lift.defaultLiftListen pack unpack
 
 instance Lift.LiftPass (StateT tag s) where
-    liftPass = Lift.defaultLiftPass NT.pack NT.unpack
+    liftPass = Lift.defaultLiftPass pack unpack
 
 instance Lift.LiftCallCC (StateT tag s) where
-    liftCallCC  = Lift.defaultLiftCallCC  NT.pack NT.unpack
-    liftCallCC' = Lift.defaultLiftCallCC' NT.pack NT.unpack
+    liftCallCC  = Lift.defaultLiftCallCC  pack unpack
+    liftCallCC' = Lift.defaultLiftCallCC' pack unpack
 
 instance Taggable (StateT tag s m) where
     type Tag (StateT tag s m) = 'Just tag
@@ -113,6 +122,8 @@ instance Taggable (StateT tag s m) where
 
 instance Tagged (StateT tag s m) tag where
     type Untagged (StateT tag s m) = Trans.StateT s m
+    tagged   _ = pack
+    untagged _ = unpack
 
 -- | Constructor for computations in the state monad transformer.
 stateT :: proxy tag -> (s -> m (a, s)) -> StateT tag s m a

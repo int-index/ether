@@ -17,7 +17,7 @@ Annotating monads with tags to turn untagged constraints into tagged ones.
 >
 > f :: T.MonadState Int m => m String
 > f = fmap show T.get
-> 
+>
 > g :: MonadState Foo Int m => m String
 > g = ethered foo f
 -}
@@ -33,7 +33,6 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO)
 import GHC.Generics (Generic)
-import qualified Control.Newtype as NT
 
 import Control.Monad.Ether.Reader.Class
 import Control.Monad.Ether.State.Class
@@ -50,8 +49,6 @@ newtype WrappedEther tag m a = WrapEther { unwrapEther :: m a }
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
              , MonadFix, MonadIO )
-
-instance NT.Newtype (WrappedEther tag m a)
 
 -- | Annotate a polymorphic monadic computation with a tag.
 ethered :: proxy tag -> WrappedEther tag m a -> m a
