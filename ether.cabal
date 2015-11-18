@@ -24,8 +24,7 @@ source-repository head
 
 library
 
-  exposed-modules:     Control.Ether.Tagged
-                       Control.Ether.Wrapped
+  exposed-modules:     Control.Ether.Wrapped
                        Control.Ether.Abbr
                        Control.Ether.Implicit.Abbr
                        Control.Ether.TH

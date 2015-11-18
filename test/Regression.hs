@@ -11,7 +11,6 @@ module Main where
 
 import Data.Monoid
 import Control.Monad
-import Control.Ether.Tagged
 import Control.Ether.TH
 import Control.Ether.Wrapped
 
@@ -101,24 +100,23 @@ wrapCore' = do
 wrapCore'' :: Int -> (Int, Int)
 wrapCore'' a = runReader r1 (runStateT s1 (runReaderT s1 wrapCore' a) a) (-1)
 
--- Should not compile with `ensureUniqueTags`
-uniqueTagsCore :: IO ()
-uniqueTagsCore = flip (runReaderT r1) (1 :: Int)
-               . flip (runReaderT r1) (True :: Bool)
-               . flip (runReaderT r1) (2 :: Int)
-               . flip (runReaderT r1) (3 :: Integer)
-            {- . ensureUniqueTags -}
-               $ do
-                    a :: Integer <- ask r1
-                    b :: Int <- ask r1
-                    c :: Bool <- ask r1
-                    T.liftIO $ do
-                        print a
-                        print b
-                        print c
+nonUniqueTagsCore :: IO ()
+nonUniqueTagsCore
+  = flip (runReaderT r1) (1 :: Int)
+  . flip (runReaderT r1) (True :: Bool)
+  . flip (runReaderT r1) (2 :: Int)
+  . flip (runReaderT r1) (3 :: Integer)
+  $ do
+    a :: Integer <- ask r1
+    b :: Int <- ask r1
+    c :: Bool <- ask r1
+    T.liftIO $ do
+      print a
+      print b
+      print c
 
-stateCore :: (Ether '[S1 <-> Int, R1 --> Int] m, UniqueTags m) => m ()
-stateCore = ensureUniqueTags $ do
+stateCore :: Ether '[S1 <-> Int, R1 --> Int] m => m ()
+stateCore = do
     a <- ask r1
     n <- get s1
     put s1 (n * a)
@@ -212,7 +210,7 @@ wrapStateBad2 = do
     T.get
 
 wrapStateBad2Core :: Int -> Int
-wrapStateBad2Core = evalState foo (ensureUniqueTags $ ethered foo wrapStateBad2)
+wrapStateBad2Core = evalState foo (ethered foo wrapStateBad2)
 
 wrapReaderCore :: Int -> Int
 wrapReaderCore = runReader foo (ethered foo (liftM2 (+) T.ask (ask foo)))

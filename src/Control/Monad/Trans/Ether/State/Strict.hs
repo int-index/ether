@@ -38,7 +38,6 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor)
-import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
@@ -116,14 +115,11 @@ instance Lift.LiftCallCC (StateT tag s) where
     liftCallCC  = Lift.defaultLiftCallCC  pack unpack
     liftCallCC' = Lift.defaultLiftCallCC' pack unpack
 
-instance Taggable (StateT tag s m) where
-    type Tag (StateT tag s m) = 'Just tag
-    type Inner (StateT tag s m) = 'Just m
+tagged :: proxy tag -> Trans.StateT s m a -> StateT tag s m a
+tagged _ = pack
 
-instance Tagged (StateT tag s m) tag where
-    type Untagged (StateT tag s m) = Trans.StateT s m
-    tagged   _ = pack
-    untagged _ = unpack
+untagged :: proxy tag -> StateT tag s m a -> Trans.StateT s m a
+untagged _ = unpack
 
 -- | Constructor for computations in the state monad transformer.
 stateT :: proxy tag -> (s -> m (a, s)) -> StateT tag s m a

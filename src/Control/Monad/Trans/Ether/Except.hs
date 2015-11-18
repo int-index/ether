@@ -34,7 +34,6 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
-import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
@@ -116,14 +115,11 @@ instance Lift.LiftCallCC (ExceptT tag e) where
     liftCallCC  = Lift.defaultLiftCallCC pack unpack
     liftCallCC' = Lift.defaultLiftCallCC pack unpack
 
-instance Taggable (ExceptT tag e m) where
-    type Tag (ExceptT tag e m) = 'Just tag
-    type Inner (ExceptT tag e m) = 'Just m
+tagged :: proxy tag -> Trans.ExceptT e m a -> ExceptT tag e m a
+tagged _ = pack
 
-instance Tagged (ExceptT tag e m) tag where
-    type Untagged (ExceptT tag e m) = Trans.ExceptT e m
-    tagged   _ = pack
-    untagged _ = unpack
+untagged :: proxy tag -> ExceptT tag e m a -> Trans.ExceptT e m a
+untagged _ = unpack
 
 -- | Constructor for computations in the exception monad transformer.
 exceptT :: proxy tag -> m (Either e a) -> ExceptT tag e m a

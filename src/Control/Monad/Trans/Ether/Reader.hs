@@ -34,7 +34,6 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
-import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
@@ -112,14 +111,11 @@ instance Lift.LiftCallCC (ReaderT tag r) where
     liftCallCC  = Lift.defaultLiftCallCC  pack unpack
     liftCallCC' = Lift.defaultLiftCallCC' pack unpack
 
-instance Taggable (ReaderT tag r m) where
-    type Tag (ReaderT tag r m) = 'Just tag
-    type Inner (ReaderT tag r m) = 'Just m
+tagged :: proxy tag -> Trans.ReaderT r m a -> ReaderT tag r m a
+tagged _ = pack
 
-instance Tagged (ReaderT tag r m) tag where
-    type Untagged (ReaderT tag r m) = Trans.ReaderT r m
-    tagged   _ = pack
-    untagged _ = unpack
+untagged :: proxy tag -> ReaderT tag r m a -> Trans.ReaderT r m a
+untagged _ = unpack
 
 -- | Constructor for computations in the reader monad transformer.
 readerT :: proxy tag -> (r -> m a) -> ReaderT tag r m a

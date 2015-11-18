@@ -26,7 +26,7 @@ proxySimple name ty = do
 -- Creates a tag and a value-level proxy for it.
 --
 -- @'ethereal' \"Foo\" \"foo\"@ generates the following code:
--- 
+--
 -- > data Foo
 -- > foo :: Proxy Foo
 -- > foo = Proxy

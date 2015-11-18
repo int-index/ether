@@ -42,7 +42,6 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
-import Control.Ether.Tagged (Taggable(..), Tagged(..))
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
@@ -119,14 +118,11 @@ instance Monoid w => Lift.LiftCallCC (WriterT tag w) where
     liftCallCC  = Lift.defaultLiftCallCC pack unpack
     liftCallCC' = Lift.defaultLiftCallCC pack unpack
 
-instance Taggable (WriterT tag w m) where
-    type Tag (WriterT tag w m) = 'Just tag
-    type Inner (WriterT tag w m) = 'Just m
+tagged :: proxy tag -> Trans.WriterT w m a -> WriterT tag w m a
+tagged _ = pack
 
-instance Tagged (WriterT tag w m) tag where
-    type Untagged (WriterT tag w m) = Trans.WriterT w m
-    tagged   _ = pack
-    untagged _ = unpack
+untagged :: proxy tag -> WriterT tag w m a -> Trans.WriterT w m a
+untagged _ = unpack
 
 -- | Constructor for computations in the writer monad transformer.
 writerT :: proxy tag -> m (a, w) -> WriterT tag w m a

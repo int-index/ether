@@ -27,10 +27,10 @@ type family MaybeToList (mt :: Maybe k) :: [k] where
 
 #if __GLASGOW_HASKELL__ < 710
 fmap :: Monad f => (a -> b) -> f a -> f b
-fmap = Control.Monad.liftM 
+fmap = Control.Monad.liftM
 #else
 fmap :: Functor f => (a -> b) -> f a -> f b
-fmap = Prelude.fmap 
+fmap = Prelude.fmap
 #endif
 
 {-# INLINE fmap #-}
