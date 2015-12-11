@@ -34,6 +34,7 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
+import Control.Monad.Catch (MonadThrow, MonadCatch)
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
@@ -74,7 +75,8 @@ runExcept t = Trans.runExcept . untagged t
 newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
-             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
+             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
+             , MonadThrow, MonadCatch )
 
 -- | Type-restricted `coerce`.
 pack :: Trans.ExceptT e m a -> ExceptT tag e m a

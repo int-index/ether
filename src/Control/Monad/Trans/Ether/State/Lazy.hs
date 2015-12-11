@@ -38,6 +38,7 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor)
+import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
@@ -74,7 +75,8 @@ type State tag r = StateT tag r Identity
 newtype StateT tag s m a = StateT (Trans.StateT s m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
-             , MonadFix, MonadTrans, MonadIO, MFunctor )
+             , MonadFix, MonadTrans, MonadIO, MFunctor
+             , MonadThrow, MonadCatch, MonadMask )
 
 -- | Type-restricted `coerce`.
 pack :: Trans.StateT s m a -> StateT tag s m a

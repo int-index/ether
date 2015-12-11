@@ -34,6 +34,7 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
+import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
@@ -70,7 +71,8 @@ type Reader tag r = ReaderT tag r Identity
 newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
-             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
+             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
+             , MonadThrow, MonadCatch, MonadMask )
 
 -- | Type-restricted `coerce`.
 pack :: Trans.ReaderT r m a -> ReaderT tag r m a

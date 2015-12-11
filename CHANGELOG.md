@@ -1,3 +1,12 @@
+0.4.0.0
+-------
+
+* Remove `Control.Ether.Tagged`.
+* `MonadThrow`, `MonadCatch`, `MonadMask` instances.
+* `MonadBase`, `MonadBaseControl` for `WrapEther`.
+* Drop `newtype-generics`.
+
+
 0.3.1.1
 -------
 

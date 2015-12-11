@@ -42,6 +42,7 @@ import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
+import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
@@ -77,7 +78,8 @@ type Writer tag w = WriterT tag w Identity
 newtype WriterT tag w m a = WriterT (Trans.WriterT w m a)
     deriving ( Generic
              , Functor, Applicative, Alternative, Monad, MonadPlus
-             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad )
+             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
+             , MonadThrow, MonadCatch, MonadMask )
 
 -- | Type-restricted `coerce`.
 pack :: Trans.WriterT w m a -> WriterT tag w m a
