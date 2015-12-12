@@ -78,11 +78,11 @@ newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
              , MonadThrow, MonadCatch )
 
--- | Type-restricted `coerce`.
+-- | Type-restricted 'coerce'.
 pack :: Trans.ExceptT e m a -> ExceptT tag e m a
 pack = coerce
 
--- | Type-restricted `coerce`.
+-- | Type-restricted 'coerce'.
 unpack :: ExceptT tag e m a -> Trans.ExceptT e m a
 unpack = coerce
 

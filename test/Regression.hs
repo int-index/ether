@@ -1,18 +1,7 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE EmptyDataDecls #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE LambdaCase #-}
 module Main where
 
 import Data.Monoid
 import Control.Monad
-import Control.Ether.TH
-import Control.Ether.Wrapped
 
 import Control.Monad.Ether
 import Control.Ether.Abbr
@@ -25,8 +14,9 @@ import qualified Control.Monad.Writer as T
 import qualified Control.Monad.State  as T
 
 import Test.Tasty
-import Test.Tasty.QuickCheck
-import Test.QuickCheck.Function
+
+import Regression.T1
+import Regression.T2
 
 ethereal "R1" "r1"
 ethereal "R2" "r2"
@@ -39,44 +29,9 @@ main = defaultMain suite
 
 suite :: TestTree
 suite = testGroup "Ether"
-    [ testGroup "ReaderT"
-        [ testProperty "layered sum (local left)" layeredLocalLeft
-        , testProperty "layered sum (local right)" layeredLocalRight
-        ]
+    [ test1
+    , test2
     ]
-
-layeredLocalLeft, layeredLocalRight
-    :: Fun (Int, Integer) Integer
-    -> Fun Integer Integer
-    -> Int -> Integer -> Property
-
-layeredLocalLeft k f a1 a2 = property (direct == run indirect)
-  where
-    run = flip (runReader r1) a1 . flip (runReaderT r2) a2
-    (direct, indirect) = layeredLocalCore' k f a1 a2
-
-layeredLocalRight k f a1 a2 = property (direct == run indirect)
-  where
-    run = flip (runReader r2) a2 . flip (runReaderT r1) a1
-    (direct, indirect) = layeredLocalCore' k f a1 a2
-
-layeredLocalCore
-    :: Ether '[R1 --> r1, R2 --> r2] m
-    => (r2 -> r2) -> (r1 -> r2 -> a) -> m a
-layeredLocalCore f g = do
-    n <- ask r1
-    m <- local r2 f (ask r2)
-    return (g n m)
-
-layeredLocalCore'
-    :: Ether '[R1 --> Int, R2 --> Integer] m
-    => Fun (Int, Integer) Integer
-    -> Fun Integer Integer
-    -> Int -> Integer -> (Integer, m Integer)
-layeredLocalCore' k f a1 a2 = (direct, indirect)
-  where
-    direct = apply k (fromIntegral a1, apply f a2)
-    indirect = layeredLocalCore (apply f) (\n m -> apply k (fromIntegral n, m))
 
 implicitCore :: Ether '[I.R Int, I.R Bool] m => m String
 implicitCore = I.local (succ :: Int -> Int) $ do
@@ -93,7 +48,7 @@ wrapCore = do
 
 wrapCore' :: Ether '[S1 --> Int, S1 <-> Int, R1 --> Int] m => m Int
 wrapCore' = do
-    a <- ethered s1 wrapCore
+    a <- tagAttach s1 wrapCore
     c <- ask r1
     return (a + c)
 
@@ -186,8 +141,8 @@ wrapState_g = liftM show T.get
 
 wrapState_useboth :: Ether '[Foo <-> Int, Bar <-> Bool] m => m String
 wrapState_useboth = do
-    a <- ethered foo wrapState_f
-    b <- ethered bar wrapState_g
+    a <- tagAttach foo wrapState_f
+    b <- tagAttach bar wrapState_g
     return (a ++ b)
 
 wrapStateCore :: Int -> Bool -> String
@@ -199,7 +154,7 @@ wrapStateBad1_g = modify foo (*100)
 wrapStateBad1_useboth :: MonadState Foo Int m => m String
 wrapStateBad1_useboth = do
     wrapStateBad1_g
-    ethered foo wrapState_f
+    tagAttach foo wrapState_f
 
 wrapStateBad1 :: Int -> String
 wrapStateBad1 = evalState foo wrapStateBad1_useboth
@@ -210,7 +165,7 @@ wrapStateBad2 = do
     T.get
 
 wrapStateBad2Core :: Int -> Int
-wrapStateBad2Core = evalState foo (ethered foo wrapStateBad2)
+wrapStateBad2Core = evalState foo (tagAttach foo wrapStateBad2)
 
 wrapReaderCore :: Int -> Int
-wrapReaderCore = runReader foo (ethered foo (liftM2 (+) T.ask (ask foo)))
+wrapReaderCore = runReader foo (tagAttach foo (liftM2 (+) T.ask (ask foo)))

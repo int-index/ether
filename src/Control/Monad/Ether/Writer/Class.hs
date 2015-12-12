@@ -1,15 +1,15 @@
-{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
-
 {-# LANGUAGE CPP #-}
+
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
+#endif
+
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE PolyKinds #-}
-
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE OverlappingInstances #-}
-#endif
 
 -- | See "Control.Monad.Writer.Class".
 
@@ -23,7 +23,6 @@ module Control.Monad.Ether.Writer.Class
 import Data.Monoid
 #endif
 
-import Control.Monad.Trans.Ether.Writer hiding (writer, tell, listen, pass)
 import qualified Control.Monad.Trans.Ether.Writer as W
 import qualified Control.Monad.Trans.Lift.Listen as Lift
 import qualified Control.Monad.Trans.Lift.Pass   as Lift
@@ -64,7 +63,7 @@ censor t f m = pass t $ do
     a <- m
     return (a, f)
 
-instance (Monoid w, Monad m) => MonadWriter tag w (WriterT tag w m) where
+instance (Monoid w, Monad m) => MonadWriter tag w (W.WriterT tag w m) where
     writer = W.writer
     tell = W.tell
     listen = W.listen

@@ -1,9 +1,10 @@
 0.4.0.0
 -------
 
+* Poly-kinded tags.
 * Remove `Control.Ether.Tagged`.
+* Replace `Control.Ether.Wrapped` with `Control.Monad.Trans.Ether.Dispatch`.
 * `MonadThrow`, `MonadCatch`, `MonadMask` instances.
-* `MonadBase`, `MonadBaseControl` for `WrapEther`.
 * Drop `newtype-generics`.
 
 

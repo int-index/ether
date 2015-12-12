@@ -24,8 +24,7 @@ source-repository head
 
 library
 
-  exposed-modules:     Control.Ether.Wrapped
-                       Control.Ether.Abbr
+  exposed-modules:     Control.Ether.Abbr
                        Control.Ether.Implicit.Abbr
                        Control.Ether.TH
                        Control.Monad.Trans.Ether.Reader
@@ -34,6 +33,7 @@ library
                        Control.Monad.Trans.Ether.State.Lazy
                        Control.Monad.Trans.Ether.State.Strict
                        Control.Monad.Trans.Ether.Except
+                       Control.Monad.Trans.Ether.Dispatch
                        Control.Monad.Ether
                        Control.Monad.Ether.Reader
                        Control.Monad.Ether.Reader.Class
@@ -97,7 +97,20 @@ test-suite regression
                ,       ether
 
   main-is:             Regression.hs
+  other-modules:       Regression.T1
+                       Regression.T2
+
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   default-language:    Haskell2010
-  ghc-options:         -Wall
+  default-extensions:  TypeFamilies
+                       FlexibleContexts
+                       EmptyDataDecls
+                       TemplateHaskell
+                       ConstraintKinds
+                       ScopedTypeVariables
+                       DataKinds
+                       PolyKinds
+                       TypeOperators
+                       LambdaCase
+  ghc-options:         -Wall -fno-warn-missing-signatures

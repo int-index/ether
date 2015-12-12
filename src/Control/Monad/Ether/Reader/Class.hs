@@ -1,15 +1,15 @@
-{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
-
 {-# LANGUAGE CPP #-}
+
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
+#endif
+
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE PolyKinds #-}
-
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE OverlappingInstances #-}
-#endif
 
 -- | See "Control.Monad.Reader.Class".
 
@@ -18,7 +18,6 @@ module Control.Monad.Ether.Reader.Class
     , asks
     ) where
 
-import Control.Monad.Trans.Ether.Reader hiding (reader, ask, local)
 import qualified Control.Monad.Trans.Ether.Reader as R
 import qualified Control.Monad.Trans.Lift.Local as Lift
 import qualified Control.Ether.Util as Util
@@ -58,7 +57,7 @@ asks
     -> m a
 asks = reader
 
-instance Monad m => MonadReader tag r (ReaderT tag r m) where
+instance Monad m => MonadReader tag r (R.ReaderT tag r m) where
     ask = R.ask
     local = R.local
     reader = R.reader

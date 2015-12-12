@@ -1,15 +1,15 @@
-{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
-
 {-# LANGUAGE CPP #-}
+
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
+#endif
+
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE PolyKinds #-}
-
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE OverlappingInstances #-}
-#endif
 
 -- | See "Control.Monad.Except".
 
@@ -17,7 +17,6 @@ module Control.Monad.Ether.Except.Class
     ( MonadExcept(..)
     ) where
 
-import Control.Monad.Trans.Ether.Except hiding (throw, catch)
 import qualified Control.Monad.Trans.Ether.Except as E
 import qualified Control.Monad.Trans.Lift.Catch as Lift
 
@@ -32,7 +31,7 @@ class Monad m => MonadExcept tag e m | m tag -> e where
     -- normal execution.
     catch :: proxy tag -> m a -> (e -> m a) -> m a
 
-instance Monad m => MonadExcept tag e (ExceptT tag e m) where
+instance Monad m => MonadExcept tag e (E.ExceptT tag e m) where
     throw = E.throw
     catch = E.catch
 

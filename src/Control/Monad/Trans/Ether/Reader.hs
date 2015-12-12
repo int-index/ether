@@ -74,11 +74,11 @@ newtype ReaderT tag r m a = ReaderT (Trans.ReaderT r m a)
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
              , MonadThrow, MonadCatch, MonadMask )
 
--- | Type-restricted `coerce`.
+-- | Type-restricted 'coerce'.
 pack :: Trans.ReaderT r m a -> ReaderT tag r m a
 pack = coerce
 
--- | Type-restricted `coerce`.
+-- | Type-restricted 'coerce'.
 unpack :: ReaderT tag r m a -> Trans.ReaderT r m a
 unpack = coerce
 

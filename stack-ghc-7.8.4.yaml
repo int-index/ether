@@ -31,4 +31,5 @@ extra-deps:
 - transformers-compat-0.4.0.4
 - transformers-lift-0.1.0.0
 - unbounded-delays-0.1.0.9
+- exceptions-0.8.0.2
 resolver: ghc-7.8.4

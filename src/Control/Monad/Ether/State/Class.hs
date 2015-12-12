@@ -1,15 +1,15 @@
-{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
-
 {-# LANGUAGE CPP #-}
+
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
+#endif
+
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE PolyKinds #-}
-
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE OverlappingInstances #-}
-#endif
 
 -- | See "Control.Monad.State.Class".
 
@@ -19,10 +19,9 @@ module Control.Monad.Ether.State.Class
     , gets
     ) where
 
-import Control.Monad.Trans (MonadTrans(..))
-
 import qualified Control.Monad.Trans.Ether.State.Lazy   as S.L
 import qualified Control.Monad.Trans.Ether.State.Strict as S.S
+import qualified Control.Monad.Trans as Lift
 import qualified Control.Ether.Util as Util
 
 -- | See 'Control.Monad.State.MonadState'.
@@ -65,10 +64,10 @@ instance Monad m => MonadState tag s (S.S.StateT tag s m) where
     state = S.S.state
 
 instance {-# OVERLAPPABLE #-}
-         ( MonadTrans t
+         ( Lift.MonadTrans t
          , Monad (t m)
          , MonadState tag s m
          ) => MonadState tag s (t m) where
-    get t = lift (get t)
-    put t = lift . put t
-    state t = lift . state t
+    get t = Lift.lift (get t)
+    put t = Lift.lift . put t
+    state t = Lift.lift . state t

@@ -81,11 +81,11 @@ newtype WriterT tag w m a = WriterT (Trans.WriterT w m a)
              , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
              , MonadThrow, MonadCatch, MonadMask )
 
--- | Type-restricted `coerce`.
+-- | Type-restricted 'coerce'.
 pack :: Trans.WriterT w m a -> WriterT tag w m a
 pack = coerce
 
--- | Type-restricted `coerce`.
+-- | Type-restricted 'coerce'.
 unpack :: WriterT tag w m a -> Trans.WriterT w m a
 unpack = coerce
 

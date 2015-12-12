@@ -78,11 +78,11 @@ newtype StateT tag s m a = StateT (Trans.StateT s m a)
              , MonadFix, MonadTrans, MonadIO, MFunctor
              , MonadThrow, MonadCatch, MonadMask )
 
--- | Type-restricted `coerce`.
+-- | Type-restricted 'coerce'.
 pack :: Trans.StateT s m a -> StateT tag s m a
 pack = coerce
 
--- | Type-restricted `coerce`.
+-- | Type-restricted 'coerce'.
 unpack :: StateT tag s m a -> Trans.StateT s m a
 unpack = coerce
 
