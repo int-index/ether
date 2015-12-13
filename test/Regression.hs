@@ -17,6 +17,7 @@ import Test.Tasty
 
 import Regression.T1
 import Regression.T2
+import Regression.T3
 
 ethereal "R1" "r1"
 ethereal "R2" "r2"
@@ -31,13 +32,8 @@ suite :: TestTree
 suite = testGroup "Ether"
     [ test1
     , test2
+    , test3
     ]
-
-implicitCore :: Ether '[I.R Int, I.R Bool] m => m String
-implicitCore = I.local (succ :: Int -> Int) $ do
-    n :: Int <- I.ask
-    b <- I.local not I.ask
-    return (if b then "" else show n)
 
 wrapCore :: (T.MonadReader Int m, T.MonadState Int m) => m Int
 wrapCore = do
