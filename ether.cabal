@@ -99,6 +99,10 @@ test-suite regression
   main-is:             Regression.hs
   other-modules:       Regression.T1
                        Regression.T2
+                       Regression.T3
+                       Regression.T4
+                       Regression.T5
+                       Regression.T6
 
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test

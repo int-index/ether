@@ -18,6 +18,9 @@ import Test.Tasty
 import Regression.T1
 import Regression.T2
 import Regression.T3
+import Regression.T4
+import Regression.T5
+import Regression.T6
 
 ethereal "R1" "r1"
 ethereal "R2" "r2"
@@ -30,26 +33,13 @@ main = defaultMain suite
 
 suite :: TestTree
 suite = testGroup "Ether"
-    [ test1
-    , test2
-    , test3
-    ]
-
-wrapCore :: (T.MonadReader Int m, T.MonadState Int m) => m Int
-wrapCore = do
-    b <- T.get
-    a <- T.ask
-    T.put (a + b)
-    return (a * b)
-
-wrapCore' :: Ether '[S1 --> Int, S1 <-> Int, R1 --> Int] m => m Int
-wrapCore' = do
-    a <- tagAttach s1 wrapCore
-    c <- ask r1
-    return (a + c)
-
-wrapCore'' :: Int -> (Int, Int)
-wrapCore'' a = runReader r1 (runStateT s1 (runReaderT s1 wrapCore' a) a) (-1)
+  [ test1
+  , test2
+  , test3
+  , test4
+  , test5
+  , test6
+  ]
 
 nonUniqueTagsCore :: IO ()
 nonUniqueTagsCore
