@@ -107,14 +107,15 @@ test-suite regression
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   default-language:    Haskell2010
-  default-extensions:  TypeFamilies
-                       FlexibleContexts
-                       EmptyDataDecls
-                       TemplateHaskell
-                       ConstraintKinds
-                       ScopedTypeVariables
+  default-extensions:  ConstraintKinds
                        DataKinds
-                       PolyKinds
-                       TypeOperators
+                       EmptyDataDecls
+                       FlexibleContexts
+                       GeneralizedNewtypeDeriving
                        LambdaCase
+                       PolyKinds
+                       ScopedTypeVariables
+                       TemplateHaskell
+                       TypeFamilies
+                       TypeOperators
   ghc-options:         -Wall -fno-warn-missing-signatures
