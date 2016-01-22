@@ -23,7 +23,6 @@ import Regression.T5
 import Regression.T6
 
 ethereal "R1" "r1"
-ethereal "R2" "r2"
 ethereal "S1" "s1"
 ethereal "Foo" "foo"
 ethereal "Bar" "bar"
@@ -40,21 +39,6 @@ suite = testGroup "Ether"
   , test5
   , test6
   ]
-
-nonUniqueTagsCore :: IO ()
-nonUniqueTagsCore
-  = flip (runReaderT r1) (1 :: Int)
-  . flip (runReaderT r1) (True :: Bool)
-  . flip (runReaderT r1) (2 :: Int)
-  . flip (runReaderT r1) (3 :: Integer)
-  $ do
-    a :: Integer <- ask r1
-    b :: Int <- ask r1
-    c :: Bool <- ask r1
-    T.liftIO $ do
-      print a
-      print b
-      print c
 
 stateCore :: Ether '[S1 <-> Int, R1 --> Int] m => m ()
 stateCore = do

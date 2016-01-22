@@ -40,17 +40,17 @@ runner2 s r
 
 test3 :: TestTree
 test3 = testGroup "T3: Tag attachement"
-  [ testProperty "runner1 works"
+  [ testProperty "runner₁ works"
     $ \s r -> property
     $ (==)
         (runner1 s r testEther)
         ((s * r, s + r, negate r * 2), negate (s + r))
-  , testProperty "runner2 works"
+  , testProperty "runner₂ works"
     $ \s r -> property
     $ (==)
         (runner2 s r testEther)
         ((s * r, s + r, negate r * 2), negate (s + r))
-  , testProperty "runner1 == runner2"
+  , testProperty "runner₁ == runner₂"
     $ \s r -> property
     $ runner1 s r testEther == runner2 s r testEther
   ]

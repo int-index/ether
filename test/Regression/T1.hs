@@ -26,14 +26,14 @@ runner1 s1 s2 = flip (runReader tag1) s1 . flip (runReaderT tag2) s2
 runner2 s1 s2 = flip (runReader tag2) s2 . flip (runReaderT tag1) s1
 
 test1 :: TestTree
-test1 = testGroup "T1: Reader.local"
-  [ testProperty "runner1 works"
+test1 = testGroup "T1: Reader local environment"
+  [ testProperty "runner₁ works"
       $ \s1 s2 -> property
       $ runner1 s1 s2 testEther == ((s1, s2), (s1, map succ s2))
-  , testProperty "runner1 works"
+  , testProperty "runner₂ works"
       $ \s1 s2 -> property
-      $ runner1 s1 s2 testEther == ((s1, s2), (s1, map succ s2))
-  , testProperty "runner1 == runner2"
+      $ runner2 s1 s2 testEther == ((s1, s2), (s1, map succ s2))
+  , testProperty "runner₁ == runner₂"
       $ \s1 s2 -> property
       $ runner1 s1 s2 testEther == runner2 s1 s2 testEther
   ]
