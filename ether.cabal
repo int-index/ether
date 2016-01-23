@@ -103,6 +103,8 @@ test-suite regression
                        Regression.T4
                        Regression.T5
                        Regression.T6
+                       Regression.T7
+                       Regression.T8
 
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test

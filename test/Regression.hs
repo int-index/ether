@@ -6,9 +6,6 @@ import Control.Monad
 import Control.Monad.Ether
 import Control.Ether.Abbr
 
-import qualified Control.Monad.Ether.Implicit as I
-import qualified Control.Ether.Implicit.Abbr as I
-
 import qualified Control.Monad.Reader as T
 import qualified Control.Monad.Writer as T
 import qualified Control.Monad.State  as T
@@ -21,9 +18,9 @@ import Regression.T3
 import Regression.T4
 import Regression.T5
 import Regression.T6
+import Regression.T7
+import Regression.T8
 
-ethereal "R1" "r1"
-ethereal "S1" "s1"
 ethereal "Foo" "foo"
 ethereal "Bar" "bar"
 
@@ -38,31 +35,9 @@ suite = testGroup "Ether"
   , test4
   , test5
   , test6
+  , test7
+  , test8
   ]
-
-data DivideByZero = DivideByZero
-    deriving (Show)
-data NegativeLog a = NegativeLog a
-    deriving (Show)
-
-exceptCore
-    :: ( Floating a, Ord a
-       , Ether '[I.E DivideByZero, I.E (NegativeLog a)] m
-       ) => a -> a -> m a
-exceptCore a b = do
-    T.when (b == 0) (I.throw DivideByZero)
-    let d = a /b
-    T.when (d < 0) (I.throw (NegativeLog d))
-    return (log d)
-
-(&) :: a -> (a -> c) -> c
-(&) = flip ($)
-
-exceptCore' :: Double -> Double -> String
-exceptCore' a b = do
-    liftM show (exceptCore a b)
-    &I.handleT (\(NegativeLog (x::Double)) -> "nl: " ++ show x)
-    &I.handle  (\DivideByZero -> "dz")
 
 summatorCore
     :: ( Num a

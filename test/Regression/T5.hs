@@ -15,7 +15,8 @@ incCounter :: Counter -> Counter
 incCounter = succ
 
 testEther
-  :: (Num a, Ord a) => Ether '[I.R a, I.S Counter] m
+  :: (Num a, Ord a)
+  => Ether '[I.R a, I.S Counter] m
   => m a
 testEther = do
   a <- I.ask
