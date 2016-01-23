@@ -34,13 +34,13 @@ handleDivideByZero DivideByZero = "dz"
 
 runner1 :: Double -> Double -> String
 runner1 a b = do
-  (show <$> testEther a b)
+  (show `fmap` testEther a b)
     & I.handleT handleNegativeLog
     & I.handle  handleDivideByZero
 
 runner2 :: Double -> Double -> String
 runner2 a b = do
-  (show <$> testEther a b)
+  (show `fmap` testEther a b)
     & I.handleT handleDivideByZero
     & I.handle  handleNegativeLog
 

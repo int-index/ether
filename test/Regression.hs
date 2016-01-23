@@ -1,13 +1,11 @@
 module Main where
 
-import Data.Monoid
 import Control.Monad
 
 import Control.Monad.Ether
 import Control.Ether.Abbr
 
 import qualified Control.Monad.Reader as T
-import qualified Control.Monad.Writer as T
 import qualified Control.Monad.State  as T
 
 import Test.Tasty
@@ -38,19 +36,6 @@ suite = testGroup "Ether"
   , test7
   , test8
   ]
-
-summatorCore
-    :: ( Num a
-       , T.MonadWriter (Sum a) m
-       , MonadWriter Foo (Sum a) m
-       ) => [a] -> m ()
-summatorCore xs = do
-    forM_ xs $ \x -> do
-        T.tell (Sum x)
-        tell foo (Sum 1)
-
-summatorCore' :: Num a => [a] -> (Sum a, Sum a)
-summatorCore' = runWriter foo . T.execWriterT . summatorCore
 
 wrapState_f :: T.MonadState Int m => m String
 wrapState_f = liftM show T.get
