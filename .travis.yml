@@ -5,7 +5,7 @@ env:
  - CABALVER=1.22 GHCVER=7.10.3
 
 before_install:
- - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
+ - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
  - travis_retry cabal update
 
 install:
@@ -14,9 +14,13 @@ install:
  - cabal install --only-dependencies --enable-tests
 
 script:
- - cabal configure --enable-tests -v2
+ - cabal configure --enable-tests --enable-library-coverage -v2
  - cabal build
  - cabal test
+
+after_script:
+ - cabal install hpc-coveralls
+ - hpc-coveralls regression --exclude-dir=test
 
 addons:
   apt:
