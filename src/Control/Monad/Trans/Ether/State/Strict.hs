@@ -26,39 +26,11 @@ module Control.Monad.Trans.Ether.State.Strict
     -- * State operations
     , get
     , put
-    -- * Newtype operations
-    , pack
-    , unpack
     ) where
 
 import Data.Functor.Identity (Identity(..))
-import Control.Applicative
-import Control.Monad (MonadPlus)
-import Control.Monad.Fix (MonadFix)
-import Control.Monad.Trans.Class (MonadTrans, lift)
-import Control.Monad.IO.Class (MonadIO)
-import Control.Monad.Morph (MFunctor)
-import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
-import GHC.Generics (Generic)
-import Data.Coerce (coerce)
-
-import qualified Control.Monad.Base as MB
-import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.State.Strict as Trans
-
-import qualified Control.Monad.Trans.Lift.StT    as Lift
-import qualified Control.Monad.Trans.Lift.Local  as Lift
-import qualified Control.Monad.Trans.Lift.Catch  as Lift
-import qualified Control.Monad.Trans.Lift.Listen as Lift
-import qualified Control.Monad.Trans.Lift.Pass   as Lift
-import qualified Control.Monad.Trans.Lift.CallCC as Lift
-
-import qualified Control.Monad.Cont.Class    as Class
-import qualified Control.Monad.Reader.Class  as Class
-import qualified Control.Monad.State.Class   as Class
-import qualified Control.Monad.Writer.Class  as Class
-import qualified Control.Monad.Error.Class   as Class
-
+import Control.Ether.TT
 
 -- | The parametrizable state monad.
 --
@@ -72,50 +44,7 @@ type State tag r = StateT tag r Identity
 --
 -- The 'return' function leaves the state unchanged, while '>>=' uses
 -- the final state of the first computation as the initial state of the second.
-newtype StateT tag s m a = StateT (Trans.StateT s m a)
-    deriving ( Generic
-             , Functor, Applicative, Alternative, Monad, MonadPlus
-             , MonadFix, MonadTrans, MonadIO, MFunctor
-             , MonadThrow, MonadCatch, MonadMask )
-
--- | Type-restricted 'coerce'.
-pack :: Trans.StateT s m a -> StateT tag s m a
-pack = coerce
-
--- | Type-restricted 'coerce'.
-unpack :: StateT tag s m a -> Trans.StateT s m a
-unpack = coerce
-
-instance MB.MonadBase b m => MB.MonadBase b (StateT tag s m) where
-    liftBase = MB.liftBaseDefault
-
-instance MC.MonadTransControl (StateT tag s) where
-    type StT (StateT tag s) a = MC.StT (Trans.StateT s) a
-    liftWith = MC.defaultLiftWith pack unpack
-    restoreT = MC.defaultRestoreT pack
-
-instance MC.MonadBaseControl b m => MC.MonadBaseControl b (StateT tag s m) where
-    type StM (StateT tag s m) a = MC.ComposeSt (StateT tag s) m a
-    liftBaseWith = MC.defaultLiftBaseWith
-    restoreM = MC.defaultRestoreM
-
-type instance Lift.StT (StateT tag s) a = MC.StT (StateT tag s) a
-
-instance Lift.LiftLocal (StateT tag s) where
-    liftLocal = Lift.defaultLiftLocal pack unpack
-
-instance Lift.LiftCatch (StateT tag s) where
-    liftCatch = Lift.defaultLiftCatch pack unpack
-
-instance Lift.LiftListen (StateT tag s) where
-    liftListen = Lift.defaultLiftListen pack unpack
-
-instance Lift.LiftPass (StateT tag s) where
-    liftPass = Lift.defaultLiftPass pack unpack
-
-instance Lift.LiftCallCC (StateT tag s) where
-    liftCallCC  = Lift.defaultLiftCallCC  pack unpack
-    liftCallCC' = Lift.defaultLiftCallCC' pack unpack
+type StateT tag s = TT tag (Trans.StateT s)
 
 tagged :: proxy tag -> Trans.StateT s m a -> StateT tag s m a
 tagged _ = pack
@@ -169,28 +98,3 @@ get t = tagged t Trans.get
 -- | Set the value of the state within the monad.
 put :: Monad m => proxy tag -> s -> StateT tag s m ()
 put t = tagged t . Trans.put
-
--- Instances for mtl classes
-
-instance Class.MonadCont m => Class.MonadCont (StateT tag s m) where
-    callCC = Lift.liftCallCC' Class.callCC
-
-instance Class.MonadReader r m => Class.MonadReader r (StateT tag s m) where
-    ask = lift Class.ask
-    local = Lift.liftLocal Class.ask Class.local
-    reader = lift . Class.reader
-
-instance Class.MonadState s' m => Class.MonadState s' (StateT tag s m) where
-    get = lift Class.get
-    put = lift . Class.put
-    state = lift . Class.state
-
-instance Class.MonadWriter w m => Class.MonadWriter w (StateT tag s m) where
-    writer = lift . Class.writer
-    tell   = lift . Class.tell
-    listen = Lift.liftListen Class.listen
-    pass   = Lift.liftPass Class.pass
-
-instance Class.MonadError e m => Class.MonadError e (StateT tag s m) where
-    throwError = lift . Class.throwError
-    catchError = Lift.liftCatch Class.catchError

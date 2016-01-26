@@ -22,38 +22,11 @@ module Control.Monad.Trans.Ether.Except
     -- * Exception operations
     , throw
     , catch
-    -- * Newtype operations
-    , pack
-    , unpack
     ) where
 
 import Data.Functor.Identity (Identity(..))
-import Control.Applicative
-import Control.Monad (MonadPlus)
-import Control.Monad.Fix (MonadFix)
-import Control.Monad.Trans.Class (MonadTrans, lift)
-import Control.Monad.IO.Class (MonadIO)
-import Control.Monad.Morph (MFunctor, MMonad)
-import Control.Monad.Catch (MonadThrow, MonadCatch)
-import GHC.Generics (Generic)
-import Data.Coerce (coerce)
-
-import qualified Control.Monad.Base as MB
-import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Except as Trans
-
-import qualified Control.Monad.Trans.Lift.StT    as Lift
-import qualified Control.Monad.Trans.Lift.Local  as Lift
-import qualified Control.Monad.Trans.Lift.Catch  as Lift
-import qualified Control.Monad.Trans.Lift.Listen as Lift
-import qualified Control.Monad.Trans.Lift.Pass   as Lift
-import qualified Control.Monad.Trans.Lift.CallCC as Lift
-
-import qualified Control.Monad.Cont.Class    as Class
-import qualified Control.Monad.Reader.Class  as Class
-import qualified Control.Monad.State.Class   as Class
-import qualified Control.Monad.Writer.Class  as Class
-import qualified Control.Monad.Error.Class   as Class
+import Control.Ether.TT
 
 
 -- | The parameterizable exception monad.
@@ -72,50 +45,7 @@ runExcept t = Trans.runExcept . untagged t
 --
 -- The 'return' function returns a normal value, while '>>=' exits on
 -- the first exception.
-newtype ExceptT tag e m a = ExceptT (Trans.ExceptT e m a)
-    deriving ( Generic
-             , Functor, Applicative, Alternative, Monad, MonadPlus
-             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
-             , MonadThrow, MonadCatch )
-
--- | Type-restricted 'coerce'.
-pack :: Trans.ExceptT e m a -> ExceptT tag e m a
-pack = coerce
-
--- | Type-restricted 'coerce'.
-unpack :: ExceptT tag e m a -> Trans.ExceptT e m a
-unpack = coerce
-
-instance MB.MonadBase b m => MB.MonadBase b (ExceptT tag e m) where
-    liftBase = MB.liftBaseDefault
-
-instance MC.MonadTransControl (ExceptT tag e) where
-    type StT (ExceptT tag e) a = MC.StT (Trans.ExceptT e) a
-    liftWith = MC.defaultLiftWith pack unpack
-    restoreT = MC.defaultRestoreT pack
-
-instance MC.MonadBaseControl b m => MC.MonadBaseControl b (ExceptT tag e m) where
-    type StM (ExceptT tag e m) a = MC.ComposeSt (ExceptT tag e) m a
-    liftBaseWith = MC.defaultLiftBaseWith
-    restoreM = MC.defaultRestoreM
-
-type instance Lift.StT (ExceptT tag e) a = MC.StT (ExceptT tag e) a
-
-instance Lift.LiftLocal (ExceptT tag e) where
-    liftLocal = Lift.defaultLiftLocal pack unpack
-
-instance Lift.LiftCatch (ExceptT tag e) where
-    liftCatch = Lift.defaultLiftCatch pack unpack
-
-instance Lift.LiftListen (ExceptT tag e) where
-    liftListen = Lift.defaultLiftListen pack unpack
-
-instance Lift.LiftPass (ExceptT tag e) where
-    liftPass = Lift.defaultLiftPass pack unpack
-
-instance Lift.LiftCallCC (ExceptT tag e) where
-    liftCallCC  = Lift.defaultLiftCallCC pack unpack
-    liftCallCC' = Lift.defaultLiftCallCC pack unpack
+type ExceptT tag e = TT tag (Trans.ExceptT e)
 
 tagged :: proxy tag -> Trans.ExceptT e m a -> ExceptT tag e m a
 tagged _ = pack
@@ -143,26 +73,3 @@ throw t = tagged t . Trans.throwE
 -- | A handler function to handle previous exceptions and return to normal execution.
 catch :: Monad m => proxy tag -> ExceptT tag e m a -> (e -> ExceptT tag e m a) -> ExceptT tag e m a
 catch t m h = tagged t $ Trans.catchE (untagged t m) (untagged t . h)
-
-instance Class.MonadCont m => Class.MonadCont (ExceptT tag e m) where
-    callCC = Lift.liftCallCC Class.callCC
-
-instance Class.MonadReader r m => Class.MonadReader r (ExceptT tag e m) where
-    ask = lift Class.ask
-    local = Lift.liftLocal Class.ask Class.local
-    reader = lift . Class.reader
-
-instance Class.MonadState s m => Class.MonadState s (ExceptT tag e m) where
-    get = lift Class.get
-    put = lift . Class.put
-    state = lift . Class.state
-
-instance Class.MonadWriter w m => Class.MonadWriter w (ExceptT tag e m) where
-    writer = lift . Class.writer
-    tell   = lift . Class.tell
-    listen = Lift.liftListen Class.listen
-    pass   = Lift.liftPass Class.pass
-
-instance Class.MonadError e' m => Class.MonadError e' (ExceptT tag e m) where
-    throwError = lift . Class.throwError
-    catchError = Lift.liftCatch Class.catchError
