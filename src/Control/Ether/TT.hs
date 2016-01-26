@@ -127,7 +127,7 @@ instance
     , Monad (trans m)
     ) => Class.MonadCont (TT tag trans m)
   where
-    callCC = Lift.liftCallCC Class.callCC
+    callCC = Lift.liftCallCC' Class.callCC
 
 instance
     ( Class.MonadReader r m
