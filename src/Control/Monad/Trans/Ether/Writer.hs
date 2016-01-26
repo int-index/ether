@@ -26,9 +26,6 @@ module Control.Monad.Trans.Ether.Writer
     , tell
     , listen
     , pass
-    -- * Newtype operations
-    , pack
-    , unpack
     ) where
 
 #if __GLASGOW_HASKELL__ < 710
@@ -36,32 +33,8 @@ import Data.Monoid
 #endif
 
 import Data.Functor.Identity (Identity(..))
-import Control.Applicative
-import Control.Monad (MonadPlus)
-import Control.Monad.Fix (MonadFix)
-import Control.Monad.Trans.Class (MonadTrans, lift)
-import Control.Monad.IO.Class (MonadIO)
-import Control.Monad.Morph (MFunctor, MMonad)
-import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
-import GHC.Generics (Generic)
-import Data.Coerce (coerce)
-
-import qualified Control.Monad.Base as MB
-import qualified Control.Monad.Trans.Control as MC
 import qualified Control.Monad.Trans.Writer.Lazy as Trans
-
-import qualified Control.Monad.Trans.Lift.StT    as Lift
-import qualified Control.Monad.Trans.Lift.Local  as Lift
-import qualified Control.Monad.Trans.Lift.Catch  as Lift
-import qualified Control.Monad.Trans.Lift.Listen as Lift
-import qualified Control.Monad.Trans.Lift.Pass   as Lift
-import qualified Control.Monad.Trans.Lift.CallCC as Lift
-
-import qualified Control.Monad.Cont.Class    as Class
-import qualified Control.Monad.Reader.Class  as Class
-import qualified Control.Monad.State.Class   as Class
-import qualified Control.Monad.Writer.Class  as Class
-import qualified Control.Monad.Error.Class   as Class
+import Control.Ether.TT
 
 -- | The parametrizable writer monad.
 --
@@ -75,50 +48,7 @@ type Writer tag w = WriterT tag w Identity
 --
 -- The 'return' function produces the output 'mempty', while '>>=' combines
 -- the outputs of the subcomputations using 'mappend'.
-newtype WriterT tag w m a = WriterT (Trans.WriterT w m a)
-    deriving ( Generic
-             , Functor, Applicative, Alternative, Monad, MonadPlus
-             , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
-             , MonadThrow, MonadCatch, MonadMask )
-
--- | Type-restricted 'coerce'.
-pack :: Trans.WriterT w m a -> WriterT tag w m a
-pack = coerce
-
--- | Type-restricted 'coerce'.
-unpack :: WriterT tag w m a -> Trans.WriterT w m a
-unpack = coerce
-
-instance (Monoid w, MB.MonadBase b m) => MB.MonadBase b (WriterT tag w m) where
-    liftBase = MB.liftBaseDefault
-
-instance Monoid w => MC.MonadTransControl (WriterT tag w) where
-    type StT (WriterT tag w) a = MC.StT (Trans.WriterT w) a
-    liftWith = MC.defaultLiftWith pack unpack
-    restoreT = MC.defaultRestoreT pack
-
-instance (Monoid w, MC.MonadBaseControl b m) => MC.MonadBaseControl b (WriterT tag w m) where
-    type StM (WriterT tag w m) a = MC.ComposeSt (WriterT tag w) m a
-    liftBaseWith = MC.defaultLiftBaseWith
-    restoreM = MC.defaultRestoreM
-
-type instance Lift.StT (WriterT tag w) a = MC.StT (WriterT tag w) a
-
-instance Monoid w => Lift.LiftLocal (WriterT tag w) where
-    liftLocal = Lift.defaultLiftLocal pack unpack
-
-instance Monoid w => Lift.LiftCatch (WriterT tag w) where
-    liftCatch = Lift.defaultLiftCatch pack unpack
-
-instance Monoid w => Lift.LiftListen (WriterT tag w) where
-    liftListen = Lift.defaultLiftListen pack unpack
-
-instance Monoid w' => Lift.LiftPass (WriterT tag w') where
-    liftPass = Lift.defaultLiftPass pack unpack
-
-instance Monoid w => Lift.LiftCallCC (WriterT tag w) where
-    liftCallCC  = Lift.defaultLiftCallCC pack unpack
-    liftCallCC' = Lift.defaultLiftCallCC pack unpack
+type WriterT tag w = TT tag (Trans.WriterT w)
 
 tagged :: proxy tag -> Trans.WriterT w m a -> WriterT tag w m a
 tagged _ = pack
@@ -167,26 +97,3 @@ listen t m = tagged t $ Trans.listen (untagged t m)
 -- value, applying the function to the accumulator.
 pass :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
 pass t m = tagged t $ Trans.pass (untagged t m)
-
-instance (Monoid w, Class.MonadCont m) => Class.MonadCont (WriterT tag w m) where
-    callCC = Lift.liftCallCC Class.callCC
-
-instance (Monoid w, Class.MonadReader r m) => Class.MonadReader r (WriterT tag w m) where
-    ask = lift Class.ask
-    local = Lift.liftLocal Class.ask Class.local
-    reader = lift . Class.reader
-
-instance (Monoid w, Class.MonadState s m) => Class.MonadState s (WriterT tag w m) where
-    get = lift Class.get
-    put = lift . Class.put
-    state = lift . Class.state
-
-instance (Monoid w, Class.MonadWriter w' m) => Class.MonadWriter w' (WriterT tag w m) where
-    writer = lift . Class.writer
-    tell   = lift . Class.tell
-    listen = Lift.liftListen Class.listen
-    pass   = Lift.liftPass Class.pass
-
-instance (Monoid w, Class.MonadError e m) => Class.MonadError e (WriterT tag w m) where
-    throwError = lift . Class.throwError
-    catchError = Lift.liftCatch Class.catchError
