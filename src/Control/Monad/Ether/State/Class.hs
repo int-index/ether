@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
 
 -- | See "Control.Monad.State.Class".
@@ -53,12 +54,12 @@ modify t f = state t (\s -> ((), f s))
 gets :: MonadState tag s m => proxy tag -> (s -> a) -> m a
 gets t f = Util.fmap f (get t)
 
-instance Monad m => MonadState tag s (S.L.StateT tag s m) where
+instance (Monad m, s ~ s') => MonadState tag s (S.L.StateT tag s' m) where
     get = S.L.get
     put = S.L.put
     state = S.L.state
 
-instance Monad m => MonadState tag s (S.S.StateT tag s m) where
+instance (Monad m, s ~ s') => MonadState tag s (S.S.StateT tag s' m) where
     get = S.S.get
     put = S.S.put
     state = S.S.state

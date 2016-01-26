@@ -6,6 +6,7 @@
 * Replace `Control.Ether.Wrapped` with `Control.Monad.Trans.Ether.Dispatch`.
 * `MonadThrow`, `MonadCatch`, `MonadMask` instances.
 * Drop `newtype-generics`.
+* Instance search is now more strict.
 
 
 0.3.1.1

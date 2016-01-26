@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
 
 -- | See "Control.Monad.Except".
@@ -31,7 +32,7 @@ class Monad m => MonadExcept tag e m | m tag -> e where
     -- normal execution.
     catch :: proxy tag -> m a -> (e -> m a) -> m a
 
-instance Monad m => MonadExcept tag e (E.ExceptT tag e m) where
+instance (Monad m, e ~ e') => MonadExcept tag e (E.ExceptT tag e' m) where
     throw = E.throw
     catch = E.catch
 

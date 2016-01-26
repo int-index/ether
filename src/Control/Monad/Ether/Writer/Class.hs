@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
 
 -- | See "Control.Monad.Writer.Class".
@@ -63,7 +64,7 @@ censor t f m = pass t $ do
     a <- m
     return (a, f)
 
-instance (Monoid w, Monad m) => MonadWriter tag w (W.WriterT tag w m) where
+instance (Monoid w, Monad m, w ~ w') => MonadWriter tag w (W.WriterT tag w' m) where
     writer = W.writer
     tell = W.tell
     listen = W.listen

@@ -14,7 +14,6 @@ testEther = ask rTag
 runner r
   = flip (runReader  rTag) (r' :: Int)
   . flip (runReaderT rTag) (r  :: Int)
-  . flip (runReaderT rTag) (fromIntegral r' :: Integer)
   where
     r' = negate r
 

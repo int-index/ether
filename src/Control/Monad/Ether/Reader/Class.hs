@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
 
 -- | See "Control.Monad.Reader.Class".
@@ -57,7 +58,7 @@ asks
     -> m a
 asks = reader
 
-instance Monad m => MonadReader tag r (R.ReaderT tag r m) where
+instance (Monad m, r ~ r') => MonadReader tag r (R.ReaderT tag r' m) where
     ask = R.ask
     local = R.local
     reader = R.reader
