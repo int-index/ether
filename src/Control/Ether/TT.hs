@@ -4,6 +4,7 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeFamilies #-}
 module Control.Ether.TT where
 
@@ -34,6 +35,8 @@ import qualified Control.Monad.Error.Class   as Class
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
+import Control.Ether.Util (MonadApplicative)
+
 -- | Tagged monad transformer.
 newtype TT tag trans (m :: * -> *) a = TT (trans m a)
   deriving
@@ -63,7 +66,7 @@ unpack = coerce
 instance
     ( MB.MonadBase b m
     , MonadTrans trans
-    , Monad (trans m)
+    , MonadApplicative (trans m)
     ) => MB.MonadBase b (TT tag trans m)
   where
     liftBase = MB.liftBaseDefault
@@ -79,7 +82,7 @@ instance
 instance
     ( MC.MonadBaseControl b m
     , MC.MonadTransControl trans
-    , Monad (trans m)
+    , MonadApplicative (trans m)
     ) => MC.MonadBaseControl b (TT tag trans m)
   where
     type StM (TT tag trans m) a = MC.ComposeSt trans m a

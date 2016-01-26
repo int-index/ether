@@ -76,7 +76,6 @@ library
                        FunctionalDependencies
                        GeneralizedNewtypeDeriving
                        MultiParamTypeClasses
-                       PolyKinds
                        ScopedTypeVariables
                        TemplateHaskell
                        TypeFamilies
