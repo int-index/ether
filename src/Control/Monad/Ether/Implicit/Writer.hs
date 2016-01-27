@@ -31,27 +31,27 @@ import qualified Control.Monad.Ether.Writer as Explicit
 type MonadWriter w = Explicit.MonadWriter w w
 
 -- | See 'Control.Monad.Ether.Writer.writer'.
-writer :: forall m w a . MonadWriter w m => (a, w) -> m a
+writer :: forall w m a . MonadWriter w m => (a, w) -> m a
 writer = Explicit.writer (Proxy :: Proxy w)
 
 -- | See 'Control.Monad.Ether.Writer.tell'.
-tell :: forall m w . MonadWriter w m => w -> m ()
+tell :: forall w m . MonadWriter w m => w -> m ()
 tell = Explicit.tell (Proxy :: Proxy w)
 
 -- | See 'Control.Monad.Ether.Writer.listen'.
-listen :: forall m w a . MonadWriter w m => m a -> m (a, w)
+listen :: forall w m a . MonadWriter w m => m a -> m (a, w)
 listen = Explicit.listen (Proxy :: Proxy w)
 
 -- | See 'Control.Monad.Ether.Writer.pass'.
-pass :: forall m w a . MonadWriter w m => m (a, w -> w) -> m a
+pass :: forall w m a . MonadWriter w m => m (a, w -> w) -> m a
 pass = Explicit.pass (Proxy :: Proxy w)
 
 -- | See 'Control.Monad.Ether.Writer.listens'.
-listens :: forall m w a b . MonadWriter w m => (w -> b) -> m a -> m (a, b)
+listens :: forall w m a b . MonadWriter w m => (w -> b) -> m a -> m (a, b)
 listens = Explicit.listens (Proxy :: Proxy w)
 
 -- | See 'Control.Monad.Ether.Writer.censor'.
-censor :: forall m w a . MonadWriter w m => (w -> w) -> m a -> m a
+censor :: forall w m a . MonadWriter w m => (w -> w) -> m a -> m a
 censor = Explicit.censor (Proxy :: Proxy w)
 
 -- | See 'Control.Monad.Ether.Writer.Writer'.

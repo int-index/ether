@@ -55,8 +55,8 @@ runExceptT = Explicit.runExceptT Proxy
 
 -- | See 'Control.Monad.Ether.Except.handle'.
 handle :: (e -> a) -> Except e a -> a
-handle = Explicit.handle (Proxy :: Proxy e)
+handle = Explicit.handle Proxy
 
 -- | See 'Control.Monad.Ether.Except.handleT'.
 handleT :: Functor m => (e -> a) -> ExceptT e m a -> m a
-handleT = Explicit.handleT (Proxy :: Proxy e)
+handleT = Explicit.handleT Proxy

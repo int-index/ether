@@ -66,21 +66,21 @@ execState = Explicit.execState Proxy
 type MonadState s = Explicit.MonadState s s
 
 -- | See 'Control.Monad.Ether.State.Lazy.get'.
-get :: forall m s . MonadState s m => m s
+get :: forall s m . MonadState s m => m s
 get = Explicit.get (Proxy :: Proxy s)
 
 -- | See 'Control.Monad.Ether.State.Lazy.gets'.
-gets :: forall m s a . MonadState s m => (s -> a) -> m a
+gets :: forall s m a . MonadState s m => (s -> a) -> m a
 gets = Explicit.gets (Proxy :: Proxy s)
 
 -- | See 'Control.Monad.Ether.State.Lazy.put'.
-put :: forall m s . MonadState s m => s -> m ()
+put :: forall s m . MonadState s m => s -> m ()
 put = Explicit.put (Proxy :: Proxy s)
 
 -- | See 'Control.Monad.Ether.State.Lazy.state'.
-state :: forall m s a . MonadState s m => (s -> (a, s)) -> m a
+state :: forall s m a . MonadState s m => (s -> (a, s)) -> m a
 state = Explicit.state (Proxy :: Proxy s)
 
 -- | See 'Control.Monad.Ether.State.Lazy.modify'.
-modify :: forall m s . MonadState s m => (s -> s) -> m ()
+modify :: forall s m . MonadState s m => (s -> s) -> m ()
 modify = Explicit.modify (Proxy :: Proxy s)
