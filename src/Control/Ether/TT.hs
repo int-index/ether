@@ -91,36 +91,21 @@ instance
 
 type instance Lift.StT (TT tag trans) a = Lift.StT trans a
 
-instance
-    ( Lift.LiftLocal trans
-    ) => Lift.LiftLocal (TT tag trans)
-  where
-    liftLocal = Lift.defaultLiftLocal pack unpack
+instance Lift.LiftLocal trans => Lift.LiftLocal (TT tag trans) where
+  liftLocal = Lift.defaultLiftLocal pack unpack
 
-instance
-    ( Lift.LiftCatch trans
-    ) => Lift.LiftCatch (TT tag trans)
-  where
-    liftCatch = Lift.defaultLiftCatch pack unpack
+instance Lift.LiftCatch trans => Lift.LiftCatch (TT tag trans) where
+  liftCatch = Lift.defaultLiftCatch pack unpack
 
-instance
-    ( Lift.LiftListen trans
-    ) => Lift.LiftListen (TT tag trans)
-  where
-    liftListen = Lift.defaultLiftListen pack unpack
+instance Lift.LiftListen trans => Lift.LiftListen (TT tag trans) where
+  liftListen = Lift.defaultLiftListen pack unpack
 
-instance
-    ( Lift.LiftPass trans
-    ) => Lift.LiftPass (TT tag trans)
-  where
-    liftPass = Lift.defaultLiftPass pack unpack
+instance Lift.LiftPass trans => Lift.LiftPass (TT tag trans) where
+  liftPass = Lift.defaultLiftPass pack unpack
 
-instance
-    ( Lift.LiftCallCC trans
-    ) => Lift.LiftCallCC (TT tag trans)
-  where
-    liftCallCC  = Lift.defaultLiftCallCC  pack unpack
-    liftCallCC' = Lift.defaultLiftCallCC' pack unpack
+instance Lift.LiftCallCC trans => Lift.LiftCallCC (TT tag trans) where
+  liftCallCC  = Lift.defaultLiftCallCC  pack unpack
+  liftCallCC' = Lift.defaultLiftCallCC' pack unpack
 
 -- Instances for mtl classes
 
