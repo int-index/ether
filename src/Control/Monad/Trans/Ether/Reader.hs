@@ -43,34 +43,28 @@ type Reader tag r = ReaderT tag r Identity
 -- the inherited environment to both subcomputations.
 type ReaderT tag r = TT tag (Trans.ReaderT r)
 
-tagged :: proxy tag -> Trans.ReaderT r m a -> ReaderT tag r m a
-tagged _ = pack
-
-untagged :: proxy tag -> ReaderT tag r m a -> Trans.ReaderT r m a
-untagged _ = unpack
-
 -- | Constructor for computations in the reader monad transformer.
 readerT :: proxy tag -> (r -> m a) -> ReaderT tag r m a
-readerT t = tagged t . Trans.ReaderT
+readerT _ = pack . Trans.ReaderT
 
 -- | Constructor for computations in the reader monad
 -- (the inverse of 'runReader').
 reader :: Monad m => proxy tag -> (r -> a) -> ReaderT tag r m a
-reader t = tagged t . Trans.reader
+reader _ = pack . Trans.reader
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the vinal value.
 runReaderT :: proxy tag -> ReaderT tag r m a -> r -> m a
-runReaderT t = Trans.runReaderT . untagged t
+runReaderT _ = Trans.runReaderT . unpack
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the vinal value.
 runReader :: proxy tag -> Reader tag r a -> r -> a
-runReader t = Trans.runReader . untagged t
+runReader _ = Trans.runReader . unpack
 
 -- | Fetch the value of the environment.
 ask :: Monad m => proxy tag -> ReaderT tag r m r
-ask t = tagged t Trans.ask
+ask _ = pack Trans.ask
 
 -- | Execute a computation in a modified environment
 -- (a specialization of 'withReaderT').
@@ -83,4 +77,4 @@ local
     -> ReaderT tag r m a
     -- ^ Computation to run in the modified environment.
     -> ReaderT tag r m a
-local t f m = tagged t $ Trans.withReaderT f (untagged t m)
+local _ f = pack . Trans.withReaderT f . unpack

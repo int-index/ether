@@ -46,55 +46,49 @@ type State tag r = StateT tag r Identity
 -- the final state of the first computation as the initial state of the second.
 type StateT tag s = TT tag (Trans.StateT s)
 
-tagged :: proxy tag -> Trans.StateT s m a -> StateT tag s m a
-tagged _ = pack
-
-untagged :: proxy tag -> StateT tag s m a -> Trans.StateT s m a
-untagged _ = unpack
-
 -- | Constructor for computations in the state monad transformer.
 stateT :: proxy tag -> (s -> m (a, s)) -> StateT tag s m a
-stateT t = tagged t . Trans.StateT
+stateT _ = pack . Trans.StateT
 
 -- | Constructor for computations in the state monad
 -- (the inverse of 'runState').
 state :: Monad m => proxy tag -> (s -> (a, s)) -> StateT tag s m a
-state t = tagged t . Trans.state
+state _ = pack . Trans.state
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns both the final value and the final state.
 runStateT :: proxy tag -> StateT tag s m a -> s -> m (a, s)
-runStateT t = Trans.runStateT . untagged t
+runStateT _ = Trans.runStateT . unpack
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns the final value, discarding the final state.
 evalStateT :: Monad m => proxy tag -> StateT tag s m a -> s -> m a
-evalStateT t = Trans.evalStateT . untagged t
+evalStateT _ = Trans.evalStateT . unpack
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns the final state, discarding the final value.
 execStateT :: Monad m => proxy tag -> StateT tag s m a -> s -> m s
-execStateT t = Trans.execStateT . untagged t
+execStateT _ = Trans.execStateT . unpack
 
 -- | Runs a 'State' with the given initial state
 -- and returns both the final value and the final state.
 runState :: proxy tag -> State tag s a -> s -> (a, s)
-runState t = Trans.runState . untagged t
+runState _ = Trans.runState . unpack
 
 -- | Runs a 'State' with the given initial state
 -- and returns the final value, discarding the final state.
 evalState :: proxy tag -> State tag s a -> s -> a
-evalState t = Trans.evalState . untagged t
+evalState _ = Trans.evalState . unpack
 
 -- | Runs a 'State' with the given initial state
 -- and returns the final state, discarding the final value.
 execState :: proxy tag -> State tag s a -> s -> s
-execState t = Trans.execState . untagged t
+execState _ = Trans.execState . unpack
 
 -- | Fetch the current value of the state within the monad.
 get :: Monad m => proxy tag -> StateT tag s m s
-get t = tagged t Trans.get
+get _ = pack Trans.get
 
 -- | Set the value of the state within the monad.
 put :: Monad m => proxy tag -> s -> StateT tag s m ()
-put t = tagged t . Trans.put
+put _ = pack . Trans.put

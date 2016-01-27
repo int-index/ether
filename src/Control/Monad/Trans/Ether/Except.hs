@@ -39,7 +39,7 @@ type Except tag e = ExceptT tag e Identity
 
 -- | Runs an 'Except' and returns either an exception or a normal value.
 runExcept :: proxy tag -> Except tag e a -> Either e a
-runExcept t = Trans.runExcept . untagged t
+runExcept _ = Trans.runExcept . unpack
 
 -- | The exception monad transformer.
 --
@@ -47,15 +47,9 @@ runExcept t = Trans.runExcept . untagged t
 -- the first exception.
 type ExceptT tag e = TT tag (Trans.ExceptT e)
 
-tagged :: proxy tag -> Trans.ExceptT e m a -> ExceptT tag e m a
-tagged _ = pack
-
-untagged :: proxy tag -> ExceptT tag e m a -> Trans.ExceptT e m a
-untagged _ = unpack
-
 -- | Constructor for computations in the exception monad transformer.
 exceptT :: proxy tag -> m (Either e a) -> ExceptT tag e m a
-exceptT t = tagged t . Trans.ExceptT
+exceptT _ = pack . Trans.ExceptT
 
 -- | Constructor for computations in the exception monad
 -- (the inverse of 'runExcept').
@@ -64,12 +58,12 @@ except t = exceptT t . return
 
 -- | Runs an 'ExceptT' and returns either an exception or a normal value.
 runExceptT :: proxy tag -> ExceptT tag e m a -> m (Either e a)
-runExceptT t = Trans.runExceptT . untagged t
+runExceptT _ = Trans.runExceptT . unpack
 
 -- | Is used within a monadic computation to begin exception processing.
 throw :: Monad m => proxy tag -> e -> ExceptT tag e m a
-throw t = tagged t . Trans.throwE
+throw _ = pack . Trans.throwE
 
 -- | A handler function to handle previous exceptions and return to normal execution.
 catch :: Monad m => proxy tag -> ExceptT tag e m a -> (e -> ExceptT tag e m a) -> ExceptT tag e m a
-catch t m h = tagged t $ Trans.catchE (untagged t m) (untagged t . h)
+catch _ m h = pack $ Trans.catchE (unpack m) (unpack . h)
