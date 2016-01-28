@@ -6,7 +6,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeFamilies #-}
-module Control.Ether.TT where
+
+{- |
+
+-}
+
+module Control.Monad.Trans.Ether.Tagged where
 
 import Control.Applicative
 import Control.Monad (MonadPlus)
@@ -38,44 +43,34 @@ import Data.Coerce (coerce)
 import Control.Ether.Util (MonadApplicative)
 
 -- | Tagged monad transformer.
-newtype TT tag trans (m :: * -> *) a = TT (trans m a)
+newtype TaggedTrans tag trans (m :: * -> *) a = TaggedTrans (trans m a)
   deriving
     ( Generic
-    , Functor
-    , Applicative
-    , Alternative
-    , Monad
-    , MonadPlus
-    , MonadFix
-    , MonadTrans
-    , MonadIO
-    , MFunctor
-    , MMonad
-    , MonadThrow
-    , MonadCatch
-    , MonadMask )
+    , Functor, Applicative, Alternative, Monad, MonadPlus
+    , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
+    , MonadThrow, MonadCatch, MonadMask )
 
 -- | Type-restricted 'coerce'.
-pack :: trans m a -> TT tag trans m a
+pack :: trans m a -> TaggedTrans tag trans m a
 pack = coerce
 
 -- | Type-restricted 'coerce'.
-unpack :: TT tag trans m a -> trans m a
+unpack :: TaggedTrans tag trans m a -> trans m a
 unpack = coerce
 
 instance
     ( MB.MonadBase b m
     , MonadTrans trans
     , MonadApplicative (trans m)
-    ) => MB.MonadBase b (TT tag trans m)
+    ) => MB.MonadBase b (TaggedTrans tag trans m)
   where
     liftBase = MB.liftBaseDefault
 
 instance
     ( MC.MonadTransControl trans
-    ) => MC.MonadTransControl (TT tag trans)
+    ) => MC.MonadTransControl (TaggedTrans tag trans)
   where
-    type StT (TT tag trans) a = MC.StT trans a
+    type StT (TaggedTrans tag trans) a = MC.StT trans a
     liftWith = MC.defaultLiftWith pack unpack
     restoreT = MC.defaultRestoreT pack
 
@@ -83,27 +78,27 @@ instance
     ( MC.MonadBaseControl b m
     , MC.MonadTransControl trans
     , MonadApplicative (trans m)
-    ) => MC.MonadBaseControl b (TT tag trans m)
+    ) => MC.MonadBaseControl b (TaggedTrans tag trans m)
   where
-    type StM (TT tag trans m) a = MC.ComposeSt trans m a
+    type StM (TaggedTrans tag trans m) a = MC.ComposeSt trans m a
     liftBaseWith = MC.defaultLiftBaseWith
     restoreM = MC.defaultRestoreM
 
-type instance Lift.StT (TT tag trans) a = Lift.StT trans a
+type instance Lift.StT (TaggedTrans tag trans) a = Lift.StT trans a
 
-instance Lift.LiftLocal trans => Lift.LiftLocal (TT tag trans) where
+instance Lift.LiftLocal trans => Lift.LiftLocal (TaggedTrans tag trans) where
   liftLocal = Lift.defaultLiftLocal pack unpack
 
-instance Lift.LiftCatch trans => Lift.LiftCatch (TT tag trans) where
+instance Lift.LiftCatch trans => Lift.LiftCatch (TaggedTrans tag trans) where
   liftCatch = Lift.defaultLiftCatch pack unpack
 
-instance Lift.LiftListen trans => Lift.LiftListen (TT tag trans) where
+instance Lift.LiftListen trans => Lift.LiftListen (TaggedTrans tag trans) where
   liftListen = Lift.defaultLiftListen pack unpack
 
-instance Lift.LiftPass trans => Lift.LiftPass (TT tag trans) where
+instance Lift.LiftPass trans => Lift.LiftPass (TaggedTrans tag trans) where
   liftPass = Lift.defaultLiftPass pack unpack
 
-instance Lift.LiftCallCC trans => Lift.LiftCallCC (TT tag trans) where
+instance Lift.LiftCallCC trans => Lift.LiftCallCC (TaggedTrans tag trans) where
   liftCallCC  = Lift.defaultLiftCallCC  pack unpack
   liftCallCC' = Lift.defaultLiftCallCC' pack unpack
 
@@ -113,7 +108,7 @@ instance
     ( Class.MonadCont m
     , Lift.LiftCallCC trans
     , Monad (trans m)
-    ) => Class.MonadCont (TT tag trans m)
+    ) => Class.MonadCont (TaggedTrans tag trans m)
   where
     callCC = Lift.liftCallCC' Class.callCC
 
@@ -121,7 +116,7 @@ instance
     ( Class.MonadReader r m
     , Lift.LiftLocal trans
     , Monad (trans m)
-    ) => Class.MonadReader r (TT tag trans m)
+    ) => Class.MonadReader r (TaggedTrans tag trans m)
   where
     ask = lift Class.ask
     local = Lift.liftLocal Class.ask Class.local
@@ -131,7 +126,7 @@ instance
     ( Class.MonadState s m
     , MonadTrans trans
     , Monad (trans m)
-    ) => Class.MonadState s (TT tag trans m)
+    ) => Class.MonadState s (TaggedTrans tag trans m)
   where
     get = lift Class.get
     put = lift . Class.put
@@ -142,7 +137,7 @@ instance
     , Lift.LiftListen trans
     , Lift.LiftPass trans
     , Monad (trans m)
-    ) => Class.MonadWriter w (TT tag trans m)
+    ) => Class.MonadWriter w (TaggedTrans tag trans m)
   where
     writer = lift . Class.writer
     tell   = lift . Class.tell
@@ -153,7 +148,7 @@ instance
     ( Class.MonadError e m
     , Lift.LiftCatch trans
     , Monad (trans m)
-    ) => Class.MonadError e (TT tag trans m)
+    ) => Class.MonadError e (TaggedTrans tag trans m)
   where
     throwError = lift . Class.throwError
     catchError = Lift.liftCatch Class.catchError

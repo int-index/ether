@@ -30,7 +30,7 @@ module Control.Monad.Trans.Ether.State.Lazy
 
 import Data.Functor.Identity (Identity(..))
 import qualified Control.Monad.Trans.State.Lazy as Trans
-import Control.Ether.TT
+import Control.Monad.Trans.Ether.Tagged
 
 -- | The parametrizable state monad.
 --
@@ -44,7 +44,7 @@ type State tag r = StateT tag r Identity
 --
 -- The 'return' function leaves the state unchanged, while '>>=' uses
 -- the final state of the first computation as the initial state of the second.
-type StateT tag s = TT tag (Trans.StateT s)
+type StateT tag s = TaggedTrans tag (Trans.StateT s)
 
 -- | Constructor for computations in the state monad transformer.
 stateT :: proxy tag -> (s -> m (a, s)) -> StateT tag s m a

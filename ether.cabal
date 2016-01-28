@@ -27,7 +27,6 @@ library
   exposed-modules:     Control.Ether.Abbr
                        Control.Ether.Implicit.Abbr
                        Control.Ether.TH
-                       Control.Ether.TT
                        Control.Monad.Trans.Ether.Reader
                        Control.Monad.Trans.Ether.Writer
                        Control.Monad.Trans.Ether.State
@@ -35,6 +34,7 @@ library
                        Control.Monad.Trans.Ether.State.Strict
                        Control.Monad.Trans.Ether.Except
                        Control.Monad.Trans.Ether.Dispatch
+                       Control.Monad.Trans.Ether.Tagged
                        Control.Monad.Ether
                        Control.Monad.Ether.Reader
                        Control.Monad.Ether.Reader.Class

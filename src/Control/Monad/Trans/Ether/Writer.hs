@@ -34,7 +34,7 @@ import Data.Monoid
 
 import Data.Functor.Identity (Identity(..))
 import qualified Control.Monad.Trans.Writer.Lazy as Trans
-import Control.Ether.TT
+import Control.Monad.Trans.Ether.Tagged
 
 -- | The parametrizable writer monad.
 --
@@ -48,7 +48,7 @@ type Writer tag w = WriterT tag w Identity
 --
 -- The 'return' function produces the output 'mempty', while '>>=' combines
 -- the outputs of the subcomputations using 'mappend'.
-type WriterT tag w = TT tag (Trans.WriterT w)
+type WriterT tag w = TaggedTrans tag (Trans.WriterT w)
 
 -- | Constructor for computations in the writer monad transformer.
 writerT :: proxy tag -> m (a, w) -> WriterT tag w m a

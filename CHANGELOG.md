@@ -4,6 +4,7 @@
 * Poly-kinded tags.
 * Remove `Control.Ether.Tagged`.
 * Replace `Control.Ether.Wrapped` with `Control.Monad.Trans.Ether.Dispatch`.
+* Unified tagged transformer type in `Control.Monad.Trans.Ether.Tagged`.
 * `MonadThrow`, `MonadCatch`, `MonadMask` instances.
 * Drop `newtype-generics`.
 * Instance search is now more strict.

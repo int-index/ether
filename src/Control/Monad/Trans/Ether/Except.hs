@@ -26,7 +26,7 @@ module Control.Monad.Trans.Ether.Except
 
 import Data.Functor.Identity (Identity(..))
 import qualified Control.Monad.Trans.Except as Trans
-import Control.Ether.TT
+import Control.Monad.Trans.Ether.Tagged
 
 
 -- | The parameterizable exception monad.
@@ -45,7 +45,7 @@ runExcept _ = Trans.runExcept . unpack
 --
 -- The 'return' function returns a normal value, while '>>=' exits on
 -- the first exception.
-type ExceptT tag e = TT tag (Trans.ExceptT e)
+type ExceptT tag e = TaggedTrans tag (Trans.ExceptT e)
 
 -- | Constructor for computations in the exception monad transformer.
 exceptT :: proxy tag -> m (Either e a) -> ExceptT tag e m a

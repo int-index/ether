@@ -26,7 +26,7 @@ module Control.Monad.Trans.Ether.Reader
 
 import Data.Functor.Identity (Identity(..))
 import qualified Control.Monad.Trans.Reader as Trans
-import Control.Ether.TT
+import Control.Monad.Trans.Ether.Tagged
 
 -- | The parameterizable reader monad.
 --
@@ -41,7 +41,7 @@ type Reader tag r = ReaderT tag r Identity
 --
 -- The 'return' function ignores the environment, while '>>=' passes
 -- the inherited environment to both subcomputations.
-type ReaderT tag r = TT tag (Trans.ReaderT r)
+type ReaderT tag r = TaggedTrans tag (Trans.ReaderT r)
 
 -- | Constructor for computations in the reader monad transformer.
 readerT :: proxy tag -> (r -> m a) -> ReaderT tag r m a
