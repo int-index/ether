@@ -220,8 +220,8 @@ ethereal <span class="lit">"Bar" "bar"</span>
 <span class="kw">data</span> Foo
 foo <span class="kw">=</span> Proxy <span class="kw">::</span> Proxy Foo
 </pre>
-              In fact, any data type of kind <code>*</code> can serve as a tag.
-              Later we'll see how it's used for implicit tagging.
+              In fact, any type can serve as a tag. Later we'll see
+              how it's used for implicit tagging.
             </p>
             <p>
               But for now let's stick to our newly created tags <code>Foo</code>
@@ -302,12 +302,12 @@ useboth
        <span class="kw">,</span> Ether.MonadState Bar Bool m
        ) <span class="kw">=&gt;</span> m String
 useboth <span class="kw">=</span> do
-    a <span class="kw">&lt;-</span> ethered foo f
-    b <span class="kw">&lt;-</span> ethered bar g
+    a <span class="kw">&lt;-</span> tagAttach foo f
+    b <span class="kw">&lt;-</span> tagAttach bar g
     return (a <span class="kw">++</span> b)
 </pre>
-              Here we use the <code>ethered</code> function
-              from <code>Control.Ether.Wrapped</code>
+              Here we use the <code>tagAttach</code> function
+              from <code>Control.Monad.Trans.Ether.Dispatch</code>
               to turn untagged transformers into tagged ones.
             </p>
             <p>
