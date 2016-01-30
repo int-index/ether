@@ -83,7 +83,7 @@ library
                        UndecidableInstances
 
   hs-source-dirs:      src
-  ghc-options:         -Wall -Werror
+  ghc-options:         -Wall
 
 
 test-suite regression
@@ -121,4 +121,4 @@ test-suite regression
                        TemplateHaskell
                        TypeFamilies
                        TypeOperators
-  ghc-options:         -Wall -Werror -fno-warn-missing-signatures
+  ghc-options:         -Wall -fno-warn-missing-signatures

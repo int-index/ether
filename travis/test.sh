@@ -4,4 +4,4 @@ fi
 
 echo "COVERAGE_OPT=$COVERAGE_OPT"
 
-stack test :regression $COVERAGE_OPT --no-terminal
+stack test :regression $COVERAGE_OPT --no-terminal --ghc-options -Werror
