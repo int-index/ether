@@ -16,6 +16,34 @@
 
 {- |
 
+Type-level machinery to manipulate constraints on the monad
+transformer stack.
+
+Out of the box it provides the following dispatch strategies:
+
+* 'tagAttach' to use functions defined using untagged monad classes
+  as if they were defined using tagged ones.
+
+* 'tagReplace' to use functions defined using one tag
+  as if they were defined using another one.
+
+> import qualified Control.Monad.State as T
+> import Control.Ether.TH (ethereal)
+> import Control.Monad.Ether.State (MonadState)
+> import Control.Monad.Trans.Ether.Dispatch (tagAttach, tagDispatch)
+>
+> ethereal "Foo" "foo"
+> ethereal "Bar" "bar"
+>
+> f :: T.MonadState Int m => m String
+> f = fmap show T.get
+>
+> g :: MonadState Foo Int m => m String
+> g = tagAttach foo f
+>
+> h :: MonadState Bar Int m => m String
+> h = tagReplace foo bar g
+
 -}
 
 module Control.Monad.Trans.Ether.Dispatch
@@ -27,9 +55,6 @@ module Control.Monad.Trans.Ether.Dispatch
   , K_TagReplace(..)
   , tagAttach
   , tagReplace
-  -- * Newtype operations
-  , pack
-  , unpack
   ) where
 
 import Control.Applicative

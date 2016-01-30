@@ -7,9 +7,9 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeFamilies #-}
 
-{- |
-
--}
+-- | This module defines the core data type of Ether, 'TaggedTrans',
+-- and a bunch of instances for it. 'TaggedTrans' attaches a tag to
+-- an existing monad transformer.
 
 module Control.Monad.Trans.Ether.Tagged where
 

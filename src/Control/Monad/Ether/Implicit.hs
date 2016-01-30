@@ -10,5 +10,5 @@ import Control.Monad.Ether.Implicit.Reader as X
 import Control.Monad.Ether.Implicit.Writer as X
 import Control.Monad.Ether.Implicit.State as X
 import Control.Monad.Ether.Implicit.Except as X
-import Control.Monad.Trans.Ether.Dispatch as X hiding (pack, unpack)
+import Control.Monad.Trans.Ether.Dispatch as X
 import Control.Ether.TH as X (ethereal)
