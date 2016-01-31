@@ -1,6 +1,9 @@
 <!doctype html>
 <html>
     <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Ether: Monad Transformers and Classes</title>
         <link href='https://fonts.googleapis.com/css?family=Ubuntu+Mono|Ubuntu&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
         <style>
 html, body {
@@ -17,12 +20,15 @@ body {
     font-family: 'Ubuntu', sans-serif;
     font-size: 20px;
     color: #444;
+    margin-left: 1em;
+    margin-right: 1em;
 }
 pre, code {
     font-family: 'Ubuntu Mono', monospace;
-    font-size: 0.9em !important;
+    font-size: 0.9em;
 }
 h1 {
+    font-size: 1.5em;
     margin-top: 2em;
 }
 section {
@@ -60,6 +66,7 @@ section:first-child h1 {
     margin: 0;
 }
 section:first-child h2 {
+    text-align: center;
     font-size: 0.4em;
 }
 li {
@@ -82,19 +89,8 @@ body > footer {
     color: #999;
 }
 .source {
-    background: #444;
-    color: white;
     display: table;
-    min-width: 50%;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
-    border-color: white;
-}
-.kw {
-    color: #6bcffa;
-}
-.lit {
-    color: #eee890;
+    border-color: #eee;
 }
 
 #forkongithub a {
@@ -143,11 +139,24 @@ body > footer {
 }
 
 @media screen and (max-width:1030px) {
-    body { font-size: 0.9em; }
+    section:first-child {
+        font-size: 4em;
+    }
+    #forkongithub {
+      display: none;
+    }
+    h1 {
+      font-size: 1.3em;
+    }
+    body {
+      font-size: 0.9em;
+    }
 }
 
         </style>
-        <title>Ether: Monad Transformers and Classes</title>
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/color-brewer.min.css">
+        <script src="./vendor/highlight.js/highlight.pack.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
     </head>
     <body>
 
@@ -158,7 +167,7 @@ body > footer {
       <main>
         <section>
             <h1>Ether</h1>
-            <h2>Monad Transformers and Classes</h2>
+            <h2>Monad&nbsp;Transformers and&nbsp;Classes</h2>
         </section>
         <section>
         <div class="section">
@@ -208,18 +217,14 @@ body > footer {
             <p>
               Ether's interface is similar to mtl's interface, except most
               functions require a tag. So let's create some tags:
-<pre class="source">
-ethereal <span class="lit">"Foo" "foo"</span>
-ethereal <span class="lit">"Bar" "bar"</span>
-</pre>
+<pre class="source"><code class="haskell">ethereal "Foo" "foo"
+ethereal "Bar" "bar"</code></pre>
               <code>ethereal</code> is a Template Haskell function that expands
               to an empty data declaration and a value-level proxy. If for some
               reason you don't want to use Template Haskell, you can create tags
               manually like so:
-<pre class="source">
-<span class="kw">data</span> Foo
-foo <span class="kw">=</span> Proxy <span class="kw">::</span> Proxy Foo
-</pre>
+<pre class="source"><code class="haskell">data Foo
+foo = Proxy :: Proxy Foo</code></pre>
               In fact, any type can serve as a tag. Later we'll see
               how it's used for implicit tagging.
             </p>
@@ -227,16 +232,14 @@ foo <span class="kw">=</span> Proxy <span class="kw">::</span> Proxy Foo
               But for now let's stick to our newly created tags <code>Foo</code>
               and <code>Bar</code>. We define a function that uses multiple
               <code>MonadReader</code>s (something impossible with mtl):
-<pre class="source">
-add <span class="kw">::</span> ( Num a
-       <span class="kw">,</span> MonadReader Foo a m
-       <span class="kw">,</span> MonadReader Bar a m
-       ) <span class="kw">=&gt;</span> m a
-add <span class="kw">=</span> liftA2 (+) (ask foo) (ask bar)
+<pre class="source"><code class="haskell">add :: ( Num a
+       , MonadReader Foo a m
+       , MonadReader Bar a m
+       ) =&gt; m a
+add = liftA2 (+) (ask foo) (ask bar)
 
-n <span class="kw">::</span> Num a <span class="kw">=&gt;</span> a
-n <span class="kw">=</span> runReader foo (runReaderT bar add 10) 20
-</pre>
+n :: Num a =&gt; a
+n = runReader foo (runReaderT bar add 10) 20</code></pre>
               Here we can see that <code>MonadReader</code>, <code>ask</code>,
               <code>runReader</code> and <code>runReaderT</code> are used just
               like the ones from mtl, only with a tag. As you might expect,
@@ -255,31 +258,27 @@ n <span class="kw">=</span> runReader foo (runReaderT bar add 10) 20
               Ether's classes are fully compatible with ones from mtl,
               meaning that you can use Ether with your existing code without
               unnecessary changes. Consider the following code snippet:
-<pre class="source">
-summator
-    <span class="kw">::</span> ( Num a
-       <span class="kw">,</span> MonadWriter (Sum a) m
-       ) <span class="kw">=&gt;</span> [a] <span class="kw">-&gt;</span> m ()
-summator xs <span class="kw">=</span> do
-    for_ xs <span class="kw">$ \</span>x <span class="kw">-&gt;</span> tell (Sum x)
-</pre>
+<pre class="source"><code class="haskell">summator
+    :: ( Num a
+       , MonadWriter (Sum a) m
+       ) =&gt; [a] -&gt; m ()
+summator xs = do
+    for_ xs $ \x -&gt; tell (Sum x)</code></pre>
               Now, say you want to add another <code>MonadWriter</code> to count
               how many numbers you've summed up. As we know, it's impossible
               with mtl alone, but you can combine the existing untagged
               <code>MonadWriter</code> with a tagged one:
-<pre class="source">
-<span class="kw">import qualified</span> Control.Monad.Ether.Writer <span class="kw">as</span> Ether
+<pre class="source"><code class="haskell">import qualified Control.Monad.Ether.Writer as Ether
 
 summator
-    <span class="kw">:: </span>( Num a
-       <span class="kw">,</span> MonadWriter (Sum a) m
-       <span class="kw">,</span> Ether.MonadWriter Foo (Sum a) m
-       ) <span class="kw">=&gt;</span> [a] <span class="kw">-&gt;</span> m ()
-summator xs <span class="kw">=</span> do
-    for_ xs <span class="kw">$ \</span>x <span class="kw">-&gt; </span>do
+    :: ( Num a
+       , MonadWriter (Sum a) m
+       , Ether.MonadWriter Foo (Sum a) m
+       ) =&gt; [a] -&gt; m ()
+summator xs = do
+    for_ xs $ \x -&gt; do
         tell (Sum x)
-        Ether.tell foo (Sum 1)
-</pre>
+        Ether.tell foo (Sum 1)</code></pre>
               Easy, right? Untagged classes can be considered a special case of
               tagged ones, and any mix of them should Just Work&trade;. But
               wait, there's more...
@@ -290,22 +289,21 @@ summator xs <span class="kw">=</span> do
               use those functions in one monad transformer stack with mtl, thus
               <em>mtl is antimodular!</em>
               However, Ether comes to the rescue with its wrapping mechanism:
-<pre class="source">
-f <span class="kw">::</span> MonadState Int m <span class="kw">=&gt;</span> m String
-f <span class="kw">= </span><em>omitted</em>
+<pre class="source"><code class="haskell">f :: MonadState Int m =&gt; m String
+f = <em>omitted</em>
 
-g <span class="kw">::</span> MonadState Bool m <span class="kw">=&gt;</span> m String
-g <span class="kw">= </span><em>omitted</em>
+g :: MonadState Bool m =&gt; m String
+g = <em>omitted</em>
 
 useboth
-    <span class="kw">:: </span>( Ether.MonadState Foo Int  m
-       <span class="kw">,</span> Ether.MonadState Bar Bool m
-       ) <span class="kw">=&gt;</span> m String
-useboth <span class="kw">=</span> do
-    a <span class="kw">&lt;-</span> tagAttach foo f
-    b <span class="kw">&lt;-</span> tagAttach bar g
-    return (a <span class="kw">++</span> b)
-</pre>
+    :: ( Ether.MonadState Foo Int  m
+       , Ether.MonadState Bar Bool m
+       ) =&gt; m String
+useboth = do
+    a &lt;- tagAttach foo f
+    b &lt;- tagAttach bar g
+    return (a ++ b)
+</code></pre>
               Here we use the <code>tagAttach</code> function
               from <code>Control.Monad.Trans.Ether.Dispatch</code>
               to turn untagged transformers into tagged ones.
@@ -314,43 +312,40 @@ useboth <span class="kw">=</span> do
               On this wave of modularity features I'd like to present you another
               one: simulating checked exceptions from Java. It's as simple as
               having one <code>MonadExcept</code> per exception:
-<pre class="source">
-<span class="kw">data</span> DivideByZero <span class="kw">=</span> DivideByZero
-<span class="kw">data</span> NegativeLog  <span class="kw">=</span> NegativeLog
+<pre class="source"><code class="haskell">data DivideByZero = DivideByZero
+data NegativeLog = NegativeLog
 
 logDiv
     ( Floating a
-    <span class="kw">,</span> Ord a
-    <span class="kw">,</span> MonadExcept Foo DivideByZero m
-    <span class="kw">,</span> MonadExcept Bar NegativeLog  m
-    ) <span class="kw">=&gt;</span> a <span class="kw">-&gt;</span> a <span class="kw">-&gt;</span> m a
-logDiv x y <span class="kw">=</span> do
-    when (y <span class="kw">==</span> 0) (throw foo DivideByZero)
-    let d <span class="kw">=</span> x<span class="kw">/</span>y
-    when (d <span class="kw">&lt;</span> 0) (throw bar NegativeLog)
-    return (log d)
-</pre>
+    , Ord a
+    , MonadExcept Foo DivideByZero m
+    , MonadExcept Bar NegativeLog  m
+    ) =&gt; a -&gt; a -&gt; m a
+logDiv x y = do
+    when (y == 0) (throw foo DivideByZero)
+    let d = x/y
+    when (d &lt; 0) (throw bar NegativeLog)
+    return (log d)</code></pre>
               Now we can handle those exceptions one by one with <code>runExceptT</code>.
               However, this tagging business starts to become unmanagable. Do we
               also need to create a tag per exception? The answer, fortunately,
               is no: since exceptions tend to be monomorphic, we can use them
               as tags for their classes. This feature is called implicit
               tagging, and we can rewrite the example above like so:
-<pre class="source">
-<span class="kw">import qualified</span> Control.Monad.Ether.Implicit.Except <span class="kw">as</span> I
+<pre class="source"><code class="haskell">import qualified Control.Monad.Ether.Implicit.Except as I
 
 logDiv
     ( Floating a
-    <span class="kw">,</span> Ord a
-    <span class="kw">,</span> I.MonadExcept DivideByZero m
-    <span class="kw">,</span> I.MonadExcept NegativeLog  m
-    ) <span class="kw">=&gt;</span> a <span class="kw">-&gt;</span> a <span class="kw">-&gt;</span> m a
-logDiv x y <span class="kw">=</span> do
-    when (y <span class="kw">==</span> 0) (I.throw DivideByZero)
-    let d <span class="kw">=</span> x<span class="kw">/</span>y
-    when (d <span class="kw">&lt;</span> 0) (I.throw NegativeLog)
+    , Ord a
+    , I.MonadExcept DivideByZero m
+    , I.MonadExcept NegativeLog  m
+    ) =&gt; a -&gt; a -&gt; m a
+logDiv x y = do
+    when (y == 0) (I.throw DivideByZero)
+    let d = x/y
+    when (d &lt; 0) (I.throw NegativeLog)
     return (log d)
-</pre>
+</code></pre>
             That's better. In fact, implicit tagging can be used with polymorphic
             tags too, but its behavior can be sometimes unobvious. You also may
             need to use type annotations when using implicit tagging, so for
