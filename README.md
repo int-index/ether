@@ -12,7 +12,7 @@ monad transformers and classes in a compatible way.
 
 ## Installation
 
-You can install `ether 0.3.1.1`
+You can install `ether 0.4.0.0`
 
 1. using Cabal, from Hackage;
 2. using Stack, from Stackage;
