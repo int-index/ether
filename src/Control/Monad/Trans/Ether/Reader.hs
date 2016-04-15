@@ -53,12 +53,12 @@ reader :: Monad m => proxy tag -> (r -> a) -> ReaderT tag r m a
 reader _ = pack . Trans.reader
 
 -- | Runs a 'ReaderT' with the given environment
--- and returns the vinal value.
+-- and returns the final value.
 runReaderT :: proxy tag -> ReaderT tag r m a -> r -> m a
 runReaderT _ = Trans.runReaderT . unpack
 
 -- | Runs a 'ReaderT' with the given environment
--- and returns the vinal value.
+-- and returns the final value.
 runReader :: proxy tag -> Reader tag r a -> r -> a
 runReader _ = Trans.runReader . unpack
 
