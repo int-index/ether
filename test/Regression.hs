@@ -11,6 +11,7 @@ import Regression.T6
 import Regression.T7
 import Regression.T8
 import Regression.T9
+import Regression.T10
 
 main :: IO ()
 main = defaultMain suite
@@ -26,4 +27,5 @@ suite = testGroup "Ether"
   , test7
   , test8
   , test9
+  , test10
   ]
