@@ -5,7 +5,7 @@ description:
     Ether is a Haskell library that extends @mtl@ and @transformers@ with
     tagged monad transformers and classes in a compatible way.
 
-    Introduction https://int-index.github.io/ether/
+    Introduction <https://int-index.github.io/ether/>
 
 category:            Control
 license:             BSD3
