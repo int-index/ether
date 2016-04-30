@@ -6,14 +6,14 @@ import Control.Monad.Ether
 import Test.Tasty
 import Test.Tasty.QuickCheck
 
-ethereal "RTag" "rTag"
+data RTag
 
 testEther :: Ether '[RTag --> Int] m => m Int
-testEther = ask rTag
+testEther = ask [tag|RTag|]
 
 runner r
-  = flip (runReader  rTag) (r' :: Int)
-  . flip (runReaderT rTag) (r  :: Int)
+  = flip (runReader  [tag|RTag|]) (r' :: Int)
+  . flip (runReaderT [tag|RTag|]) (r  :: Int)
   where
     r' = negate r
 

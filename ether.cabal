@@ -98,6 +98,7 @@ test-suite regression
                ,       tasty >=0.10
                ,       tasty-quickcheck >=0.8
                ,       QuickCheck >=2.8
+               ,       ghc-prim >=0.3
                ,       ether
 
   main-is:             Regression.hs
@@ -126,4 +127,5 @@ test-suite regression
                        TemplateHaskell
                        TypeFamilies
                        TypeOperators
+                       QuasiQuotes
   ghc-options:         -Wall -fno-warn-missing-signatures

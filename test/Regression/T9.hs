@@ -6,17 +6,16 @@ import Control.Monad.Ether
 import Test.Tasty
 import Test.Tasty.QuickCheck
 
-ethereal "Foo" "foo"
-ethereal "Bar" "bar"
-
+data Foo
+data Bar
 
 testEther1 :: Ether '[Foo <-> Int] m => m String
 testEther1 = do
-  modify foo negate
-  gets foo show
+  modify [tag|Foo|] negate
+  gets [tag|Foo|] show
 
 testEther2 :: Ether '[Bar <-> Int] m => m String
-testEther2 = tagReplace foo bar testEther1
+testEther2 = tagReplace [tag|Foo|] [tag|Bar|] testEther1
 
 testEther
   :: Ether '[Foo <-> Int, Bar <-> Int] m
@@ -30,12 +29,12 @@ model :: Int -> Int -> String
 model a b = show (negate a) ++ show (negate b)
 
 runner1 a b
-  = flip (evalState  foo) a
-  . flip (evalStateT bar) b
+  = flip (evalState  [tag|Foo|]) a
+  . flip (evalStateT [tag|Bar|]) b
 
 runner2 a b
-  = flip (evalState  bar) b
-  . flip (evalStateT foo) a
+  = flip (evalState  [tag|Bar|]) b
+  . flip (evalStateT [tag|Foo|]) a
 
 test9 :: TestTree
 test9 = testGroup "T9: Tag replacement"
