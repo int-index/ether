@@ -56,8 +56,6 @@ library
                        Control.Monad.Ether.Implicit.State.Strict
                        Control.Monad.Ether.Implicit.Except
 
-  other-modules:       Control.Ether.Util
-
   build-depends:       base >=4.7 && <4.10
                ,       transformers >=0.4.2
                ,       transformers-lift >=0.1.0.1
@@ -70,8 +68,7 @@ library
                ,       ghc-prim >=0.3
 
   default-language:    Haskell2010
-  other-extensions:    CPP
-                       ConstraintKinds
+  other-extensions:    ConstraintKinds
                        DataKinds
                        DefaultSignatures
                        DeriveGeneric

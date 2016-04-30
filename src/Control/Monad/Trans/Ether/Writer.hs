@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -28,10 +27,6 @@ module Control.Monad.Trans.Ether.Writer
     , listen
     , pass
     ) where
-
-#if __GLASGOW_HASKELL__ < 710
-import Data.Monoid
-#endif
 
 import GHC.Prim (Proxy#)
 import Data.Functor.Identity (Identity(..))
@@ -86,22 +81,10 @@ tell :: Monad m => Proxy# tag -> w -> WriterT tag w m ()
 tell t w = writer t ((), w)
 
 -- | Executes an action and adds its accumulator to the value of the computation.
-listen
-#if __GLASGOW_HASKELL__ < 800
-  :: (Monad m, Monoid w)
-#else
-  :: Monad m
-#endif
-  => Proxy# tag -> WriterT tag w m a -> WriterT tag w m (a, w)
+listen :: Monad m => Proxy# tag -> WriterT tag w m a -> WriterT tag w m (a, w)
 listen _ = pack . Trans.listen . unpack
 
 -- | Executes an action which returns a value and a function, and returns the
 -- value, applying the function to the accumulator.
-pass
-#if __GLASGOW_HASKELL__ < 800
-  :: (Monad m, Monoid w)
-#else
-  :: Monad m
-#endif
-  => Proxy# tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
+pass :: Monad m => Proxy# tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
 pass _ = pack . Trans.pass . unpack
