@@ -69,17 +69,17 @@ library
                ,       ghc-prim >=0.3
 
   default-language:    Haskell2010
+  default-extensions:  PolyKinds
+                       ScopedTypeVariables
+                       FunctionalDependencies
+                       TypeApplications
   other-extensions:    ConstraintKinds
                        DataKinds
                        DefaultSignatures
                        DeriveGeneric
                        FlexibleInstances
-                       FunctionalDependencies
                        GeneralizedNewtypeDeriving
                        MagicHash
-                       MultiParamTypeClasses
-                       ScopedTypeVariables
-                       TypeApplications
                        TypeFamilies
                        TypeOperators
                        UndecidableInstances
