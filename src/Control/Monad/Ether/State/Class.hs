@@ -1,10 +1,3 @@
-{-# LANGUAGE CPP #-}
-
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE OverlappingInstances #-}
-{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
-#endif
-
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -25,7 +18,6 @@ import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Ether.State.Lazy   as S.L
 import qualified Control.Monad.Trans.Ether.State.Strict as S.S
 import qualified Control.Monad.Trans as Lift
-import qualified Control.Ether.Util as Util
 
 -- | See 'Control.Monad.State.MonadState'.
 class Monad m => MonadState tag s m | m tag -> s where
@@ -54,7 +46,7 @@ modify t f = state t (\s -> ((), f s))
 
 -- | Gets specific component of the state, using a projection function supplied.
 gets :: MonadState tag s m => Proxy# tag -> (s -> a) -> m a
-gets t f = Util.fmap f (get t)
+gets t f = fmap f (get t)
 
 instance (Monad m, s ~ s') => MonadState tag s (S.L.StateT tag s' m) where
     get = S.L.get

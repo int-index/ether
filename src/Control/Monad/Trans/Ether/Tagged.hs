@@ -40,8 +40,6 @@ import qualified Control.Monad.Error.Class   as Class
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
-import Control.Ether.Util (MonadApplicative)
-
 -- | Tagged monad transformer.
 newtype TaggedTrans tag trans (m :: * -> *) a = TaggedTrans (trans m a)
   deriving
@@ -61,7 +59,7 @@ unpack = coerce
 instance
     ( MB.MonadBase b m
     , MonadTrans trans
-    , MonadApplicative (trans m)
+    , Monad (trans m)
     ) => MB.MonadBase b (TaggedTrans tag trans m)
   where
     liftBase = MB.liftBaseDefault
@@ -77,7 +75,7 @@ instance
 instance
     ( MC.MonadBaseControl b m
     , MC.MonadTransControl trans
-    , MonadApplicative (trans m)
+    , Monad (trans m)
     ) => MC.MonadBaseControl b (TaggedTrans tag trans m)
   where
     type StM (TaggedTrans tag trans m) a = MC.ComposeSt trans m a

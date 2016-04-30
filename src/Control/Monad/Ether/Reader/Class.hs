@@ -1,10 +1,3 @@
-{-# LANGUAGE CPP #-}
-
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE OverlappingInstances #-}
-{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
-#endif
-
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -23,7 +16,6 @@ module Control.Monad.Ether.Reader.Class
 import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Ether.Reader as R
 import qualified Control.Monad.Trans.Lift.Local as Lift
-import qualified Control.Ether.Util as Util
 
 -- | See 'Control.Monad.Reader.MonadReader'.
 class Monad m => MonadReader tag r m | m tag -> r where
@@ -49,7 +41,7 @@ class Monad m => MonadReader tag r m | m tag -> r where
         -> (r -> a)
         -- ^ The selector function to apply to the environment.
         -> m a
-    reader t f = Util.fmap f (ask t)
+    reader t f = fmap f (ask t)
 
 -- | Retrieves a function of the current environment.
 asks

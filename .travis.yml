@@ -1,16 +1,10 @@
 sudo: false
 
-env:
- - GHCVER=7.8.4 STACK_YAML=stack-ghc-7.8.4.yaml
- - GHCVER=7.10.3 STACK_YAML=stack.yaml
- - GHCVER=8.0.1 STACK_YAML=stack-ghc-8.0.1.yaml COVERAGE="YES"
-
 cache:
   directories:
     - $HOME/.stack/
 
 before_install:
- - export PATH=/opt/ghc/$GHCVER/bin:$PATH
  - mkdir -p ~/.local/bin
  - travis_retry curl -L https://github.com/commercialhaskell/stack/releases/download/v1.0.4.3/stack-1.0.4.3-linux-x86_64.tar.gz | tar -xvz
  - mv stack-1.0.4.3-linux-x86_64/stack ~/.local/bin
@@ -22,15 +16,13 @@ install:
  - stack install --only-dependencies --no-terminal
 
 script:
- - travis/test.sh
+ - stack test :regression --coverage --no-terminal --ghc-options -Werror
 
 after_script:
- - travis/shc.sh
+ - curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.3.0/shc-linux-x64-7.10.2.tar.bz2 | tar -xvj
+ - ./shc ether regression
 
 addons:
   apt:
-    sources:
-    - hvr-ghc
     packages:
-    - ghc-7.8.4
-    - ghc-7.10.3
+    - libgmp-dev

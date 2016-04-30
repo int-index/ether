@@ -1,8 +1,4 @@
-{-# LANGUAGE CPP #-}
-
-#if __GLASGOW_HASKELL__ >= 710
 {-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
-#endif
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
