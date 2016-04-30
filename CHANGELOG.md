@@ -1,3 +1,12 @@
+0.5.0.0
+-------
+
+* Support GHC 8.0 only.
+* Utilize the `TypeApplications` extension.
+* Remove `Control.Ether.TH`.
+* Use `Proxy#` in class methods.
+
+
 0.4.0.0
 -------
 
