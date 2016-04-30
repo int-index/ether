@@ -1,7 +1,7 @@
 module Regression.T3 (test3) where
 
 import Control.Ether.Abbr
-import Control.Monad.Ether
+import Control.Monad.Ether.Ambiguous
 
 import qualified Control.Monad.Reader as T
 import qualified Control.Monad.State as T
@@ -22,21 +22,21 @@ testMTL = do
 testEther
   :: Ether '[STag --> Int, STag <-> Int, RTag --> Int] m
   => m (Int, Int, Int)
-testEther = local [tag|RTag|] (*2) $ do
-  a_mul_b <- tagAttach [tag|STag|] testMTL
-  a_add_b <- get [tag|STag|]
-  modify [tag|STag|] negate
-  c <- ask [tag|RTag|]
+testEther = local @RTag (*2) $ do
+  a_mul_b <- tagAttach @STag testMTL
+  a_add_b <- get @STag
+  modify @STag negate
+  c <- ask @RTag
   return (a_mul_b, a_add_b, c)
 
 runner1 s r
-  = flip (runReader  [tag|RTag|]) (negate r)
-  . flip (runReaderT [tag|STag|]) r
-  . flip (runStateT  [tag|STag|]) s
+  = flip (runReader  @RTag) (negate r)
+  . flip (runReaderT @STag) r
+  . flip (runStateT  @STag) s
 runner2 s r
-  = flip (runReader  [tag|RTag|]) (negate r)
-  . flip (runStateT  [tag|STag|]) s
-  . flip (runReaderT [tag|STag|]) r
+  = flip (runReader  @RTag) (negate r)
+  . flip (runStateT  @STag) s
+  . flip (runReaderT @STag) r
 
 test3 :: TestTree
 test3 = testGroup "T3: Tag attachement"

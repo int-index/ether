@@ -1,7 +1,7 @@
 module Regression.T4 (test4) where
 
 import Control.Ether.Abbr
-import Control.Monad.Ether
+import Control.Monad.Ether.Ambiguous
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
@@ -9,11 +9,11 @@ import Test.Tasty.QuickCheck
 data RTag
 
 testEther :: Ether '[RTag --> Int] m => m Int
-testEther = ask [tag|RTag|]
+testEther = ask @RTag
 
 runner r
-  = flip (runReader  [tag|RTag|]) (r' :: Int)
-  . flip (runReaderT [tag|RTag|]) (r  :: Int)
+  = flip (runReader  @RTag) (r' :: Int)
+  . flip (runReaderT @RTag) (r  :: Int)
   where
     r' = negate r
 

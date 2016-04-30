@@ -1,7 +1,7 @@
 module Regression.T8 (test8) where
 
 import Control.Ether.Abbr
-import Control.Monad.Ether
+import Control.Monad.Ether.Ambiguous
 
 import qualified Control.Monad.State as T
 
@@ -21,22 +21,22 @@ testEther
   :: Ether '[Foo <-> Int, Bar <-> Bool] m
   => m String
 testEther = do
-  tagAttach [tag|Foo|] testMTL1
-  tagAttach [tag|Bar|] testMTL2
-  a <- gets [tag|Foo|] show
-  b <- gets [tag|Bar|] show
+  tagAttach @Foo testMTL1
+  tagAttach @Bar testMTL2
+  a <- gets @Foo show
+  b <- gets @Bar show
   return (a ++ b)
 
 model :: Int -> Bool -> String
 model a b = show (negate a) ++ show (not b)
 
 runner1 a b
-  = flip (evalState  [tag|Foo|]) a
-  . flip (evalStateT [tag|Bar|]) b
+  = flip (evalState  @Foo) a
+  . flip (evalStateT @Bar) b
 
 runner2 a b
-  = flip (evalState  [tag|Bar|]) b
-  . flip (evalStateT [tag|Foo|]) a
+  = flip (evalState  @Bar) b
+  . flip (evalStateT @Foo) a
 
 test8 :: TestTree
 test8 = testGroup "T8: Multiple tag attachements"
