@@ -19,7 +19,7 @@ module Control.Monad.Ether.Except.Class
     ( MonadExcept(..)
     ) where
 
-import GHC.Prim (Proxy#, proxy#)
+import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Ether.Except as E
 import qualified Control.Monad.Trans.Lift.Catch as Lift
 

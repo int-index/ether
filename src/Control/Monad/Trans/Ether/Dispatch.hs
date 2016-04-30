@@ -165,8 +165,8 @@ tagReplace _ _ = coerce
 
 instance MonadReader tag r m
       => Class.MonadReader r (DispatchTagAttachT tag m) where
-  ask   = let t = Proxy :: Proxy tag in Lift.lift (ask t)
-  local = let t = Proxy :: Proxy tag in Lift.liftLocal (ask t) (local t)
+  ask   = let t = proxy# :: Proxy# tag in Lift.lift (ask t)
+  local = let t = proxy# :: Proxy# tag in Lift.liftLocal (ask t) (local t)
 
 instance MonadState tag s m
       => Class.MonadState s (DispatchTagAttachT tag m) where
@@ -190,8 +190,8 @@ instance MonadWriter tag w m
 
 instance MonadReader tNew r m
       => MonadReader tOld r (DispatchTagReplaceT tOld tNew m) where
-  ask   _ = let t = Proxy :: Proxy tNew in Lift.lift (ask t)
-  local _ = let t = Proxy :: Proxy tNew in Lift.liftLocal (ask t) (local t)
+  ask   _ = let t = proxy# :: Proxy# tNew in Lift.lift (ask t)
+  local _ = let t = proxy# :: Proxy# tNew in Lift.liftLocal (ask t) (local t)
 
 instance MonadState tNew s m
       => MonadState tOld s (DispatchTagReplaceT tOld tNew m) where

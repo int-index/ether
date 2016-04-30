@@ -1,5 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Ether.Reader".
 
@@ -20,7 +21,7 @@ module Control.Monad.Ether.Implicit.Reader
     , runReaderT
     ) where
 
-import Data.Proxy
+import GHC.Prim (Proxy#, proxy#)
 import qualified Control.Monad.Ether.Reader as Explicit
 
 -- | See 'Control.Monad.Ether.Reader.ReaderT'.
@@ -31,31 +32,31 @@ type Reader  r = Explicit.Reader  r r
 
 -- | See 'Control.Monad.Ether.Reader.readerT'.
 readerT :: (r -> m a) -> ReaderT r m a
-readerT = Explicit.readerT Proxy
+readerT = Explicit.readerT proxy#
 
 -- | See 'Control.Monad.Ether.Reader.runReaderT'.
 runReaderT :: ReaderT r m a -> r -> m a
-runReaderT = Explicit.runReaderT Proxy
+runReaderT = Explicit.runReaderT proxy#
 
 -- | See 'Control.Monad.Ether.Reader.runReader'.
 runReader :: Reader r a -> r -> a
-runReader = Explicit.runReader Proxy
+runReader = Explicit.runReader proxy#
 
 -- | See 'Control.Monad.Ether.Reader.MonadReader'.
 type MonadReader r = Explicit.MonadReader r r
 
 -- | See 'Control.Monad.Ether.Reader.local'.
 local :: forall r m a . MonadReader r m => (r -> r) -> m a -> m a
-local = Explicit.local (Proxy :: Proxy r)
+local = Explicit.local (proxy# :: Proxy# r)
 
 -- | See 'Control.Monad.Ether.Reader.ask'.
 ask :: forall r m . MonadReader r m => m r
-ask = Explicit.ask (Proxy :: Proxy r)
+ask = Explicit.ask (proxy# :: Proxy# r)
 
 -- | See 'Control.Monad.Ether.Reader.reader'.
 reader :: forall r m a . MonadReader r m => (r -> a) -> m a
-reader = Explicit.reader (Proxy :: Proxy r)
+reader = Explicit.reader (proxy# :: Proxy# r)
 
 -- | See 'Control.Monad.Ether.Reader.asks'.
 asks :: forall r m a . MonadReader r m => (r -> a) -> m a
-asks = Explicit.asks (Proxy :: Proxy r)
+asks = Explicit.asks (proxy# :: Proxy# r)
