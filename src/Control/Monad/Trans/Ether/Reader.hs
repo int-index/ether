@@ -6,7 +6,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | See "Control.Monad.Trans.Reader".
 
@@ -25,7 +26,6 @@ module Control.Monad.Trans.Ether.Reader
     , local
     ) where
 
-import GHC.Prim (Proxy#)
 import Data.Functor.Identity (Identity(..))
 import qualified Control.Monad.Trans.Reader as Trans
 import Control.Monad.Trans.Ether.Tagged
@@ -46,37 +46,37 @@ type Reader tag r = ReaderT tag r Identity
 type ReaderT tag r = TaggedTrans tag (Trans.ReaderT r)
 
 -- | Constructor for computations in the reader monad transformer.
-readerT :: Proxy# tag -> (r -> m a) -> ReaderT tag r m a
-readerT _ = pack . Trans.ReaderT
+readerT :: forall tag r m a . (r -> m a) -> ReaderT tag r m a
+readerT = pack . Trans.ReaderT
 
 -- | Constructor for computations in the reader monad
 -- (the inverse of 'runReader').
-reader :: Monad m => Proxy# tag -> (r -> a) -> ReaderT tag r m a
-reader _ = pack . Trans.reader
+reader :: forall tag r m a . Monad m => (r -> a) -> ReaderT tag r m a
+reader = pack . Trans.reader
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the final value.
-runReaderT :: Proxy# tag -> ReaderT tag r m a -> r -> m a
-runReaderT _ = Trans.runReaderT . unpack
+runReaderT :: forall tag r m a . ReaderT tag r m a -> r -> m a
+runReaderT = Trans.runReaderT . unpack
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the final value.
-runReader :: Proxy# tag -> Reader tag r a -> r -> a
-runReader _ = Trans.runReader . unpack
+runReader :: forall tag r a . Reader tag r a -> r -> a
+runReader = Trans.runReader . unpack
 
 -- | Fetch the value of the environment.
-ask :: Monad m => Proxy# tag -> ReaderT tag r m r
-ask _ = pack Trans.ask
+ask :: forall tag r m . Monad m => ReaderT tag r m r
+ask = pack Trans.ask
 
 -- | Execute a computation in a modified environment
 -- (a specialization of 'withReaderT').
 --
 -- * @'runReaderT' tag ('local' tag f m) = 'runReaderT' tag m . f@
 local
-    :: Proxy# tag
-    -> (r -> r)
+    :: forall tag r m a
+     . (r -> r)
     -- ^ The function to modify the environment.
     -> ReaderT tag r m a
     -- ^ Computation to run in the modified environment.
     -> ReaderT tag r m a
-local _ f = pack . Trans.withReaderT f . unpack
+local f = pack . Trans.withReaderT f . unpack

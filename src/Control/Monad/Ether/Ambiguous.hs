@@ -6,7 +6,7 @@ module Control.Monad.Ether.Ambiguous (module X) where
 
 import Control.Monad as X
 import Control.Monad.Fix as X
-import Control.Monad.Ether.Ambiguous.Reader as X
+import Control.Monad.Ether.Reader as X
 import Control.Monad.Ether.Ambiguous.Writer as X
 import Control.Monad.Ether.Ambiguous.State as X
 import Control.Monad.Ether.Ambiguous.Except as X

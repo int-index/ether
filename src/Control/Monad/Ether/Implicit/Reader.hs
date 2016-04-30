@@ -21,7 +21,7 @@ module Control.Monad.Ether.Implicit.Reader
     , runReaderT
     ) where
 
-import qualified Control.Monad.Ether.Ambiguous.Reader as A
+import qualified Control.Monad.Ether.Reader as A
 
 -- | See 'Control.Monad.Ether.Reader.ReaderT'.
 type ReaderT r = A.ReaderT r r

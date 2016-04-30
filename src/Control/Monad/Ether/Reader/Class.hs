@@ -4,14 +4,15 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Reader.Class".
 
 module Control.Monad.Ether.Reader.Class
-    ( MonadReader(..)
-    , asks
-    ) where
+  ( MonadReader(..)
+  ) where
 
 import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Ether.Reader as R
@@ -43,19 +44,10 @@ class Monad m => MonadReader tag r m | m tag -> r where
         -> m a
     reader t f = fmap f (ask t)
 
--- | Retrieves a function of the current environment.
-asks
-    :: MonadReader tag r m
-    => Proxy# tag
-    -> (r -> a)
-    -- ^ The selector function to apply to the environment.
-    -> m a
-asks = reader
-
 instance (Monad m, r ~ r') => MonadReader tag r (R.ReaderT tag r' m) where
-    ask = R.ask
-    local = R.local
-    reader = R.reader
+    ask _ = R.ask @tag
+    local _ = R.local @tag
+    reader _ = R.reader @tag
 
 instance {-# OVERLAPPABLE #-}
          ( Lift.LiftLocal t
