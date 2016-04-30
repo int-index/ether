@@ -148,13 +148,13 @@ instance Lift.LiftCallCC (DispatchT dp) where
   liftCallCC' = Lift.defaultLiftCallCC' pack unpack
 
 -- | Attach a tag to untagged transformers.
-tagAttach :: proxy t -> DispatchTagAttachT t m a -> m a
+tagAttach :: Proxy# t -> DispatchTagAttachT t m a -> m a
 tagAttach _ = coerce
 
 -- | Replace a tag with another tag.
 tagReplace
-  :: proxy tOld
-  -> proxy tNew
+  :: Proxy# tOld
+  -> Proxy# tNew
   -> DispatchTagReplaceT tOld tNew m a
   -> m a
 tagReplace _ _ = coerce
