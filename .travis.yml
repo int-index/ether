@@ -16,7 +16,8 @@ install:
  - stack install --only-dependencies --no-terminal
 
 script:
- - stack test :regression --coverage --no-terminal --ghc-options -Werror
+ - stack test ether:regression --coverage --no-terminal --ghc-options -Werror
+ - stack bench ether:bench --no-terminal --ghc-options -Werror
 
 after_script:
  - curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.3.0/shc-linux-x64-7.10.2.tar.bz2 | tar -xvj
