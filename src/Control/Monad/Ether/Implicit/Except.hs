@@ -22,7 +22,7 @@ module Control.Monad.Ether.Implicit.Except
     , handleT
     ) where
 
-import qualified Control.Monad.Ether.Ambiguous.Except as A
+import qualified Control.Monad.Ether.Except as A
 
 -- | See 'Control.Monad.Ether.Except.MonadExcept'.
 type MonadExcept e = A.MonadExcept e e

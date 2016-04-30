@@ -58,7 +58,6 @@ library
                        Control.Monad.Ether.Ambiguous.State
                        Control.Monad.Ether.Ambiguous.State.Lazy
                        Control.Monad.Ether.Ambiguous.State.Strict
-                       Control.Monad.Ether.Ambiguous.Except
 
   build-depends:       base >=4.7 && <4.10
                ,       transformers >=0.4.2

@@ -1,3 +1,6 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Except".
@@ -5,7 +8,9 @@
 module Control.Monad.Ether.Except
     (
     -- * MonadExcept class
-      MonadExcept(..)
+      MonadExcept
+    , throw
+    , catch
     -- * The Except monad
     , Except
     , runExcept
@@ -18,15 +23,25 @@ module Control.Monad.Ether.Except
     , handle
     ) where
 
-import GHC.Prim (Proxy#)
-import Control.Monad.Ether.Except.Class
+import GHC.Prim (Proxy#, proxy#)
+import Control.Monad.Ether.Except.Class (MonadExcept)
+import qualified Control.Monad.Ether.Except.Class as C
 import Control.Monad.Trans.Ether.Except hiding (throw, catch)
 import Data.Functor.Identity (Identity(..))
 
+-- | Is used within a monadic computation to begin exception processing.
+throw :: forall tag e m a . MonadExcept tag e m => e -> m a
+throw = C.throw (proxy# :: Proxy# tag)
+
+-- | A handler function to handle previous exceptions and return to
+-- normal execution.
+catch :: forall tag e m a . MonadExcept tag e m => m a -> (e -> m a) -> m a
+catch = C.catch (proxy# :: Proxy# tag)
+
 -- | Runs an 'Except' and handles the exception with the given function.
-handle :: Proxy# tag -> (e -> a) -> Except tag e a -> a
-handle t h m = runIdentity (handleT t h m)
+handle :: forall tag e a . (e -> a) -> Except tag e a -> a
+handle h m = runIdentity (handleT @tag h m)
 
 -- | Runs an 'ExceptT' and handles the exception with the given function.
-handleT :: Functor m => Proxy# tag -> (e -> a) -> ExceptT tag e m a -> m a
-handleT t h m = fmap (either h id) (runExceptT t m)
+handleT :: forall tag e m a . Functor m => (e -> a) -> ExceptT tag e m a -> m a
+handleT h m = fmap (either h id) (runExceptT @tag m)

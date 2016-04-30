@@ -4,13 +4,15 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Except".
 
 module Control.Monad.Ether.Except.Class
-    ( MonadExcept(..)
-    ) where
+  ( MonadExcept(..)
+  ) where
 
 import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Ether.Except as E
@@ -27,8 +29,8 @@ class Monad m => MonadExcept tag e m | m tag -> e where
     catch :: Proxy# tag -> m a -> (e -> m a) -> m a
 
 instance (Monad m, e ~ e') => MonadExcept tag e (E.ExceptT tag e' m) where
-    throw = E.throw
-    catch = E.catch
+    throw _ = E.throw @tag
+    catch _ = E.catch @tag
 
 instance {-# OVERLAPPABLE #-}
          ( Lift.LiftCatch t
