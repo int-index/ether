@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE CPP #-}
 
 -- | Template Haskell utilities.
 
@@ -11,7 +12,11 @@ import qualified Language.Haskell.TH as TH
 import Data.Proxy
 
 emptyDataDecl :: TH.Name -> TH.DecQ
+#if __GLASGOW_HASKELL__ < 800
 emptyDataDecl name = TH.dataD (return []) name [] [] []
+#else
+emptyDataDecl name = TH.dataD (return []) name [] Nothing [] (return [])
+#endif
 
 funSimple :: TH.Name -> TH.ExpQ -> TH.DecQ
 funSimple name body = TH.funD name [ TH.clause [] (TH.normalB body) [] ]

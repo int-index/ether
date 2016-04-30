@@ -1,5 +1,6 @@
 flags: {}
 packages:
 - '.'
-extra-deps: []
+extra-deps:
+- transformers-lift-0.1.0.1
 resolver: lts-5.0

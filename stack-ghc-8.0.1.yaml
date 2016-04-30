@@ -1,0 +1,35 @@
+packages:
+- '.'
+extra-deps:
+- QuickCheck-2.8.2
+- ansi-terminal-0.6.2.3
+- ansi-wl-pprint-0.6.7.3
+- async-2.1.0
+- clock-0.7.2
+- exceptions-0.8.2.1
+- mmorph-1.0.6
+- monad-control-1.0.1.0
+- mtl-2.2.1
+- optparse-applicative-0.12.1.0
+- parsec-3.1.9
+- primitive-0.6.1.0
+- random-1.1
+- regex-base-0.93.2
+- regex-tdfa-1.2.2
+- stm-2.4.4.1
+- tagged-0.8.4
+- tasty-0.11.0.3
+- tasty-quickcheck-0.8.4
+- text-1.2.2.1
+- tf-random-0.5
+- transformers-base-0.4.4
+- transformers-compat-0.5.1.4
+- transformers-lift-0.1.0.1
+- unbounded-delays-0.1.0.9
+compiler-check: match-exact
+resolver: ghc-8.0.0.20160421
+setup-info:
+  ghc:
+    linux64:
+      8.0.0.20160421:
+        url: https://downloads.haskell.org/~ghc/8.0.1-rc4/ghc-8.0.0.20160421-x86_64-unknown-linux.tar.xz
