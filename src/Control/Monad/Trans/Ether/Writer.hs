@@ -84,10 +84,22 @@ tell :: Monad m => proxy tag -> w -> WriterT tag w m ()
 tell t w = writer t ((), w)
 
 -- | Executes an action and adds its accumulator to the value of the computation.
-listen :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m a -> WriterT tag w m (a, w)
+listen
+#if __GLASGOW_HASKELL__ < 800
+  :: (Monad m, Monoid w)
+#else
+  :: Monad m
+#endif
+  => proxy tag -> WriterT tag w m a -> WriterT tag w m (a, w)
 listen _ = pack . Trans.listen . unpack
 
 -- | Executes an action which returns a value and a function, and returns the
 -- value, applying the function to the accumulator.
-pass :: (Monoid w, Monad m) => proxy tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
+pass
+#if __GLASGOW_HASKELL__ < 800
+  :: (Monad m, Monoid w)
+#else
+  :: Monad m
+#endif
+  => proxy tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
 pass _ = pack . Trans.pass . unpack
