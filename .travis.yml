@@ -2,8 +2,8 @@ sudo: false
 
 env:
  - GHCVER=7.8.4 STACK_YAML=stack-ghc-7.8.4.yaml
- - GHCVER=7.10.3 STACK_YAML=stack.yaml COVERAGE="YES"
- - GHCVER=8.0.1 STACK_YAML=stack-ghc-8.0.1.yaml
+ - GHCVER=7.10.3 STACK_YAML=stack.yaml
+ - GHCVER=8.0.1 STACK_YAML=stack-ghc-8.0.1.yaml COVERAGE="YES"
 
 cache:
   directories:
