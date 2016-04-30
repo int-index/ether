@@ -84,7 +84,7 @@ library
                        MagicHash
                        MultiParamTypeClasses
                        ScopedTypeVariables
-                       TemplateHaskell
+                       TypeApplications
                        TypeFamilies
                        TypeOperators
                        UndecidableInstances
@@ -127,7 +127,6 @@ test-suite regression
                        LambdaCase
                        PolyKinds
                        ScopedTypeVariables
-                       TemplateHaskell
                        TypeApplications
                        TypeFamilies
                        TypeOperators
