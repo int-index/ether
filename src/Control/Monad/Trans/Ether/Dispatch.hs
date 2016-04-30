@@ -67,7 +67,6 @@ import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
-import Data.Proxy
 import GHC.Prim (Proxy#, proxy#)
 
 import qualified Control.Monad.Base as MB
@@ -170,8 +169,8 @@ instance MonadReader tag r m
 
 instance MonadState tag s m
       => Class.MonadState s (DispatchTagAttachT tag m) where
-  get = let t = Proxy :: Proxy tag in Lift.lift (get t)
-  put = let t = Proxy :: Proxy tag in Lift.lift . put t
+  get = let t = proxy# :: Proxy# tag in Lift.lift (get t)
+  put = let t = proxy# :: Proxy# tag in Lift.lift . put t
 
 instance MonadExcept tag e m
       => Class.MonadError e (DispatchTagAttachT tag m) where
@@ -195,8 +194,8 @@ instance MonadReader tNew r m
 
 instance MonadState tNew s m
       => MonadState tOld s (DispatchTagReplaceT tOld tNew m) where
-  get _ = let t = Proxy :: Proxy tNew in Lift.lift (get t)
-  put _ = let t = Proxy :: Proxy tNew in Lift.lift . put t
+  get _ = let t = proxy# :: Proxy# tNew in Lift.lift (get t)
+  put _ = let t = proxy# :: Proxy# tNew in Lift.lift . put t
 
 instance MonadExcept tNew e m
       => MonadExcept tOld e (DispatchTagReplaceT tOld tNew m) where
