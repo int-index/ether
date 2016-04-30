@@ -6,7 +6,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MagicHash #-}
 
 {- |
 
@@ -60,7 +59,6 @@ import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
-import GHC.Prim (Proxy#, proxy#)
 
 import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
@@ -77,6 +75,11 @@ import Control.Monad.Ether.Reader.Class
 import Control.Monad.Ether.State.Class
 import Control.Monad.Ether.Except.Class
 import Control.Monad.Ether.Writer.Class
+
+import Control.Monad.Ether.Reader as A
+import Control.Monad.Ether.State.Common as A
+import Control.Monad.Ether.Except as A
+import Control.Monad.Ether.Writer as A
 
 import qualified Control.Monad.Reader as Class
 import qualified Control.Monad.State  as Class
@@ -153,47 +156,47 @@ tagReplace = coerce
 
 instance MonadReader tag r m
       => Class.MonadReader r (DispatchTagAttachT tag m) where
-  ask   = let t = proxy# :: Proxy# tag in Lift.lift (ask t)
-  local = let t = proxy# :: Proxy# tag in Lift.liftLocal (ask t) (local t)
+  ask   = Lift.lift (A.ask @tag)
+  local = Lift.liftLocal (A.ask @tag) (A.local @tag)
 
 instance MonadState tag s m
       => Class.MonadState s (DispatchTagAttachT tag m) where
-  get = let t = proxy# :: Proxy# tag in Lift.lift (get t)
-  put = let t = proxy# :: Proxy# tag in Lift.lift . put t
+  get = Lift.lift (A.get @tag)
+  put = Lift.lift . A.put @tag
 
 instance MonadExcept tag e m
       => Class.MonadError e (DispatchTagAttachT tag m) where
-  throwError = let t = proxy# :: Proxy# tag in Lift.lift . throw t
-  catchError = let t = proxy# :: Proxy# tag in Lift.liftCatch (catch t)
+  throwError = Lift.lift . A.throw @tag
+  catchError = Lift.liftCatch (A.catch @tag)
 
 instance MonadWriter tag w m
       => Class.MonadWriter w (DispatchTagAttachT tag m) where
-  writer = let t = proxy# :: Proxy# tag in Lift.lift . writer t
-  tell   = let t = proxy# :: Proxy# tag in Lift.lift . tell t
-  listen = let t = proxy# :: Proxy# tag in Lift.liftListen (listen t)
-  pass   = let t = proxy# :: Proxy# tag in Lift.liftPass (pass t)
+  writer = Lift.lift . A.writer @tag
+  tell   = Lift.lift . A.tell @tag
+  listen = Lift.liftListen (A.listen @tag)
+  pass   = Lift.liftPass (A.pass @tag)
 
 
 -- TagReplace instances
 
 instance MonadReader tNew r m
       => MonadReader tOld r (DispatchTagReplaceT tOld tNew m) where
-  ask   _ = let t = proxy# :: Proxy# tNew in Lift.lift (ask t)
-  local _ = let t = proxy# :: Proxy# tNew in Lift.liftLocal (ask t) (local t)
+  ask   _ = Lift.lift (A.ask @tNew)
+  local _ = Lift.liftLocal (A.ask @tNew) (A.local @tNew)
 
 instance MonadState tNew s m
       => MonadState tOld s (DispatchTagReplaceT tOld tNew m) where
-  get _ = let t = proxy# :: Proxy# tNew in Lift.lift (get t)
-  put _ = let t = proxy# :: Proxy# tNew in Lift.lift . put t
+  get _ = Lift.lift (A.get @tNew)
+  put _ = Lift.lift . A.put @tNew
 
 instance MonadExcept tNew e m
       => MonadExcept tOld e (DispatchTagReplaceT tOld tNew m) where
-  throw _ = let t = proxy# :: Proxy# tNew in Lift.lift . throw t
-  catch _ = let t = proxy# :: Proxy# tNew in Lift.liftCatch (catch t)
+  throw _ = Lift.lift . A.throw @tNew
+  catch _ = Lift.liftCatch (A.catch @tNew)
 
 instance MonadWriter tNew w m
       => MonadWriter tOld w (DispatchTagReplaceT tOld tNew m) where
-  writer _ = let t = proxy# :: Proxy# tNew in Lift.lift . writer t
-  tell   _ = let t = proxy# :: Proxy# tNew in Lift.lift . tell t
-  listen _ = let t = proxy# :: Proxy# tNew in Lift.liftListen (listen t)
-  pass   _ = let t = proxy# :: Proxy# tNew in Lift.liftPass (pass t)
+  writer _ = Lift.lift . A.writer @tNew
+  tell   _ = Lift.lift . A.tell @tNew
+  listen _ = Lift.liftListen (A.listen @tNew)
+  pass   _ = Lift.liftPass (A.pass @tNew)
