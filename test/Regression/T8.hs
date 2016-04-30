@@ -8,8 +8,8 @@ import qualified Control.Monad.State as T
 import Test.Tasty
 import Test.Tasty.QuickCheck
 
-ethereal "Foo" "foo"
-ethereal "Bar" "bar"
+data Foo
+data Bar
 
 testMTL1 :: T.MonadState Int m => m ()
 testMTL1 = T.modify negate
@@ -21,22 +21,22 @@ testEther
   :: Ether '[Foo <-> Int, Bar <-> Bool] m
   => m String
 testEther = do
-  tagAttach foo testMTL1
-  tagAttach bar testMTL2
-  a <- gets foo show
-  b <- gets bar show
+  tagAttach [tag|Foo|] testMTL1
+  tagAttach [tag|Bar|] testMTL2
+  a <- gets [tag|Foo|] show
+  b <- gets [tag|Bar|] show
   return (a ++ b)
 
 model :: Int -> Bool -> String
 model a b = show (negate a) ++ show (not b)
 
 runner1 a b
-  = flip (evalState  foo) a
-  . flip (evalStateT bar) b
+  = flip (evalState  [tag|Foo|]) a
+  . flip (evalStateT [tag|Bar|]) b
 
 runner2 a b
-  = flip (evalState  bar) b
-  . flip (evalStateT foo) a
+  = flip (evalState  [tag|Bar|]) b
+  . flip (evalStateT [tag|Foo|]) a
 
 test8 :: TestTree
 test8 = testGroup "T8: Multiple tag attachements"

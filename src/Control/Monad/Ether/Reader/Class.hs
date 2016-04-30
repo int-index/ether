@@ -11,6 +11,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Reader.Class".
 
@@ -19,6 +20,7 @@ module Control.Monad.Ether.Reader.Class
     , asks
     ) where
 
+import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Ether.Reader as R
 import qualified Control.Monad.Trans.Lift.Local as Lift
 import qualified Control.Ether.Util as Util
@@ -29,12 +31,12 @@ class Monad m => MonadReader tag r m | m tag -> r where
     {-# MINIMAL (ask | reader), local #-}
 
     -- | Retrieves the monad environment.
-    ask :: proxy tag -> m r
+    ask :: Proxy# tag -> m r
     ask t = reader t id
 
     -- | Executes a computation in a modified environment.
     local
-        :: proxy tag
+        :: Proxy# tag
         -> (r -> r)
         -- ^ The function to modify the environment.
         -> m a
@@ -43,7 +45,7 @@ class Monad m => MonadReader tag r m | m tag -> r where
 
     -- | Retrieves a function of the current environment.
     reader
-        :: proxy tag
+        :: Proxy# tag
         -> (r -> a)
         -- ^ The selector function to apply to the environment.
         -> m a
@@ -52,7 +54,7 @@ class Monad m => MonadReader tag r m | m tag -> r where
 -- | Retrieves a function of the current environment.
 asks
     :: MonadReader tag r m
-    => proxy tag
+    => Proxy# tag
     -> (r -> a)
     -- ^ The selector function to apply to the environment.
     -> m a

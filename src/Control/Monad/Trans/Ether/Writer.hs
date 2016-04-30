@@ -7,6 +7,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Trans.Writer".
 
@@ -32,6 +33,7 @@ module Control.Monad.Trans.Ether.Writer
 import Data.Monoid
 #endif
 
+import GHC.Prim (Proxy#)
 import Data.Functor.Identity (Identity(..))
 import qualified Control.Monad.Trans.Writer.Lazy as Trans
 import Control.Monad.Trans.Ether.Tagged
@@ -51,36 +53,36 @@ type Writer tag w = WriterT tag w Identity
 type WriterT tag w = TaggedTrans tag (Trans.WriterT w)
 
 -- | Constructor for computations in the writer monad transformer.
-writerT :: proxy tag -> m (a, w) -> WriterT tag w m a
+writerT :: Proxy# tag -> m (a, w) -> WriterT tag w m a
 writerT _ = pack . Trans.WriterT
 
 -- | Constructor for computations in the writer monad
 -- (the inverse of 'runWriter').
-writer :: Monad m => proxy tag -> (a, w) -> WriterT tag w m a
+writer :: Monad m => Proxy# tag -> (a, w) -> WriterT tag w m a
 writer _ = pack . Trans.writer
 
 -- | Runs a 'WriterT' and returns both the normal value
 -- and the final accumulator.
-runWriterT :: proxy tag -> WriterT tag w m a -> m (a, w)
+runWriterT :: Proxy# tag -> WriterT tag w m a -> m (a, w)
 runWriterT _ = Trans.runWriterT . unpack
 
 -- | Runs a 'Writer' and returns both the normal value
 -- and the final accumulator.
-runWriter :: proxy tag -> Writer tag w a -> (a, w)
+runWriter :: Proxy# tag -> Writer tag w a -> (a, w)
 runWriter _ = Trans.runWriter . unpack
 
 -- | Runs a 'WriterT' and returns the final accumulator,
 -- discarding the normal value.
-execWriterT :: Monad m => proxy tag -> WriterT tag w m a -> m w
+execWriterT :: Monad m => Proxy# tag -> WriterT tag w m a -> m w
 execWriterT _ = Trans.execWriterT . unpack
 
 -- | Runs a 'Writer' and returns the final accumulator,
 -- discarding the normal value.
-execWriter :: proxy tag -> Writer tag w a -> w
+execWriter :: Proxy# tag -> Writer tag w a -> w
 execWriter _ = Trans.execWriter . unpack
 
 -- | Appends a value to the accumulator within the monad.
-tell :: Monad m => proxy tag -> w -> WriterT tag w m ()
+tell :: Monad m => Proxy# tag -> w -> WriterT tag w m ()
 tell t w = writer t ((), w)
 
 -- | Executes an action and adds its accumulator to the value of the computation.
@@ -90,7 +92,7 @@ listen
 #else
   :: Monad m
 #endif
-  => proxy tag -> WriterT tag w m a -> WriterT tag w m (a, w)
+  => Proxy# tag -> WriterT tag w m a -> WriterT tag w m (a, w)
 listen _ = pack . Trans.listen . unpack
 
 -- | Executes an action which returns a value and a function, and returns the
@@ -101,5 +103,5 @@ pass
 #else
   :: Monad m
 #endif
-  => proxy tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
+  => Proxy# tag -> WriterT tag w m (a, w -> w) -> WriterT tag w m a
 pass _ = pack . Trans.pass . unpack

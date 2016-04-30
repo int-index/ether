@@ -6,6 +6,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Trans.Reader".
 
@@ -24,6 +25,7 @@ module Control.Monad.Trans.Ether.Reader
     , local
     ) where
 
+import GHC.Prim (Proxy#)
 import Data.Functor.Identity (Identity(..))
 import qualified Control.Monad.Trans.Reader as Trans
 import Control.Monad.Trans.Ether.Tagged
@@ -44,26 +46,26 @@ type Reader tag r = ReaderT tag r Identity
 type ReaderT tag r = TaggedTrans tag (Trans.ReaderT r)
 
 -- | Constructor for computations in the reader monad transformer.
-readerT :: proxy tag -> (r -> m a) -> ReaderT tag r m a
+readerT :: Proxy# tag -> (r -> m a) -> ReaderT tag r m a
 readerT _ = pack . Trans.ReaderT
 
 -- | Constructor for computations in the reader monad
 -- (the inverse of 'runReader').
-reader :: Monad m => proxy tag -> (r -> a) -> ReaderT tag r m a
+reader :: Monad m => Proxy# tag -> (r -> a) -> ReaderT tag r m a
 reader _ = pack . Trans.reader
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the final value.
-runReaderT :: proxy tag -> ReaderT tag r m a -> r -> m a
+runReaderT :: Proxy# tag -> ReaderT tag r m a -> r -> m a
 runReaderT _ = Trans.runReaderT . unpack
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the final value.
-runReader :: proxy tag -> Reader tag r a -> r -> a
+runReader :: Proxy# tag -> Reader tag r a -> r -> a
 runReader _ = Trans.runReader . unpack
 
 -- | Fetch the value of the environment.
-ask :: Monad m => proxy tag -> ReaderT tag r m r
+ask :: Monad m => Proxy# tag -> ReaderT tag r m r
 ask _ = pack Trans.ask
 
 -- | Execute a computation in a modified environment
@@ -71,7 +73,7 @@ ask _ = pack Trans.ask
 --
 -- * @'runReaderT' tag ('local' tag f m) = 'runReaderT' tag m . f@
 local
-    :: proxy tag
+    :: Proxy# tag
     -> (r -> r)
     -- ^ The function to modify the environment.
     -> ReaderT tag r m a

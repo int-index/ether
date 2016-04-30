@@ -13,6 +13,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MagicHash #-}
 
 {- |
 
@@ -66,7 +67,7 @@ import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
-import Data.Proxy
+import GHC.Prim (Proxy#, proxy#)
 
 import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
@@ -147,13 +148,13 @@ instance Lift.LiftCallCC (DispatchT dp) where
   liftCallCC' = Lift.defaultLiftCallCC' pack unpack
 
 -- | Attach a tag to untagged transformers.
-tagAttach :: proxy t -> DispatchTagAttachT t m a -> m a
+tagAttach :: Proxy# t -> DispatchTagAttachT t m a -> m a
 tagAttach _ = coerce
 
 -- | Replace a tag with another tag.
 tagReplace
-  :: proxy tOld
-  -> proxy tNew
+  :: Proxy# tOld
+  -> Proxy# tNew
   -> DispatchTagReplaceT tOld tNew m a
   -> m a
 tagReplace _ _ = coerce
@@ -163,47 +164,47 @@ tagReplace _ _ = coerce
 
 instance MonadReader tag r m
       => Class.MonadReader r (DispatchTagAttachT tag m) where
-  ask   = let t = Proxy :: Proxy tag in Lift.lift (ask t)
-  local = let t = Proxy :: Proxy tag in Lift.liftLocal (ask t) (local t)
+  ask   = let t = proxy# :: Proxy# tag in Lift.lift (ask t)
+  local = let t = proxy# :: Proxy# tag in Lift.liftLocal (ask t) (local t)
 
 instance MonadState tag s m
       => Class.MonadState s (DispatchTagAttachT tag m) where
-  get = let t = Proxy :: Proxy tag in Lift.lift (get t)
-  put = let t = Proxy :: Proxy tag in Lift.lift . put t
+  get = let t = proxy# :: Proxy# tag in Lift.lift (get t)
+  put = let t = proxy# :: Proxy# tag in Lift.lift . put t
 
 instance MonadExcept tag e m
       => Class.MonadError e (DispatchTagAttachT tag m) where
-  throwError = let t = Proxy :: Proxy tag in Lift.lift . throw t
-  catchError = let t = Proxy :: Proxy tag in Lift.liftCatch (catch t)
+  throwError = let t = proxy# :: Proxy# tag in Lift.lift . throw t
+  catchError = let t = proxy# :: Proxy# tag in Lift.liftCatch (catch t)
 
 instance MonadWriter tag w m
       => Class.MonadWriter w (DispatchTagAttachT tag m) where
-  writer = let t = Proxy :: Proxy tag in Lift.lift . writer t
-  tell   = let t = Proxy :: Proxy tag in Lift.lift . tell t
-  listen = let t = Proxy :: Proxy tag in Lift.liftListen (listen t)
-  pass   = let t = Proxy :: Proxy tag in Lift.liftPass (pass t)
+  writer = let t = proxy# :: Proxy# tag in Lift.lift . writer t
+  tell   = let t = proxy# :: Proxy# tag in Lift.lift . tell t
+  listen = let t = proxy# :: Proxy# tag in Lift.liftListen (listen t)
+  pass   = let t = proxy# :: Proxy# tag in Lift.liftPass (pass t)
 
 
 -- TagReplace instances
 
 instance MonadReader tNew r m
       => MonadReader tOld r (DispatchTagReplaceT tOld tNew m) where
-  ask   _ = let t = Proxy :: Proxy tNew in Lift.lift (ask t)
-  local _ = let t = Proxy :: Proxy tNew in Lift.liftLocal (ask t) (local t)
+  ask   _ = let t = proxy# :: Proxy# tNew in Lift.lift (ask t)
+  local _ = let t = proxy# :: Proxy# tNew in Lift.liftLocal (ask t) (local t)
 
 instance MonadState tNew s m
       => MonadState tOld s (DispatchTagReplaceT tOld tNew m) where
-  get _ = let t = Proxy :: Proxy tNew in Lift.lift (get t)
-  put _ = let t = Proxy :: Proxy tNew in Lift.lift . put t
+  get _ = let t = proxy# :: Proxy# tNew in Lift.lift (get t)
+  put _ = let t = proxy# :: Proxy# tNew in Lift.lift . put t
 
 instance MonadExcept tNew e m
       => MonadExcept tOld e (DispatchTagReplaceT tOld tNew m) where
-  throw _ = let t = Proxy :: Proxy tNew in Lift.lift . throw t
-  catch _ = let t = Proxy :: Proxy tNew in Lift.liftCatch (catch t)
+  throw _ = let t = proxy# :: Proxy# tNew in Lift.lift . throw t
+  catch _ = let t = proxy# :: Proxy# tNew in Lift.liftCatch (catch t)
 
 instance MonadWriter tNew w m
       => MonadWriter tOld w (DispatchTagReplaceT tOld tNew m) where
-  writer _ = let t = Proxy :: Proxy tNew in Lift.lift . writer t
-  tell   _ = let t = Proxy :: Proxy tNew in Lift.lift . tell t
-  listen _ = let t = Proxy :: Proxy tNew in Lift.liftListen (listen t)
-  pass   _ = let t = Proxy :: Proxy tNew in Lift.liftPass (pass t)
+  writer _ = let t = proxy# :: Proxy# tNew in Lift.lift . writer t
+  tell   _ = let t = proxy# :: Proxy# tNew in Lift.lift . tell t
+  listen _ = let t = proxy# :: Proxy# tNew in Lift.liftListen (listen t)
+  pass   _ = let t = proxy# :: Proxy# tNew in Lift.liftPass (pass t)

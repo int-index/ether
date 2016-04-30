@@ -1,45 +1,19 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE MagicHash #-}
 
 -- | Template Haskell utilities.
 
-module Control.Ether.TH
-    ( ethereal
-    ) where
+module Control.Ether.TH (tag) where
 
 import qualified Language.Haskell.TH as TH
+import qualified Language.Haskell.TH.Quote as TH
 
-import Data.Proxy
+import GHC.Prim (Proxy#, proxy#)
 
-emptyDataDecl :: TH.Name -> TH.DecQ
-#if __GLASGOW_HASKELL__ < 800
-emptyDataDecl name = TH.dataD (return []) name [] [] []
-#else
-emptyDataDecl name = TH.dataD (return []) name [] Nothing [] (return [])
-#endif
-
-funSimple :: TH.Name -> TH.ExpQ -> TH.DecQ
-funSimple name body = TH.funD name [ TH.clause [] (TH.normalB body) [] ]
-
-proxySimple :: TH.Name -> TH.TypeQ -> TH.Q (TH.Dec, TH.Dec)
-proxySimple name ty = do
-    sig <- TH.sigD name [t| Proxy $ty |]
-    val <- funSimple name [e| Proxy |]
-    return (sig, val)
-
--- |
--- Creates a tag and a value-level proxy for it.
---
--- @'ethereal' \"Foo\" \"foo\"@ generates the following code:
---
--- > data Foo
--- > foo :: Proxy Foo
--- > foo = Proxy
-ethereal :: String -> String -> TH.DecsQ
-ethereal strTagName strTagProxyName = do
-    let tagName = TH.mkName strTagName
-        tag = TH.conT tagName
-        tagProxyName = TH.mkName strTagProxyName
-    tagDecl <- emptyDataDecl tagName
-    (tagProxySig, tagProxyVal) <- proxySimple tagProxyName tag
-    return [tagDecl, tagProxySig, tagProxyVal]
+tag :: TH.QuasiQuoter
+tag = TH.QuasiQuoter proxyExpQ undefined undefined undefined
+  where
+    proxyExpQ :: String -> TH.ExpQ
+    proxyExpQ nameStr =
+      let ty = TH.conT (TH.mkName nameStr)
+      in [e| proxy# :: Proxy# $ty |]
