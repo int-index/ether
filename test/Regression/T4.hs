@@ -1,7 +1,7 @@
 module Regression.T4 (test4) where
 
 import Control.Ether.Abbr
-import Control.Monad.Ether.Ambiguous
+import Control.Monad.Ether
 
 import Test.Tasty
 import Test.Tasty.QuickCheck

@@ -1,18 +1,13 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Writer.Class".
 
 module Control.Monad.Ether.Writer.Class
-    ( MonadWriter(..)
-    , listens
-    , censor
-    ) where
+  ( MonadWriter(..)
+  ) where
 
 import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Ether.Writer as W
@@ -42,24 +37,11 @@ class (Monoid w, Monad m) => MonadWriter tag w m | m tag -> w where
     -- and return the value, applying the function to the accumulator.
     pass :: Proxy# tag -> m (a, w -> w) -> m a
 
--- | Execute an action and add the result of applying the given function to
--- its accumulator to the value of the computation.
-listens :: MonadWriter tag w m => Proxy# tag -> (w -> b) -> m a -> m (a, b)
-listens t f m = do
-    ~(a, w) <- listen t m
-    return (a, f w)
-
--- | Execute an action and apply a function to its accumulator.
-censor :: MonadWriter tag w m => Proxy# tag -> (w -> w) -> m a -> m a
-censor t f m = pass t $ do
-    a <- m
-    return (a, f)
-
 instance (Monoid w, Monad m, w ~ w') => MonadWriter tag w (W.WriterT tag w' m) where
-    writer = W.writer
-    tell = W.tell
-    listen = W.listen
-    pass = W.pass
+    writer _ = W.writer @tag
+    tell _ = W.tell @tag
+    listen _ = W.listen @tag
+    pass _ = W.pass @tag
 
 instance {-# OVERLAPPABLE #-}
          ( Lift.LiftListen t

@@ -4,7 +4,10 @@
 module Control.Monad.Ether.State.Strict
     (
     -- * MonadState class
-      MonadState(..)
+      MonadState
+    , get
+    , put
+    , state
     , modify
     , gets
     -- * The State monad
@@ -20,5 +23,5 @@ module Control.Monad.Ether.State.Strict
     , execStateT
     ) where
 
-import Control.Monad.Ether.State.Class
+import Control.Monad.Ether.State.Common
 import Control.Monad.Trans.Ether.State.Strict hiding (state, get, put)

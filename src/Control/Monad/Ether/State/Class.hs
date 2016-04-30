@@ -1,18 +1,13 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.State.Class".
 
 module Control.Monad.Ether.State.Class
-    ( MonadState(..)
-    , modify
-    , gets
-    ) where
+  ( MonadState(..)
+  ) where
 
 import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Ether.State.Lazy   as S.L
@@ -40,23 +35,15 @@ class Monad m => MonadState tag s m | m tag -> s where
         put t s'
         return a
 
--- | Modifies the state inside a state monad.
-modify :: MonadState tag s m => Proxy# tag -> (s -> s) -> m ()
-modify t f = state t (\s -> ((), f s))
-
--- | Gets specific component of the state, using a projection function supplied.
-gets :: MonadState tag s m => Proxy# tag -> (s -> a) -> m a
-gets t f = fmap f (get t)
-
 instance (Monad m, s ~ s') => MonadState tag s (S.L.StateT tag s' m) where
-    get = S.L.get
-    put = S.L.put
-    state = S.L.state
+    get _ = S.L.get @tag
+    put _ = S.L.put @tag
+    state _ = S.L.state @tag
 
 instance (Monad m, s ~ s') => MonadState tag s (S.S.StateT tag s' m) where
-    get = S.S.get
-    put = S.S.put
-    state = S.S.state
+    get _ = S.S.get @tag
+    put _ = S.S.put @tag
+    state _ = S.S.state @tag
 
 instance {-# OVERLAPPABLE #-}
          ( Lift.MonadTrans t

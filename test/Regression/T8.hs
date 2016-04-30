@@ -1,7 +1,7 @@
 module Regression.T8 (test8) where
 
 import Control.Ether.Abbr
-import Control.Monad.Ether.Ambiguous
+import Control.Monad.Ether
 
 import qualified Control.Monad.State as T
 

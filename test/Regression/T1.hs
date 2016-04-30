@@ -1,6 +1,6 @@
 module Regression.T1 (test1) where
 
-import Control.Monad.Ether.Ambiguous
+import Control.Monad.Ether
 import Control.Ether.Abbr
 
 import Test.Tasty

@@ -1,7 +1,7 @@
 module Regression.T3 (test3) where
 
 import Control.Ether.Abbr
-import Control.Monad.Ether.Ambiguous
+import Control.Monad.Ether
 
 import qualified Control.Monad.Reader as T
 import qualified Control.Monad.State as T

@@ -1,6 +1,4 @@
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | See "Control.Monad.Ether.Writer".
 
@@ -25,7 +23,7 @@ module Control.Monad.Ether.Implicit.Writer
     , execWriterT
     ) where
 
-import qualified Control.Monad.Ether.Ambiguous.Writer as A
+import qualified Control.Monad.Ether.Writer as A
 
 -- | See 'Control.Monad.Ether.Writer.MonadWriter'.
 type MonadWriter w = A.MonadWriter w w
