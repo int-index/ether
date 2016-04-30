@@ -28,7 +28,6 @@ library
 
   exposed-modules:     Control.Ether.Abbr
                        Control.Ether.Implicit.Abbr
-                       Control.Ether.TH
                        Control.Monad.Trans.Ether.Reader
                        Control.Monad.Trans.Ether.Writer
                        Control.Monad.Trans.Ether.State
@@ -55,6 +54,13 @@ library
                        Control.Monad.Ether.Implicit.State.Lazy
                        Control.Monad.Ether.Implicit.State.Strict
                        Control.Monad.Ether.Implicit.Except
+                       Control.Monad.Ether.Ambiguous
+                       Control.Monad.Ether.Ambiguous.Reader
+                       Control.Monad.Ether.Ambiguous.Writer
+                       Control.Monad.Ether.Ambiguous.State
+                       Control.Monad.Ether.Ambiguous.State.Lazy
+                       Control.Monad.Ether.Ambiguous.State.Strict
+                       Control.Monad.Ether.Ambiguous.Except
 
   build-depends:       base >=4.7 && <4.10
                ,       transformers >=0.4.2
@@ -122,6 +128,7 @@ test-suite regression
                        PolyKinds
                        ScopedTypeVariables
                        TemplateHaskell
+                       TypeApplications
                        TypeFamilies
                        TypeOperators
                        QuasiQuotes

@@ -1,7 +1,7 @@
 module Regression.T9 (test9) where
 
 import Control.Ether.Abbr
-import Control.Monad.Ether
+import Control.Monad.Ether.Ambiguous
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
@@ -11,11 +11,11 @@ data Bar
 
 testEther1 :: Ether '[Foo <-> Int] m => m String
 testEther1 = do
-  modify [tag|Foo|] negate
-  gets [tag|Foo|] show
+  modify @Foo negate
+  gets @Foo show
 
 testEther2 :: Ether '[Bar <-> Int] m => m String
-testEther2 = tagReplace [tag|Foo|] [tag|Bar|] testEther1
+testEther2 = tagReplace @Foo @Bar testEther1
 
 testEther
   :: Ether '[Foo <-> Int, Bar <-> Int] m
@@ -29,12 +29,12 @@ model :: Int -> Int -> String
 model a b = show (negate a) ++ show (negate b)
 
 runner1 a b
-  = flip (evalState  [tag|Foo|]) a
-  . flip (evalStateT [tag|Bar|]) b
+  = flip (evalState  @Foo) a
+  . flip (evalStateT @Bar) b
 
 runner2 a b
-  = flip (evalState  [tag|Bar|]) b
-  . flip (evalStateT [tag|Foo|]) a
+  = flip (evalState  @Bar) b
+  . flip (evalStateT @Foo) a
 
 test9 :: TestTree
 test9 = testGroup "T9: Tag replacement"

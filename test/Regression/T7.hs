@@ -3,7 +3,7 @@ module Regression.T7 (test7) where
 import Data.Monoid
 import Control.Monad
 
-import Control.Monad.Ether
+import Control.Monad.Ether.Ambiguous
 import qualified Control.Monad.Writer as T
 
 import Test.Tasty
@@ -19,16 +19,16 @@ testEther
 testEther xs = do
   forM_ xs $ \x -> do
     T.tell (Sum x)
-    tell [tag|WTag|] (Sum 1)
+    tell @WTag (Sum 1)
 
 runner1 :: Num a => [a] -> (a, a)
 runner1 xs =
-  let (s, c) = T.runWriter . execWriterT [tag|WTag|] $ testEther xs
+  let (s, c) = T.runWriter . execWriterT @WTag $ testEther xs
   in (getSum s, getSum c)
 
 runner2 :: Num a => [a] -> (a, a)
 runner2 xs =
-  let (c, s) = runWriter [tag|WTag|] . T.execWriterT $ testEther xs
+  let (c, s) = runWriter @WTag . T.execWriterT $ testEther xs
   in (getSum s, getSum c)
 
 triangular :: Integral a => a -> a
