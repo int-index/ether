@@ -1,5 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Ether.Except".
 
@@ -21,7 +22,7 @@ module Control.Monad.Ether.Implicit.Except
     , handleT
     ) where
 
-import Data.Proxy
+import GHC.Prim (Proxy#, proxy#)
 import qualified Control.Monad.Ether.Except as Explicit
 
 -- | See 'Control.Monad.Ether.Except.MonadExcept'.
@@ -29,34 +30,34 @@ type MonadExcept e = Explicit.MonadExcept e e
 
 -- | See 'Control.Monad.Ether.Except.throw'.
 throw :: forall e m a . MonadExcept e m => e -> m a
-throw = Explicit.throw (Proxy :: Proxy e)
+throw = Explicit.throw (proxy# :: Proxy# e)
 
 -- | See 'Control.Monad.Ether.Except.catch'.
 catch :: forall e m a . MonadExcept e m => m a -> (e -> m a) -> m a
-catch = Explicit.catch (Proxy :: Proxy e)
+catch = Explicit.catch (proxy# :: Proxy# e)
 
 -- | See 'Control.Monad.Ether.Except.Except'.
 type Except e = Explicit.Except e e
 
 -- | See 'Control.Monad.Ether.Except.runExcept'.
 runExcept :: Except e a -> Either e a
-runExcept = Explicit.runExcept Proxy
+runExcept = Explicit.runExcept proxy#
 
 -- | See 'Control.Monad.Ether.Except.ExceptT'.
 type ExceptT e = Explicit.ExceptT e e
 
 -- | See 'Control.Monad.Ether.Except.exceptT'.
 exceptT :: m (Either e a) -> ExceptT e m a
-exceptT = Explicit.exceptT Proxy
+exceptT = Explicit.exceptT proxy#
 
 -- | See 'Control.Monad.Ether.Except.runExceptT'.
 runExceptT :: ExceptT e m a -> m (Either e a)
-runExceptT = Explicit.runExceptT Proxy
+runExceptT = Explicit.runExceptT proxy#
 
 -- | See 'Control.Monad.Ether.Except.handle'.
 handle :: (e -> a) -> Except e a -> a
-handle = Explicit.handle Proxy
+handle = Explicit.handle proxy#
 
 -- | See 'Control.Monad.Ether.Except.handleT'.
 handleT :: Functor m => (e -> a) -> ExceptT e m a -> m a
-handleT = Explicit.handleT Proxy
+handleT = Explicit.handleT proxy#

@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE MagicHash #-}
 {-# LANGUAGE CPP #-}
 
 -- | Template Haskell utilities.
@@ -9,7 +10,7 @@ module Control.Ether.TH
 
 import qualified Language.Haskell.TH as TH
 
-import Data.Proxy
+import GHC.Prim (Proxy#, proxy#)
 
 emptyDataDecl :: TH.Name -> TH.DecQ
 #if __GLASGOW_HASKELL__ < 800
@@ -23,8 +24,8 @@ funSimple name body = TH.funD name [ TH.clause [] (TH.normalB body) [] ]
 
 proxySimple :: TH.Name -> TH.TypeQ -> TH.Q (TH.Dec, TH.Dec)
 proxySimple name ty = do
-    sig <- TH.sigD name [t| Proxy $ty |]
-    val <- funSimple name [e| Proxy |]
+    sig <- TH.sigD name [t| Proxy# $ty |]
+    val <- funSimple name [e| proxy# |]
     return (sig, val)
 
 -- |

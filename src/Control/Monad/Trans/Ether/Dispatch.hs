@@ -13,6 +13,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MagicHash #-}
 
 {- |
 
@@ -67,6 +68,7 @@ import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 import Data.Proxy
+import GHC.Prim (Proxy#, proxy#)
 
 import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
@@ -173,8 +175,8 @@ instance MonadState tag s m
 
 instance MonadExcept tag e m
       => Class.MonadError e (DispatchTagAttachT tag m) where
-  throwError = let t = Proxy :: Proxy tag in Lift.lift . throw t
-  catchError = let t = Proxy :: Proxy tag in Lift.liftCatch (catch t)
+  throwError = let t = proxy# :: Proxy# tag in Lift.lift . throw t
+  catchError = let t = proxy# :: Proxy# tag in Lift.liftCatch (catch t)
 
 instance MonadWriter tag w m
       => Class.MonadWriter w (DispatchTagAttachT tag m) where
@@ -198,8 +200,8 @@ instance MonadState tNew s m
 
 instance MonadExcept tNew e m
       => MonadExcept tOld e (DispatchTagReplaceT tOld tNew m) where
-  throw _ = let t = Proxy :: Proxy tNew in Lift.lift . throw t
-  catch _ = let t = Proxy :: Proxy tNew in Lift.liftCatch (catch t)
+  throw _ = let t = proxy# :: Proxy# tNew in Lift.lift . throw t
+  catch _ = let t = proxy# :: Proxy# tNew in Lift.liftCatch (catch t)
 
 instance MonadWriter tNew w m
       => MonadWriter tOld w (DispatchTagReplaceT tOld tNew m) where
