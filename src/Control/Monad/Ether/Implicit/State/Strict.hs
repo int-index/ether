@@ -26,7 +26,7 @@ module Control.Monad.Ether.Implicit.State.Strict
     , execStateT
     ) where
 
-import qualified Control.Monad.Ether.Ambiguous.State.Strict as A
+import qualified Control.Monad.Ether.State.Strict as A
 
 -- | See 'Control.Monad.Ether.State.Strict.StateT'.
 type StateT s = A.StateT s s

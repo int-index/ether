@@ -26,7 +26,7 @@ module Control.Monad.Ether.Implicit.State.Lazy
     , execStateT
     ) where
 
-import qualified Control.Monad.Ether.Ambiguous.State.Lazy as A
+import qualified Control.Monad.Ether.State.Lazy as A
 
 -- | See 'Control.Monad.Ether.State.Lazy.StateT'.
 type StateT s = A.StateT s s
