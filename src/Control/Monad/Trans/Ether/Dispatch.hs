@@ -180,10 +180,10 @@ instance MonadExcept tag e m
 
 instance MonadWriter tag w m
       => Class.MonadWriter w (DispatchTagAttachT tag m) where
-  writer = let t = Proxy :: Proxy tag in Lift.lift . writer t
-  tell   = let t = Proxy :: Proxy tag in Lift.lift . tell t
-  listen = let t = Proxy :: Proxy tag in Lift.liftListen (listen t)
-  pass   = let t = Proxy :: Proxy tag in Lift.liftPass (pass t)
+  writer = let t = proxy# :: Proxy# tag in Lift.lift . writer t
+  tell   = let t = proxy# :: Proxy# tag in Lift.lift . tell t
+  listen = let t = proxy# :: Proxy# tag in Lift.liftListen (listen t)
+  pass   = let t = proxy# :: Proxy# tag in Lift.liftPass (pass t)
 
 
 -- TagReplace instances
@@ -205,7 +205,7 @@ instance MonadExcept tNew e m
 
 instance MonadWriter tNew w m
       => MonadWriter tOld w (DispatchTagReplaceT tOld tNew m) where
-  writer _ = let t = Proxy :: Proxy tNew in Lift.lift . writer t
-  tell   _ = let t = Proxy :: Proxy tNew in Lift.lift . tell t
-  listen _ = let t = Proxy :: Proxy tNew in Lift.liftListen (listen t)
-  pass   _ = let t = Proxy :: Proxy tNew in Lift.liftPass (pass t)
+  writer _ = let t = proxy# :: Proxy# tNew in Lift.lift . writer t
+  tell   _ = let t = proxy# :: Proxy# tNew in Lift.lift . tell t
+  listen _ = let t = proxy# :: Proxy# tNew in Lift.liftListen (listen t)
+  pass   _ = let t = proxy# :: Proxy# tNew in Lift.liftPass (pass t)

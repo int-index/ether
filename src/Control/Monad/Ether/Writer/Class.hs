@@ -11,6 +11,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Writer.Class".
 
@@ -24,6 +25,7 @@ module Control.Monad.Ether.Writer.Class
 import Data.Monoid
 #endif
 
+import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Ether.Writer as W
 import qualified Control.Monad.Trans.Lift.Listen as Lift
 import qualified Control.Monad.Trans.Lift.Pass   as Lift
@@ -34,32 +36,32 @@ class (Monoid w, Monad m) => MonadWriter tag w m | m tag -> w where
     {-# MINIMAL (writer | tell), listen, pass #-}
 
     -- | Embed a simple writer action.
-    writer :: proxy tag -> (a, w) -> m a
+    writer :: Proxy# tag -> (a, w) -> m a
     writer t ~(a, w) = do
       tell t w
       return a
 
     -- | Append a value to the accumulator within the monad.
-    tell :: proxy tag -> w -> m ()
+    tell :: Proxy# tag -> w -> m ()
     tell t w = writer t ((),w)
 
     -- | Execute an action and add its accumulator
     -- to the value of the computation.
-    listen :: proxy tag -> m a -> m (a, w)
+    listen :: Proxy# tag -> m a -> m (a, w)
 
     -- | Execute an action which returns a value and a function,
     -- and return the value, applying the function to the accumulator.
-    pass :: proxy tag -> m (a, w -> w) -> m a
+    pass :: Proxy# tag -> m (a, w -> w) -> m a
 
 -- | Execute an action and add the result of applying the given function to
 -- its accumulator to the value of the computation.
-listens :: MonadWriter tag w m => proxy tag -> (w -> b) -> m a -> m (a, b)
+listens :: MonadWriter tag w m => Proxy# tag -> (w -> b) -> m a -> m (a, b)
 listens t f m = do
     ~(a, w) <- listen t m
     return (a, f w)
 
 -- | Execute an action and apply a function to its accumulator.
-censor :: MonadWriter tag w m => proxy tag -> (w -> w) -> m a -> m a
+censor :: MonadWriter tag w m => Proxy# tag -> (w -> w) -> m a -> m a
 censor t f m = pass t $ do
     a <- m
     return (a, f)
