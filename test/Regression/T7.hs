@@ -18,8 +18,9 @@ testEther
   => [a] -> m ()
 testEther xs = do
   forM_ xs $ \x -> do
-    T.tell (Sum x)
-    tell @WTag (Sum 1)
+    u1 <- T.tell (Sum x)
+    u2 <- tell @WTag (Sum 1)
+    when (u1 /= u2) $ error "Impossible"
 
 runner1 :: Num a => [a] -> (a, a)
 runner1 xs =

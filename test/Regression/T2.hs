@@ -9,7 +9,7 @@ import Test.Tasty.QuickCheck
 
 testEther :: Ether '[I.R Integer, I.R Bool] m => m String
 testEther = I.local (succ :: Integer -> Integer) $ do
-  n :: Integer <- I.ask
+  n :: Integer <- I.asks (*2)
   b <- I.local not I.ask
   return (if b then "" else show n)
 
@@ -20,10 +20,10 @@ test2 :: TestTree
 test2 = testGroup "T2: Implicit tags"
   [ testProperty "runner₁ works"
     $ \n -> property
-    $ runner1 n testEther == show (succ n)
+    $ runner1 n testEther == show (succ n * 2)
   , testProperty "runner₂ works"
     $ \n -> property
-    $ runner2 n testEther == show (succ n)
+    $ runner2 n testEther == show (succ n * 2)
   , testProperty "runner₁ == runner₂"
     $ \n -> property
     $ runner1 n testEther == runner2 n testEther
