@@ -45,6 +45,7 @@ module Control.Monad.Trans.Ether.Dispatch
     DispatchT
   , dispatchT
   , runDispatchT
+  , redispatch
   -- * Dispatch types and functions
   , K_TagAttach(..)
   , tagAttach
@@ -100,20 +101,24 @@ newtype DispatchT dp m a = DispatchT (Trans.IdentityT m a)
     , MonadThrow, MonadCatch, MonadMask )
 
 -- | Type-restricted 'coerce'.
-pack :: Trans.IdentityT m a -> DispatchT dp m a
+pack :: forall dp m a . Trans.IdentityT m a -> DispatchT dp m a
 pack = coerce
 
 -- | Type-restricted 'coerce'.
-dispatchT :: m a -> DispatchT dp m a
+unpack :: forall dp m a . DispatchT dp m a -> Trans.IdentityT m a
+unpack = coerce
+
+-- | Type-restricted 'coerce'.
+dispatchT :: forall dp m a . m a -> DispatchT dp m a
 dispatchT = coerce
 
 -- | Type-restricted 'coerce'.
-runDispatchT :: DispatchT dp m a -> m a
+runDispatchT :: forall dp m a . DispatchT dp m a -> m a
 runDispatchT = coerce
 
 -- | Type-restricted 'coerce'.
-unpack :: DispatchT dp m a -> Trans.IdentityT m a
-unpack = coerce
+redispatch :: forall dp dp' m a . DispatchT dp m a -> DispatchT dp' m a
+redispatch = coerce
 
 instance MB.MonadBase b m => MB.MonadBase b (DispatchT dp m) where
   liftBase = MB.liftBaseDefault

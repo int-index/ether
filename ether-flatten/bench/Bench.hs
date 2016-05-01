@@ -10,7 +10,7 @@ import Criterion.Main
 import qualified Control.Monad.Reader as M
 import qualified Control.Monad.Ether.Reader as E
 import qualified Control.Monad.Ether.Reader.Flatten as E.F
-import Control.Monad.Ether.Reader.Flatten (load)
+import Control.Ether.Flatten
 import qualified Control.Lens as L
 
 readerSummatorMTL_flat_9
@@ -78,15 +78,33 @@ run_readerSummatorEther_flatten_9
     =
       E.F.runReader
         readerSummatorEther_sep_9
-          ( load @1 a9 . load @2 a8 . load @3 a7 . load @4 a6
-          . load @5 a5 . load @6 a4 . load @7 a3 . load @8 a2
-          . load @9 a1 )
+          ( load @1 a9
+          . load @2 a8
+          . load @3 a7
+          . load @4 a6
+          . load @5 a5
+          . load @6 a4
+          . load @7 a3
+          . load @8 a2
+          . load @9 a1
+          $ Nil )
 
-run_readerSummatorEther_biflatten_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int) -> String
-run_readerSummatorEther_biflatten_9
+run_readerSummatorEther_flattenhalf_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int) -> String
+run_readerSummatorEther_flattenhalf_9
   (a1, a2, a3, a4, a5, a6, a7, a8, a9)
-    = flip E.F.runReader (load @1 a9 . load @2 a8 . load @3 a7 . load @4 a6)
-    . flip E.F.runReaderT (load @5 a5 . load @6 a4 . load @7 a3 . load @8 a2 . load @9 a1 )
+    = flip E.F.runReader
+      ( load @1 a9
+      . load @2 a8
+      . load @3 a7
+      . load @4 a6
+      $ Nil )
+    . flip E.F.runReaderT
+      ( load @5 a5
+      . load @6 a4
+      . load @7 a3
+      . load @8 a2
+      . load @9 a1
+      $ Nil )
     $ readerSummatorEther_sep_9
 
 tuple_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int)
@@ -98,5 +116,6 @@ main = do
     [ bench "readerSummatorMTL_flat_9" $ nf run_readerSummatorMTL_flat_9 tuple_9
     , bench "readerSummatorEther_nested_9" $ nf run_readerSummatorEther_nested_9 tuple_9
     , bench "readerSummatorEther_flatten_9" $ nf run_readerSummatorEther_flatten_9 tuple_9
-    , bench "readerSummatorEther_biflatten_9" $ nf run_readerSummatorEther_biflatten_9 tuple_9
+    , bench "readerSummatorEther_flattenhalf_9" $
+        nf run_readerSummatorEther_flattenhalf_9 tuple_9
     ]
