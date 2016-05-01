@@ -43,6 +43,8 @@ module Control.Monad.Trans.Ether.Dispatch
   (
   -- * The DispatchT monad transformer
     DispatchT
+  , dispatchT
+  , runDispatchT
   -- * Dispatch types and functions
   , K_TagAttach(..)
   , K_TagReplace(..)
@@ -107,6 +109,14 @@ type DispatchTagReplaceT tOld tNew = DispatchT (TagReplace tOld tNew)
 -- | Type-restricted 'coerce'.
 pack :: Trans.IdentityT m a -> DispatchT dp m a
 pack = coerce
+
+-- | Type-restricted 'coerce'.
+dispatchT :: m a -> DispatchT dp m a
+dispatchT = coerce
+
+-- | Type-restricted 'coerce'.
+runDispatchT :: DispatchT dp m a -> m a
+runDispatchT = coerce
 
 -- | Type-restricted 'coerce'.
 unpack :: DispatchT dp m a -> Trans.IdentityT m a
