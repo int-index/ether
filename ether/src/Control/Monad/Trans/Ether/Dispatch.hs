@@ -47,20 +47,18 @@ module Control.Monad.Trans.Ether.Dispatch
   , runDispatchT
   -- * Dispatch types and functions
   , K_TagAttach(..)
-  , K_TagReplace(..)
   , tagAttach
+  , K_TagReplace(..)
   , tagReplace
   ) where
 
 import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
-import Control.Monad.Trans.Class (MonadTrans)
+import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Morph (MFunctor, MMonad)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
-import GHC.Generics (Generic)
-import Data.Coerce (coerce)
 
 import qualified Control.Monad.Base as MB
 import qualified Control.Monad.Trans.Control as MC
@@ -83,16 +81,14 @@ import Control.Monad.Ether.State.Common as A
 import Control.Monad.Ether.Except as A
 import Control.Monad.Ether.Writer as A
 
-import qualified Control.Monad.Reader as Class
-import qualified Control.Monad.State  as Class
-import qualified Control.Monad.Except as Class
-import qualified Control.Monad.Writer as Class
+import qualified Control.Monad.Cont.Class    as Class
+import qualified Control.Monad.Reader.Class  as Class
+import qualified Control.Monad.State.Class   as Class
+import qualified Control.Monad.Writer.Class  as Class
+import qualified Control.Monad.Error.Class   as Class
 
--- | Encode type-level information for 'tagAttach'.
-data K_TagAttach t = TagAttach t
-
--- | Encode type-level information for 'tagReplace'.
-data K_TagReplace tOld tNew = TagReplace tOld tNew
+import GHC.Generics (Generic)
+import Data.Coerce (coerce)
 
 -- | Wrap a monad to change its tags. Under the hood this is
 -- simply 'Trans.IdentityT', all the work is happening on the type level.
@@ -102,9 +98,6 @@ newtype DispatchT dp m a = DispatchT (Trans.IdentityT m a)
     , Functor, Applicative, Alternative, Monad, MonadPlus
     , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
     , MonadThrow, MonadCatch, MonadMask )
-
-type DispatchTagAttachT t = DispatchT (TagAttach t)
-type DispatchTagReplaceT tOld tNew = DispatchT (TagReplace tOld tNew)
 
 -- | Type-restricted 'coerce'.
 pack :: Trans.IdentityT m a -> DispatchT dp m a
@@ -153,16 +146,62 @@ instance Lift.LiftCallCC (DispatchT dp) where
   liftCallCC  = Lift.defaultLiftCallCC  pack unpack
   liftCallCC' = Lift.defaultLiftCallCC' pack unpack
 
+-- Instances for mtl classes
+
+instance {-# OVERLAPPABLE #-}
+    ( Class.MonadCont m
+    , Monad m
+    ) => Class.MonadCont (DispatchT dp m)
+  where
+    callCC = Lift.liftCallCC' Class.callCC
+
+instance {-# OVERLAPPABLE #-}
+    ( Class.MonadReader r m
+    , Monad m
+    ) => Class.MonadReader r (DispatchT dp m)
+  where
+    ask = lift Class.ask
+    local = Lift.liftLocal Class.ask Class.local
+    reader = lift . Class.reader
+
+instance {-# OVERLAPPABLE #-}
+    ( Class.MonadState s m
+    , Monad m
+    ) => Class.MonadState s (DispatchT dp m)
+  where
+    get = lift Class.get
+    put = lift . Class.put
+    state = lift . Class.state
+
+instance {-# OVERLAPPABLE #-}
+    ( Class.MonadWriter w m
+    , Monad m
+    ) => Class.MonadWriter w (DispatchT dp m)
+  where
+    writer = lift . Class.writer
+    tell   = lift . Class.tell
+    listen = Lift.liftListen Class.listen
+    pass   = Lift.liftPass Class.pass
+
+instance {-# OVERLAPPABLE #-}
+    ( Class.MonadError e m
+    , Monad m
+    ) => Class.MonadError e (DispatchT dp m)
+  where
+    throwError = lift . Class.throwError
+    catchError = Lift.liftCatch Class.catchError
+
+
+-- TagAttach
+
+-- | Encode type-level information for 'tagAttach'.
+data K_TagAttach t = TagAttach t
+
+type DispatchTagAttachT t = DispatchT (TagAttach t)
+
 -- | Attach a tag to untagged transformers.
 tagAttach :: forall tag m a . DispatchTagAttachT tag m a -> m a
 tagAttach = coerce
-
--- | Replace a tag with another tag.
-tagReplace :: forall tOld tNew m a . DispatchTagReplaceT tOld tNew m a -> m a
-tagReplace = coerce
-
-
--- TagAttach instances
 
 instance MonadReader tag r m
       => Class.MonadReader r (DispatchTagAttachT tag m) where
@@ -187,7 +226,16 @@ instance MonadWriter tag w m
   pass   = Lift.liftPass (A.pass @tag)
 
 
--- TagReplace instances
+-- TagReplace
+
+-- | Encode type-level information for 'tagReplace'.
+data K_TagReplace tOld tNew = TagReplace tOld tNew
+
+type DispatchTagReplaceT tOld tNew = DispatchT (TagReplace tOld tNew)
+
+-- | Replace a tag with another tag.
+tagReplace :: forall tOld tNew m a . DispatchTagReplaceT tOld tNew m a -> m a
+tagReplace = coerce
 
 instance MonadReader tNew r m
       => MonadReader tOld r (DispatchTagReplaceT tOld tNew m) where
