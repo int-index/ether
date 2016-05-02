@@ -10,4 +10,4 @@ import Control.Monad.Ether.Reader as X
 import Control.Monad.Ether.Writer as X
 import Control.Monad.Ether.State as X
 import Control.Monad.Ether.Except as X
-import Control.Monad.Trans.Ether.Dispatch as X
+import Control.Monad.Trans.Ether.Dispatch as X (tagAttach, tagReplace)
