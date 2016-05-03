@@ -9,6 +9,7 @@ setup-info:
 packages:
 - 'ether'
 - 'ether-flatten'
+- 'ether-zoom'
 
 extra-deps:
 - Glob-0.7.5

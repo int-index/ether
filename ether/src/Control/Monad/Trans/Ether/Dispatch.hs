@@ -103,22 +103,27 @@ newtype DispatchT dp m a = DispatchT (Trans.IdentityT m a)
 -- | Type-restricted 'coerce'.
 pack :: forall dp m a . Trans.IdentityT m a -> DispatchT dp m a
 pack = coerce
+{-# INLINE pack #-}
 
 -- | Type-restricted 'coerce'.
 unpack :: forall dp m a . DispatchT dp m a -> Trans.IdentityT m a
 unpack = coerce
+{-# INLINE unpack #-}
 
 -- | Type-restricted 'coerce'.
 dispatchT :: forall dp m a . m a -> DispatchT dp m a
 dispatchT = coerce
+{-# INLINE dispatchT #-}
 
 -- | Type-restricted 'coerce'.
 runDispatchT :: forall dp m a . DispatchT dp m a -> m a
 runDispatchT = coerce
+{-# INLINE runDispatchT #-}
 
 -- | Type-restricted 'coerce'.
 redispatch :: forall dp dp' m a . DispatchT dp m a -> DispatchT dp' m a
 redispatch = coerce
+{-# INLINE redispatch #-}
 
 instance MB.MonadBase b m => MB.MonadBase b (DispatchT dp m) where
   liftBase = MB.liftBaseDefault
@@ -206,7 +211,7 @@ type DispatchTagAttachT t = DispatchT (TagAttach t)
 
 -- | Attach a tag to untagged transformers.
 tagAttach :: forall tag m a . DispatchTagAttachT tag m a -> m a
-tagAttach = coerce
+tagAttach = runDispatchT
 
 instance MonadReader tag r m
       => Class.MonadReader r (DispatchTagAttachT tag m) where
@@ -240,7 +245,7 @@ type DispatchTagReplaceT tOld tNew = DispatchT (TagReplace tOld tNew)
 
 -- | Replace a tag with another tag.
 tagReplace :: forall tOld tNew m a . DispatchTagReplaceT tOld tNew m a -> m a
-tagReplace = coerce
+tagReplace = runDispatchT
 
 instance MonadReader tNew r m
       => MonadReader tOld r (DispatchTagReplaceT tOld tNew m) where
