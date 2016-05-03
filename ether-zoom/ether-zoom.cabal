@@ -1,8 +1,8 @@
-name:                ether-flatten
+name:                ether-zoom
 version:             0.1.0.0
-synopsis:            Flatten nested monad transformers
+synopsis:            Zoom for the state monad
 description:
-    Flatten nested monad transformers to gain performance.
+    Zoom into parts of a state using a lens.
 
 category:            Control
 license:             BSD3
@@ -23,14 +23,11 @@ source-repository head
 
 library
 
-  exposed-modules:     Control.Monad.Ether.Reader.Flatten
-                 ,     Control.Ether.Flatten
+  exposed-modules:     Control.Monad.Ether.State.Zoom
   build-depends:       base >=4.9 && <4.10
                ,       ether >=0.5 && <0.6
-               ,       transformers >=0.4.2
-               ,       transformers-lift >=0.1.0.1
-               ,       ghc-prim >=0.3
                ,       lens >=4.14
+               ,       reflection >=2.1
 
   default-language:    Haskell2010
   default-extensions:  PolyKinds
