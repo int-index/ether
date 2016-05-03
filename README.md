@@ -2,7 +2,6 @@
 
 [![Build Status](https://img.shields.io/travis/int-index/ether.svg)](https://travis-ci.org/int-index/ether)
 [![Hackage](https://img.shields.io/hackage/v/ether.svg)](https://hackage.haskell.org/package/ether)
-[![Coveralls](https://img.shields.io/coveralls/int-index/ether.svg)](https://coveralls.io/github/int-index/ether)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/int-index/ether)
 
 
