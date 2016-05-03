@@ -37,18 +37,3 @@ instance ( MonadState tag sOuter m
   state t = dispatchT . state t . l
     where
       Lens l = reflect (Proxy :: Proxy z)
-
-{- Example usage.
-
-import Control.Monad.Ether.State
-import Control.Monad.Ether.State.Zoom
-
-data Foo
-
-example :: Enum a => (a, a) -> (a, a)
-example = evalState @Foo $ do
-  tagZoom @Foo _1 $ modify @Foo succ
-  tagZoom @Foo _2 $ modify @Foo pred
-  get @Foo
-
--}

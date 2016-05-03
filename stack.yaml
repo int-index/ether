@@ -10,6 +10,7 @@ packages:
 - 'ether'
 - 'ether-flatten'
 - 'ether-zoom'
+- 'ether-suite'
 
 extra-deps:
 - Glob-0.7.5
