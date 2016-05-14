@@ -1,3 +1,9 @@
+{-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
+
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE MagicHash #-}
 
@@ -27,7 +33,9 @@ module Control.Monad.Ether.Writer
 import GHC.Prim (Proxy#, proxy#)
 import Control.Monad.Ether.Writer.Class (MonadWriter)
 import qualified Control.Monad.Ether.Writer.Class as C
-import Control.Monad.Trans.Ether.Writer hiding (writer, tell, listen, pass)
+import qualified Control.Monad.Trans.Ether.Dispatch as D
+import qualified Control.Monad.Trans.Writer as T
+import Data.Functor.Identity
 
 -- | Embed a simple writer action.
 writer :: forall tag w m a . MonadWriter tag w m => (a, w) -> m a
@@ -59,3 +67,53 @@ censor :: forall tag w m a . MonadWriter tag w m => (w -> w) -> m a -> m a
 censor f m = pass @tag $ do
   a <- m
   return (a, f)
+
+-- | Encode type-level information for 'WriterT'.
+data K_WRITER t w = WRITER t w
+
+-- | The parametrizable writer monad.
+--
+-- Computations can accumulate a monoid value.
+--
+-- The 'return' function produces the output 'mempty', while '>>=' combines
+-- the outputs of the subcomputations using 'mappend'.
+type Writer tag w = WriterT tag w Identity
+
+-- | The writer monad transformer.
+--
+-- The 'return' function produces the output 'mempty', while '>>=' combines
+-- the outputs of the subcomputations using 'mappend'.
+type WriterT tag w = D.Dispatch (WRITER tag w) (T.WriterT w)
+
+-- | Constructor for computations in the writer monad transformer.
+writerT :: forall tag w m a . m (a, w) -> WriterT tag w m a
+writerT = D.pack . T.WriterT
+
+-- | Runs a 'WriterT' and returns both the normal value
+-- and the final accumulator.
+runWriterT :: forall tag w m a . WriterT tag w m a -> m (a, w)
+runWriterT = T.runWriterT . D.unpack
+
+-- | Runs a 'Writer' and returns both the normal value
+-- and the final accumulator.
+runWriter :: forall tag w a . Writer tag w a -> (a, w)
+runWriter = T.runWriter . D.unpack
+
+-- | Runs a 'WriterT' and returns the final accumulator,
+-- discarding the normal value.
+execWriterT :: forall tag w m a . Monad m => WriterT tag w m a -> m w
+execWriterT = T.execWriterT . D.unpack
+
+-- | Runs a 'Writer' and returns the final accumulator,
+-- discarding the normal value.
+execWriter :: forall tag w a . Writer tag w a -> w
+execWriter = T.execWriter . D.unpack
+
+instance
+    ( Monoid w, Monad m, w ~ w', trans ~ T.WriterT w
+    ) => MonadWriter tag w (D.Dispatch (WRITER tag w') trans m)
+  where
+    writer _ = D.pack . T.writer
+    tell _ = D.pack . T.tell
+    listen _ = D.pack . T.listen . D.unpack
+    pass _ = D.pack . T.pass . D.unpack

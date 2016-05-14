@@ -10,7 +10,6 @@ module Control.Monad.Ether.Writer.Class
   ) where
 
 import GHC.Prim (Proxy#)
-import qualified Control.Monad.Trans.Ether.Writer as W
 import qualified Control.Monad.Trans.Lift.Listen as Lift
 import qualified Control.Monad.Trans.Lift.Pass   as Lift
 
@@ -36,12 +35,6 @@ class (Monoid w, Monad m) => MonadWriter tag w m | m tag -> w where
     -- | Execute an action which returns a value and a function,
     -- and return the value, applying the function to the accumulator.
     pass :: Proxy# tag -> m (a, w -> w) -> m a
-
-instance (Monoid w, Monad m, w ~ w') => MonadWriter tag w (W.WriterT tag w' m) where
-    writer _ = W.writer @tag
-    tell _ = W.tell @tag
-    listen _ = W.listen @tag
-    pass _ = W.pass @tag
 
 instance {-# OVERLAPPABLE #-}
          ( Lift.LiftListen t

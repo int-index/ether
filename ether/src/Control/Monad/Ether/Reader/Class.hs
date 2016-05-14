@@ -10,7 +10,6 @@ module Control.Monad.Ether.Reader.Class
   ) where
 
 import GHC.Prim (Proxy#)
-import qualified Control.Monad.Trans.Ether.Reader as R
 import qualified Control.Monad.Trans.Lift.Local as Lift
 
 -- | See 'Control.Monad.Reader.MonadReader'.
@@ -38,11 +37,6 @@ class Monad m => MonadReader tag r m | m tag -> r where
         -- ^ The selector function to apply to the environment.
         -> m a
     reader t f = fmap f (ask t)
-
-instance (Monad m, r ~ r') => MonadReader tag r (R.ReaderT tag r' m) where
-    ask _ = R.ask @tag
-    local _ = R.local @tag
-    reader _ = R.reader @tag
 
 instance {-# OVERLAPPABLE #-}
          ( Lift.LiftLocal t

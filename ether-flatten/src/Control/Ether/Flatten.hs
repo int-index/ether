@@ -58,7 +58,8 @@ instance a ~ b => HasLens tag (Product (tag ': tags) (a ': as)) b where
   {-# INLINE lensOf #-}
 
 instance {-# OVERLAPPABLE #-}
-         ( HasLens tag (Product tags as) a
-         ) => HasLens tag (Product (t ': tags) (b ': as)) a where
-  lensOf t = productTail . lensOf t
-  {-# INLINE lensOf #-}
+    ( HasLens tag (Product tags as) a
+    ) => HasLens tag (Product (t ': tags) (b ': as)) a
+  where
+    lensOf t = productTail . lensOf t
+    {-# INLINE lensOf #-}

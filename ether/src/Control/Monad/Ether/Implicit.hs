@@ -10,4 +10,5 @@ import Control.Monad.Ether.Implicit.Reader as X
 import Control.Monad.Ether.Implicit.Writer as X
 import Control.Monad.Ether.Implicit.State as X
 import Control.Monad.Ether.Implicit.Except as X
-import Control.Monad.Trans.Ether.Dispatch as X
+import Control.Monad.Ether.TagAttach as X
+import Control.Monad.Ether.TagReplace as X

@@ -24,43 +24,57 @@ import qualified Control.Monad.Trans.Reader as T
 import Control.Lens
 import Control.Ether.Flatten
 
-data K_Flatten t = Flatten [t]
+data K_FLATTEN t = FLATTEN [t]
 
-type DispatchFlattenT ts = DispatchT (Flatten ts)
+type FlattenT ts r = Dispatch (FLATTEN ts) (T.ReaderT r)
 
 reflatten
-  :: forall tagsOld tagsNew m a
-   . DispatchFlattenT tagsOld m a
-  -> DispatchFlattenT tagsNew m a
-reflatten = redispatch
+  :: forall tagsOld tagsNew r m a
+   . FlattenT tagsOld r m a
+  -> FlattenT tagsNew r m a
+reflatten = repack
 {-# INLINE reflatten #-}
 
-type DispatchFlattenReaderT ts r m = DispatchFlattenT ts (T.ReaderT r m)
+instance
+    ( Monad m, Monad (trans m)
+    , Lift.MonadTrans trans
+    , Lift.LiftLocal trans
+    , C.MonadReader tag r m
+    ) => C.MonadReader tag r (Dispatch (FLATTEN '[]) trans m)
+  where
+    ask t = Lift.lift (ask t)
+    local t = Lift.liftLocal (ask t) (local t)
 
-instance (Monad m, C.MonadReader tag r m)
-      => C.MonadReader tag r (DispatchFlattenReaderT '[] payload m) where
-  ask t = Lift.lift (ask t)
-  local t = Lift.liftLocal (ask t) (local t)
-
-instance (Monad m, HasLens tag payload r)
-      => C.MonadReader tag r (DispatchFlattenReaderT (tag ': tags) payload m) where
-  ask t = dispatchT $ view (lensOf t)
-  local t f = dispatchT . T.local (over (lensOf t) f) . runDispatchT
+instance
+    ( Monad m, HasLens tag payload r
+    , trans ~ T.ReaderT payload
+    ) => C.MonadReader tag r (Dispatch (FLATTEN (tag ': tags)) trans m)
+  where
+    ask t = pack $ view (lensOf t)
+    local t f = pack . T.local (over (lensOf t) f) . unpack
 
 instance {-# OVERLAPPABLE #-}
-         (Monad m, C.MonadReader tag r (DispatchFlattenReaderT tags payload m))
-      => C.MonadReader tag r (DispatchFlattenReaderT (t ': tags) payload m) where
-  ask t = reflatten @tags @(t ': tags) (C.ask t)
-  local t f = reflatten @tags @(t ': tags) . C.local t f . reflatten @(t ': tags) @tags
+    ( Monad m
+    , C.MonadReader tag r (Dispatch (FLATTEN tags) trans m)
+    , trans ~ T.ReaderT payload
+    ) => C.MonadReader tag r (Dispatch (FLATTEN (t ': tags)) trans m)
+  where
+    ask t = reflatten @tags @(t ': tags) (C.ask t)
+    {-# INLINE ask #-}
+    local t f
+      = reflatten @tags @(t ': tags)
+      . C.local t f
+      . reflatten @(t ': tags) @tags
+    {-# INLINE local #-}
 
 runReaderT
-  :: DispatchFlattenReaderT tags (Product tags as) m a
+  :: FlattenT tags (Product tags as) m a
   -> Product tags as
   -> m a
-runReaderT m = T.runReaderT (runDispatchT m)
+runReaderT m = T.runReaderT (unpack m)
 
 runReader
-  :: DispatchFlattenReaderT tags (Product tags as) Identity a
+  :: FlattenT tags (Product tags as) Identity a
   -> Product tags as
   -> a
-runReader m = T.runReader (runDispatchT m)
+runReader m = T.runReader (unpack m)
