@@ -5,12 +5,12 @@ cache:
     - $HOME/.stack/
 
 before_install:
- - mkdir -p ~/.local/bin
- - travis_retry curl -L https://github.com/commercialhaskell/stack/releases/download/v1.0.4.3/stack-1.0.4.3-linux-x86_64.tar.gz | tar -xvz
- - mv stack-1.0.4.3-linux-x86_64/stack ~/.local/bin
- - export PATH=~/.local/bin:$PATH
- - stack --version
- - stack setup
+  - mkdir -p ~/.local/bin
+  - travis_retry curl -L https://github.com/commercialhaskell/stack/releases/download/v1.1.2/stack-1.1.2-linux-x86_64.tar.gz | tar -xvz
+  - mv stack-1.1.2-linux-x86_64/stack ~/.local/bin
+  - export PATH=~/.local/bin:$PATH
+  - stack --version
+  - stack setup
 
 install:
  - stack install --only-dependencies --no-terminal

@@ -10,8 +10,10 @@
 
 module Control.Ether.Flatten
   ( HasLens(..)
-  , Product(..)
+  , Product
   , load
+  , type (++)
+  , (<+>)
   ) where
 
 import Control.Lens
@@ -24,10 +26,21 @@ data Product (ts :: [k]) (as :: [*]) where
   Nil :: Product '[] '[]
   Cons :: !a -> !(Product ts as) -> Product (t ': ts) (a ': as)
 
-load
-  :: forall tag a tags as
-   . a -> Product tags as -> Product (tag ': tags) (a ': as)
-load = Cons
+load :: forall tag a . a -> Product '[tag] '[a]
+load a = Cons a Nil
+{-# INLINE load #-}
+
+type family (xs1 :: [k]) ++ (xs2 :: [k]) :: [k] where
+  '[] ++ xs2 = xs2
+  (a ': xs1) ++ xs2 = a ': (xs1 ++ xs2)
+
+(<+>)
+  :: Product ts1 as1
+  -> Product ts2 as2
+  -> Product (ts1 ++ ts2) (as1 ++ as2)
+Nil <+> as2 = as2
+Cons a as1 <+> as2 = Cons a (as1 <+> as2)
+{-# INLINE (<+>) #-}
 
 productHead ::
   Lens

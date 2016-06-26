@@ -31,9 +31,8 @@ readerSummatorMTL_flat_9 = do
 
 run_readerSummatorMTL_flat_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int) -> String
 run_readerSummatorMTL_flat_9
-  (a1, a2, a3, a4, a5, a6, a7, a8, a9)
-    = M.runReader readerSummatorMTL_flat_9
-    $ (a9, a8, a7, a6, a5, a4, a3, a2, a1)
+  (a1, a2, a3, a4, a5, a6, a7, a8, a9) =
+    M.runReader readerSummatorMTL_flat_9 (a9, a8, a7, a6, a5, a4, a3, a2, a1)
 
 readerSummatorEther_sep_9
   :: ( E.MonadReader 1 Int m
@@ -78,33 +77,15 @@ run_readerSummatorEther_flatten_9
     =
       E.F.runReader
         readerSummatorEther_sep_9
-          ( load @1 a9
-          . load @2 a8
-          . load @3 a7
-          . load @4 a6
-          . load @5 a5
-          . load @6 a4
-          . load @7 a3
-          . load @8 a2
-          . load @9 a1
-          $ Nil )
+          ( load @1 a9 <+> load @2 a8 <+> load @3 a7 <+> load @4 a6 <+>
+            load @5 a5 <+> load @6 a4 <+> load @7 a3 <+> load @8 a2 <+>
+            load @9 a1 )
 
 run_readerSummatorEther_flattenhalf_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int) -> String
 run_readerSummatorEther_flattenhalf_9
   (a1, a2, a3, a4, a5, a6, a7, a8, a9)
-    = flip E.F.runReader
-      ( load @1 a9
-      . load @2 a8
-      . load @3 a7
-      . load @4 a6
-      $ Nil )
-    . flip E.F.runReaderT
-      ( load @5 a5
-      . load @6 a4
-      . load @7 a3
-      . load @8 a2
-      . load @9 a1
-      $ Nil )
+    = flip E.F.runReader (load @1 a9 <+> load @2 a8 <+> load @3 a7 <+> load @4 a6)
+    . flip E.F.runReaderT (load @5 a5 <+> load @6 a4 <+> load @7 a3 <+> load @8 a2 <+> load @9 a1)
     $ readerSummatorEther_sep_9
 
 tuple_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int)
