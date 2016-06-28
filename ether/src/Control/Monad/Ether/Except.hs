@@ -52,7 +52,7 @@ handleT :: forall tag e m a . Functor m => (e -> a) -> ExceptT tag e m a -> m a
 handleT h m = fmap (either h id) (runExceptT @tag m)
 
 -- | Encode type-level information for 'ExceptT'.
-data K_EXCEPT t e = EXCEPT t e
+data EXCEPT t e
 
 -- | The parameterizable exception monad.
 --

@@ -67,7 +67,7 @@ asks
 asks = C.reader (proxy# :: Proxy# tag)
 
 -- | Encode type-level information for 'ReaderT'.
-data K_READER t r = READER t r
+data READER t r
 
 -- | The parameterizable reader monad.
 --

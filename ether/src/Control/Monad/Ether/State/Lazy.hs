@@ -36,7 +36,7 @@ import qualified Control.Monad.Trans.State.Lazy as T
 import Data.Functor.Identity
 
 -- | Encode type-level information for 'StateT'.
-data K_STATE t s = STATE t s
+data STATE t s
 
 -- | The parametrizable state monad.
 --

@@ -8,7 +8,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Control.Monad.Ether.TagAttach
-  ( K_TAG_ATTACH(..)
+  ( TAG_ATTACH(..)
   , TagAttachT
   , tagAttach
   ) where
@@ -33,7 +33,7 @@ import qualified Control.Monad.Error.Class   as Class
 import Control.Monad.Trans.Ether.Dispatch
 
 -- | Encode type-level information for 'tagAttach'.
-data K_TAG_ATTACH t = TAG_ATTACH t
+data TAG_ATTACH t = TAG_ATTACH t
 
 type TagAttachT t = Dispatch (TAG_ATTACH t) IdentityT
 

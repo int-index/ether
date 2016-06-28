@@ -8,7 +8,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Control.Monad.Ether.TagReplace
-  ( K_TAG_REPLACE(..)
+  ( TAG_REPLACE
   , TagReplaceT
   , tagReplace
   ) where
@@ -28,7 +28,7 @@ import Control.Monad.Ether.Writer as A
 import Control.Monad.Trans.Ether.Dispatch
 
 -- | Encode type-level information for 'tagReplace'.
-data K_TAG_REPLACE tOld tNew = TAG_REPLACE tOld tNew
+data TAG_REPLACE tOld tNew
 
 type TagReplaceT tOld tNew = Dispatch (TAG_REPLACE tOld tNew) IdentityT
 

@@ -24,7 +24,7 @@ import qualified Control.Monad.Trans.Reader as T
 import Control.Lens
 import Control.Ether.Flatten
 
-data K_FLATTEN t = FLATTEN [t]
+data FLATTEN (ts :: [k])
 
 type FlattenT ts r = Dispatch (FLATTEN ts) (T.ReaderT r)
 

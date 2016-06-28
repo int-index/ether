@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Control.Monad.Ether.State.Zoom
-  ( K_TAG_ZOOM(..)
+  ( TAG_ZOOM
   , TagZoomT
   , tagZoom
   ) where
@@ -22,7 +22,7 @@ import Control.Monad.Ether.State.Class
 import Data.Proxy
 
 -- | Encode type-level information for 'tagZoom'.
-data K_TAG_ZOOM t z = TAG_ZOOM t z
+data TAG_ZOOM t z
 
 type TagZoomT t (z :: *) = Dispatch (TAG_ZOOM t z) IdentityT
 

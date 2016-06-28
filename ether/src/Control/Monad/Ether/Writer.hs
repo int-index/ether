@@ -69,7 +69,7 @@ censor f m = pass @tag $ do
   return (a, f)
 
 -- | Encode type-level information for 'WriterT'.
-data K_WRITER t w = WRITER t w
+data WRITER t w
 
 -- | The parametrizable writer monad.
 --
