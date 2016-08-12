@@ -17,6 +17,7 @@ module Control.Ether.Flatten
   ) where
 
 import Control.Lens
+import Control.DeepSeq
 import GHC.Prim (Proxy#)
 
 class HasLens tag outer inner | tag outer -> inner where
@@ -24,7 +25,17 @@ class HasLens tag outer inner | tag outer -> inner where
 
 data Product (ts :: [k]) (as :: [*]) where
   Nil :: Product '[] '[]
-  Cons :: !a -> !(Product ts as) -> Product (t ': ts) (a ': as)
+  Cons :: a -> !(Product ts as) -> Product (t ': ts) (a ': as)
+
+instance NFData (Product '[] '[]) where
+  rnf Nil = ()
+
+instance
+    ( NFData a
+    , NFData (Product ts as)
+    ) => NFData (Product (t ': ts) (a ': as))
+  where
+    rnf (Cons a as) = rnf a `seq` rnf as
 
 load :: forall tag a . a -> Product '[tag] '[a]
 load a = Cons a Nil

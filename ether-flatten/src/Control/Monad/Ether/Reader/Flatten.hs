@@ -15,7 +15,7 @@ module Control.Monad.Ether.Reader.Flatten
   , runReaderT
   ) where
 
-import qualified Control.Monad.Trans.Lift.Local  as Lift
+import qualified Control.Monad.Trans.Lift.Local as Lift
 
 import Data.Functor.Identity
 import Control.Monad.Ether.Reader.Class as C
@@ -27,6 +27,8 @@ import Control.Ether.Flatten
 data READER (ts :: [k])
 
 type ReaderT ts r = Dispatch (READER ts) (T.ReaderT r)
+
+type Reader ts r = ReaderT ts r Identity
 
 reflatten
   :: forall tagsOld tagsNew r m a
@@ -51,7 +53,9 @@ instance
     ) => C.MonadReader tag r (Dispatch (READER (tag ': tags)) trans m)
   where
     ask t = pack $ view (lensOf t)
+    {-# INLINE ask #-}
     local t f = pack . T.local (over (lensOf t) f) . unpack
+    {-# INLINE local #-}
 
 instance {-# OVERLAPPABLE #-}
     ( Monad m
@@ -67,14 +71,8 @@ instance {-# OVERLAPPABLE #-}
       . reflatten @(t ': tags) @tags
     {-# INLINE local #-}
 
-runReaderT
-  :: ReaderT tags (Product tags as) m a
-  -> Product tags as
-  -> m a
+runReaderT :: ReaderT tags (Product tags as) m a -> Product tags as -> m a
 runReaderT m = T.runReaderT (unpack m)
 
-runReader
-  :: ReaderT tags (Product tags as) Identity a
-  -> Product tags as
-  -> a
+runReader :: Reader tags (Product tags as) a -> Product tags as -> a
 runReader m = T.runReader (unpack m)
