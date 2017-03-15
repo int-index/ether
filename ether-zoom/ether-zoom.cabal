@@ -7,8 +7,8 @@ description:
 category:            Control
 license:             BSD3
 license-file:        LICENSE
-author:              Index Int
-maintainer:          Index Int <vlad.z.4096@gmail.com>
+author:              Vladislav Zavialov
+maintainer:          Vladislav Zavialov <vlad.z.4096@gmail.com>
 homepage:            https://int-index.github.io/ether/
 bug-reports:         https://github.com/int-index/ether/issues
 build-type:          Simple
