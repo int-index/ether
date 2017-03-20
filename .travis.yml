@@ -6,8 +6,7 @@ cache:
 
 before_install:
   - mkdir -p ~/.local/bin
-  - travis_retry curl -L https://github.com/commercialhaskell/stack/releases/download/v1.1.2/stack-1.1.2-linux-x86_64.tar.gz | tar -xvz
-  - mv stack-1.1.2-linux-x86_64/stack ~/.local/bin
+  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
   - export PATH=~/.local/bin:$PATH
   - stack --version
   - stack setup
