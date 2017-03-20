@@ -69,6 +69,16 @@ instance
     liftWith = MC.defaultLiftWith pack unpack
     restoreT = MC.defaultRestoreT pack
 
+instance
+    ( MC.MonadBaseControl b m
+    , MC.MonadTransControl trans
+    , Monad (trans m)
+    ) => MC.MonadBaseControl b (Dispatch dp trans m)
+  where
+    type StM (Dispatch dp trans m) a = MC.ComposeSt trans m a
+    liftBaseWith = MC.defaultLiftBaseWith
+    restoreM = MC.defaultRestoreM
+
 type instance Lift.StT (Dispatch dp trans) a = Lift.StT trans a
 
 instance Lift.LiftLocal trans => Lift.LiftLocal (Dispatch dp trans) where
