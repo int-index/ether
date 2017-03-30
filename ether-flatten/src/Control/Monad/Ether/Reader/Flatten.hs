@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
-
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE DataKinds #-}
@@ -8,71 +6,58 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE MagicHash #-}
 
 module Control.Monad.Ether.Reader.Flatten
   ( runReader
   , runReaderT
   ) where
 
-import qualified Control.Monad.Trans.Lift.Local as Lift
-
 import Data.Functor.Identity
 import Control.Monad.Ether.Reader.Class as C
-import Control.Monad.Trans.Ether.Dispatch
-import qualified Control.Monad.Trans.Reader as T
+import Control.Monad.Trans.Ether.Handler
+import qualified Control.Monad.Reader as T
 import Control.Lens
 import Control.Ether.Flatten
+import Data.Coerce
 
-data READER (ts :: [k])
+data READER
 
-type ReaderT ts r = Dispatch (READER ts) (T.ReaderT r)
+type family READERS ts where
+  READERS '[] = '[]
+  READERS (t ': ts) = '(READER, t) ': READERS ts
+
+type ReaderT ts r = Handler (READERS ts) (T.ReaderT r)
 
 type Reader ts r = ReaderT ts r Identity
 
-reflatten
-  :: forall tagsOld tagsNew r m a
-   . ReaderT tagsOld r m a
-  -> ReaderT tagsNew r m a
-reflatten = repack
-{-# INLINE reflatten #-}
-
 instance
-    ( Monad m, Monad (trans m)
-    , Lift.MonadTrans trans
-    , Lift.LiftLocal trans
-    , C.MonadReader tag r m
-    ) => C.MonadReader tag r (Dispatch (READER '[]) trans m)
+    ( HasLens tag payload r
+    , T.MonadReader payload (trans m) -- FIXME: (forall m . T.MonadReader payload (trans m))
+    ) => C.MonadReader tag r (Handler ('(READER, tag) ': dps) trans (m :: * -> *))
   where
-    ask t = Lift.lift (ask t)
-    local t = Lift.liftLocal (ask t) (local t)
 
-instance
-    ( Monad m, HasLens tag payload r
-    , trans ~ T.ReaderT payload
-    ) => C.MonadReader tag r (Dispatch (READER (tag ': tags)) trans m)
-  where
-    ask t = pack $ view (lensOf t)
+    ask =
+      (coerce :: forall dp a .
+                   trans m a ->
+        Handler dp trans m a)
+      (view (lensOf @tag))
     {-# INLINE ask #-}
-    local t f = pack . T.local (over (lensOf t) f) . unpack
+
+    local f =
+      (coerce :: forall dp a .
+                   (trans m a ->            trans m a) ->
+        (Handler dp trans m a -> Handler dp trans m a))
+      (T.local (lensOf @tag %~ f))
     {-# INLINE local #-}
 
-instance {-# OVERLAPPABLE #-}
-    ( Monad m
-    , C.MonadReader tag r (Dispatch (READER tags) trans m)
-    , trans ~ T.ReaderT payload
-    ) => C.MonadReader tag r (Dispatch (READER (t ': tags)) trans m)
-  where
-    ask t = reflatten @tags @(t ': tags) (C.ask t)
-    {-# INLINE ask #-}
-    local t f
-      = reflatten @tags @(t ': tags)
-      . C.local t f
-      . reflatten @(t ': tags) @tags
-    {-# INLINE local #-}
+runReaderT
+  :: ReaderT tags (Product tags as) m a
+  -> Product tags as
+  -> m a
+runReaderT m = T.runReaderT (coerce m)
 
-runReaderT :: ReaderT tags (Product tags as) m a -> Product tags as -> m a
-runReaderT m = T.runReaderT (unpack m)
-
-runReader :: Reader tags (Product tags as) a -> Product tags as -> a
-runReader m = T.runReader (unpack m)
+runReader
+  :: Reader tags (Product tags as) a
+  -> Product tags as
+  -> a
+runReader m = T.runReader (coerce m)

@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
-
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE DataKinds #-}
@@ -8,74 +6,65 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE MagicHash #-}
 
 module Control.Monad.Ether.State.Flatten
   ( runState
   , runStateT
   ) where
 
-import qualified Control.Monad.Trans.Class as Lift
-
 import Data.Functor.Identity
 import Control.Monad.Ether.State.Class as C
-import Control.Monad.Trans.Ether.Dispatch
-import qualified Control.Monad.Trans.State as T
+import Control.Monad.Trans.Ether.Handler
+import qualified Control.Monad.State as T
 import Control.Lens
 import Control.Ether.Flatten
+import Data.Coerce
 
-data STATE (ts :: [k])
+data STATE
 
-type StateT ts s = Dispatch (STATE ts) (T.StateT s)
+type family STATES ts where
+  STATES '[] = '[]
+  STATES (t ': ts) = '(STATE, t) ': STATES ts
+
+type StateT ts s = Handler (STATES ts) (T.StateT s)
 
 type State ts s = StateT ts s Identity
 
-reflatten
-  :: forall tagsOld tagsNew s m a
-   . StateT tagsOld s m a
-  -> StateT tagsNew s m a
-reflatten = repack
-{-# INLINE reflatten #-}
-
-instance
-    ( Monad m, Monad (trans m)
-    , Lift.MonadTrans trans
-    , C.MonadState tag s m
-    ) => C.MonadState tag s (Dispatch (STATE '[]) trans m)
-  where
-    get t = Lift.lift (get t)
-    put t = Lift.lift . put t
-    state t = Lift.lift . state t
-
 instance
     ( Monad m, HasLens tag payload s
-    , trans ~ T.StateT payload
-    ) => C.MonadState tag s (Dispatch (STATE (tag ': tags)) trans m)
+    , T.MonadState payload (trans m) -- FIXME: (forall m . T.MonadState payload (trans m))
+    ) => C.MonadState tag s (Handler ('(STATE, tag) ': dps) trans m)
   where
-    get t = pack $ use (lensOf t)
+
+    get =
+      (coerce :: forall dp a .
+                   trans m a ->
+        Handler dp trans m a)
+      (use (lensOf @tag))
     {-# INLINE get #-}
-    put t s = pack $ zoom (lensOf t) (T.put s)
+
+    put s =
+      (coerce :: forall dp a .
+                   trans m a ->
+        Handler dp trans m a)
+      (T.modify (lensOf @tag .~ s))
     {-# INLINE put #-}
 
-instance {-# OVERLAPPABLE #-}
-    ( Monad m
-    , C.MonadState tag s (Dispatch (STATE tags) trans m)
-    , trans ~ T.StateT payload
-    ) => C.MonadState tag s (Dispatch (STATE (t ': tags)) trans m)
-  where
-    get t = reflatten @tags @(t ': tags) (C.get t)
-    {-# INLINE get #-}
-    put t = reflatten @tags @(t ': tags) . C.put t
-    {-# INLINE put #-}
+    state f =
+      (coerce :: forall dp a .
+                   trans m a ->
+        Handler dp trans m a)
+      (T.state (lensOf @tag f))
+    {-# INLINE state #-}
 
 runStateT
   :: StateT tags (Product tags as) m a
   -> Product tags as
   -> m (a, Product tags as)
-runStateT m = T.runStateT (unpack m)
+runStateT m = T.runStateT (coerce m)
 
 runState
   :: State tags (Product tags as) a
   -> Product tags as
   -> (a, Product tags as)
-runState m = T.runState (unpack m)
+runState m = T.runState (coerce m)

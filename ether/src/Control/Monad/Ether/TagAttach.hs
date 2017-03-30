@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
-
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -8,7 +6,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Control.Monad.Ether.TagAttach
-  ( TAG_ATTACH(..)
+  ( TAG_ATTACH
   , TagAttachT
   , tagAttach
   ) where
@@ -30,43 +28,46 @@ import qualified Control.Monad.State.Class   as Class
 import qualified Control.Monad.Writer.Class  as Class
 import qualified Control.Monad.Error.Class   as Class
 
-import Control.Monad.Trans.Ether.Dispatch
+import Control.Monad.Trans.Ether.Handler
+
+import Data.Coerce
 
 -- | Encode type-level information for 'tagAttach'.
-data TAG_ATTACH t = TAG_ATTACH t
+data TAG_ATTACH t
 
-type TagAttachT t = Dispatch (TAG_ATTACH t) IdentityT
+type TagAttachT t = Handler (TAG_ATTACH t) IdentityT
 
 -- | Attach a tag to untagged transformers.
 tagAttach :: forall tag m a . TagAttachT tag m a -> m a
-tagAttach = runIdentityT . unpack
+tagAttach = coerce (runIdentityT @_ @m @a)
+{-# INLINE tagAttach #-}
 
 instance
     ( MonadReader tag r m, trans ~ IdentityT
-    ) => Class.MonadReader r (Dispatch (TAG_ATTACH tag) trans m)
+    ) => Class.MonadReader r (Handler (TAG_ATTACH tag) trans m)
   where
-    ask   = A.ask @tag
+    ask = A.ask @tag
     local = A.local @tag
 
 instance
     ( MonadState tag s m, trans ~ IdentityT
-    ) => Class.MonadState s (Dispatch (TAG_ATTACH tag) trans m)
+    ) => Class.MonadState s (Handler (TAG_ATTACH tag) trans m)
   where
     get = A.get @tag
     put = A.put @tag
 
 instance
     ( MonadExcept tag e m, trans ~ IdentityT
-    ) => Class.MonadError e (Dispatch (TAG_ATTACH tag) trans m)
+    ) => Class.MonadError e (Handler (TAG_ATTACH tag) trans m)
   where
     throwError = A.throw @tag
     catchError = A.catch @tag
 
 instance
     ( MonadWriter tag w m, trans ~ IdentityT
-    ) => Class.MonadWriter w (Dispatch (TAG_ATTACH tag) trans m)
+    ) => Class.MonadWriter w (Handler (TAG_ATTACH tag) trans m)
   where
     writer = A.writer @tag
-    tell   = A.tell @tag
+    tell = A.tell @tag
     listen = A.listen @tag
-    pass   = A.pass @tag
+    pass = A.pass @tag

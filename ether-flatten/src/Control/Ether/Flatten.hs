@@ -6,84 +6,232 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Control.Ether.Flatten
   ( HasLens(..)
-  , Product
-  , load
-  , type (++)
-  , (<+>)
+  , Product(..)
   ) where
 
-import Control.Lens
 import Control.DeepSeq
-import GHC.Prim (Proxy#)
+import Control.Lens
+import GHC.Generics (Generic)
 
 class HasLens tag outer inner | tag outer -> inner where
-  lensOf :: Proxy# tag -> Lens' outer inner
+  lensOf :: Lens' outer inner
 
-data Product (ts :: [k]) (as :: [*]) where
-  Nil :: Product '[] '[]
-  Cons :: a -> !(Product ts as) -> Product (t ': ts) (a ': as)
+data family Product :: [k] -> [*] -> *
 
-instance NFData (Product '[] '[]) where
-  rnf Nil = ()
+data instance Product ts '[a1, a2, a3, a4] =
+  P4
+    { p4_1 :: !a1
+    , p4_2 :: !a2
+    , p4_3 :: !a3
+    , p4_4 :: !a4
+    } deriving (Generic)
+
+deriving instance
+  ( Show a1
+  , Show a2
+  , Show a3
+  , Show a4
+  ) => Show (Product ts '[a1, a2, a3, a4])
 
 instance
-    ( NFData a
-    , NFData (Product ts as)
-    ) => NFData (Product (t ': ts) (a ': as))
-  where
-    rnf (Cons a as) = rnf a `seq` rnf as
+  ( NFData a1
+  , NFData a2
+  , NFData a3
+  , NFData a4
+  ) => NFData (Product ts '[a1, a2, a3, a4])
 
-load :: forall tag a . a -> Product '[tag] '[a]
-load a = Cons a Nil
-{-# INLINE load #-}
-
-type family (xs1 :: [k]) ++ (xs2 :: [k]) :: [k] where
-  '[] ++ xs2 = xs2
-  (a ': xs1) ++ xs2 = a ': (xs1 ++ xs2)
-
-(<+>)
-  :: Product ts1 as1
-  -> Product ts2 as2
-  -> Product (ts1 ++ ts2) (as1 ++ as2)
-Nil <+> as2 = as2
-Cons a as1 <+> as2 = Cons a (as1 <+> as2)
-{-# INLINE (<+>) #-}
-
-productHead ::
-  Lens
-    (Product (t1 ': ts) (a ': as))
-    (Product (t2 ': ts) (b ': as))
-    a
-    b
-productHead =
-  lens
-    (\(Cons a _) -> a)
-    (\(Cons _ as) a -> Cons a as)
-{-# INLINE productHead #-}
-
-productTail ::
-  Lens
-    (Product (t ': ts1) (a ': as))
-    (Product (t ': ts2) (a ': bs))
-    (Product ts1 as)
-    (Product ts2 bs)
-productTail =
-  lens
-    (\(Cons _ as) -> as)
-    (\(Cons a _) as -> Cons a as)
-{-# INLINE productTail #-}
-
-instance a ~ b => HasLens tag (Product (tag ': tags) (a ': as)) b where
-  lensOf _ = productHead
+instance a ~ a1 => HasLens t1
+  (Product
+    '[t1, t2, t3, t4]
+    '[a1, a2, a3, a4]) a where
+  lensOf = lens p4_1 (\p a -> p{ p4_1 = a })
   {-# INLINE lensOf #-}
 
-instance {-# OVERLAPPABLE #-}
-    ( HasLens tag (Product tags as) a
-    ) => HasLens tag (Product (t ': tags) (b ': as)) a
-  where
-    lensOf t = productTail . lensOf t
-    {-# INLINE lensOf #-}
+instance a ~ a2 => HasLens t2
+  (Product
+    '[t1, t2, t3, t4]
+    '[a1, a2, a3, a4]) a where
+  lensOf = lens p4_2 (\p a -> p{ p4_2 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a3 => HasLens t3
+  (Product
+    '[t1, t2, t3, t4]
+    '[a1, a2, a3, a4]) a where
+  lensOf = lens p4_3 (\p a -> p{ p4_3 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a4 => HasLens t4
+  (Product
+    '[t1, t2, t3, t4]
+    '[a1, a2, a3, a4]) a where
+  lensOf = lens p4_4 (\p a -> p{ p4_4 = a })
+  {-# INLINE lensOf #-}
+
+data instance Product ts '[a1, a2, a3, a4, a5] =
+  P5
+    { p5_1 :: !a1
+    , p5_2 :: !a2
+    , p5_3 :: !a3
+    , p5_4 :: !a4
+    , p5_5 :: !a5
+    } deriving (Generic)
+
+deriving instance
+  ( Show a1
+  , Show a2
+  , Show a3
+  , Show a4
+  , Show a5
+  ) => Show (Product ts '[a1, a2, a3, a4, a5])
+
+instance
+  ( NFData a1
+  , NFData a2
+  , NFData a3
+  , NFData a4
+  , NFData a5
+  ) => NFData (Product ts '[a1, a2, a3, a4, a5])
+
+instance a ~ a1 => HasLens t1
+  (Product
+    '[t1, t2, t3, t4, t5]
+    '[a1, a2, a3, a4, a5]) a where
+  lensOf = lens p5_1 (\p a -> p{ p5_1 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a2 => HasLens t2
+  (Product
+    '[t1, t2, t3, t4, t5]
+    '[a1, a2, a3, a4, a5]) a where
+  lensOf = lens p5_2 (\p a -> p{ p5_2 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a3 => HasLens t3
+  (Product
+    '[t1, t2, t3, t4, t5]
+    '[a1, a2, a3, a4, a5]) a where
+  lensOf = lens p5_3 (\p a -> p{ p5_3 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a4 => HasLens t4
+  (Product
+    '[t1, t2, t3, t4, t5]
+    '[a1, a2, a3, a4, a5]) a where
+  lensOf = lens p5_4 (\p a -> p{ p5_4 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a5 => HasLens t5
+  (Product
+    '[t1, t2, t3, t4, t5]
+    '[a1, a2, a3, a4, a5]) a where
+  lensOf = lens p5_5 (\p a -> p{ p5_5 = a })
+  {-# INLINE lensOf #-}
+
+data instance Product ts '[a1, a2, a3, a4, a5, a6, a7, a8, a9] =
+  P9
+    { p9_1 :: !a1
+    , p9_2 :: !a2
+    , p9_3 :: !a3
+    , p9_4 :: !a4
+    , p9_5 :: !a5
+    , p9_6 :: !a6
+    , p9_7 :: !a7
+    , p9_8 :: !a8
+    , p9_9 :: !a9
+    } deriving (Generic)
+
+deriving instance
+  ( Show a1
+  , Show a2
+  , Show a3
+  , Show a4
+  , Show a5
+  , Show a6
+  , Show a7
+  , Show a8
+  , Show a9
+  ) => Show (Product ts '[a1, a2, a3, a4, a5, a6, a7, a8, a9])
+
+instance
+  ( NFData a1
+  , NFData a2
+  , NFData a3
+  , NFData a4
+  , NFData a5
+  , NFData a6
+  , NFData a7
+  , NFData a8
+  , NFData a9
+  ) => NFData (Product ts '[a1, a2, a3, a4, a5, a6, a7, a8, a9])
+
+instance a ~ a1 => HasLens t1
+  (Product
+    '[t1, t2, t3, t4, t5, t6, t7, t8, t9]
+    '[a1, a2, a3, a4, a5, a6, a7, a8, a9]) a where
+  lensOf = lens p9_1 (\p a -> p{ p9_1 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a2 => HasLens t2
+  (Product
+    '[t1, t2, t3, t4, t5, t6, t7, t8, t9]
+    '[a1, a2, a3, a4, a5, a6, a7, a8, a9]) a where
+  lensOf = lens p9_2 (\p a -> p{ p9_2 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a3 => HasLens t3
+  (Product
+    '[t1, t2, t3, t4, t5, t6, t7, t8, t9]
+    '[a1, a2, a3, a4, a5, a6, a7, a8, a9]) a where
+  lensOf = lens p9_3 (\p a -> p{ p9_3 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a4 => HasLens t4
+  (Product
+    '[t1, t2, t3, t4, t5, t6, t7, t8, t9]
+    '[a1, a2, a3, a4, a5, a6, a7, a8, a9]) a where
+  lensOf = lens p9_4 (\p a -> p{ p9_4 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a5 => HasLens t5
+  (Product
+    '[t1, t2, t3, t4, t5, t6, t7, t8, t9]
+    '[a1, a2, a3, a4, a5, a6, a7, a8, a9]) a where
+  lensOf = lens p9_5 (\p a -> p{ p9_5 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a6 => HasLens t6
+  (Product
+    '[t1, t2, t3, t4, t5, t6, t7, t8, t9]
+    '[a1, a2, a3, a4, a5, a6, a7, a8, a9]) a where
+  lensOf = lens p9_6 (\p a -> p{ p9_6 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a7 => HasLens t7
+  (Product
+    '[t1, t2, t3, t4, t5, t6, t7, t8, t9]
+    '[a1, a2, a3, a4, a5, a6, a7, a8, a9]) a where
+  lensOf = lens p9_7 (\p a -> p{ p9_7 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a8 => HasLens t8
+  (Product
+    '[t1, t2, t3, t4, t5, t6, t7, t8, t9]
+    '[a1, a2, a3, a4, a5, a6, a7, a8, a9]) a where
+  lensOf = lens p9_8 (\p a -> p{ p9_8 = a })
+  {-# INLINE lensOf #-}
+
+instance a ~ a9 => HasLens t9
+  (Product
+    '[t1, t2, t3, t4, t5, t6, t7, t8, t9]
+    '[a1, a2, a3, a4, a5, a6, a7, a8, a9]) a where
+  lensOf = lens p9_9 (\p a -> p{ p9_9 = a })
+  {-# INLINE lensOf #-}

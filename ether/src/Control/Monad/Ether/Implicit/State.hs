@@ -1,4 +1,3 @@
-
 -- | See "Control.Monad.Ether.State".
 
 module Control.Monad.Ether.Implicit.State
