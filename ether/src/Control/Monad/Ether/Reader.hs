@@ -1,11 +1,8 @@
-{-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
-
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE MagicHash #-}
 
 -- | See "Control.Monad.Reader".
 
@@ -26,36 +23,12 @@ module Control.Monad.Ether.Reader
     , runReaderT
     ) where
 
-import GHC.Prim (Proxy#, proxy#)
-import Control.Monad.Ether.Reader.Class (MonadReader)
-import qualified Control.Monad.Ether.Reader.Class as C
-import qualified Control.Monad.Trans.Ether.Dispatch as D
-import qualified Control.Monad.Trans.Reader as T
+import Control.Monad.Ether.Reader.Class
+import qualified Control.Monad.Trans.Ether.Handler as D
+import Control.Monad.Trans.Lift.Local (Local)
+import qualified Control.Monad.Reader as T
 import Data.Functor.Identity
-
--- | Retrieves the monad environment.
-ask :: forall tag r m . MonadReader tag r m => m r
-ask = C.ask (proxy# :: Proxy# tag)
-
--- | Executes a computation in a modified environment.
-local
-  :: forall tag r m a
-   . MonadReader tag r m
-  => (r -> r)
-  -- ^ The function to modify the environment.
-  -> m a
-  -- ^ @Reader@ to run in the modified environment.
-  -> m a
-local = C.local (proxy# :: Proxy# tag)
-
--- | Retrieves a function of the current environment.
-reader
-  :: forall tag r m a
-   . MonadReader tag r m
-  => (r -> a)
-  -- ^ The selector function to apply to the environment.
-  -> m a
-reader = C.reader (proxy# :: Proxy# tag)
+import Data.Coerce
 
 -- | Retrieves a function of the current environment.
 asks
@@ -64,10 +37,11 @@ asks
   => (r -> a)
   -- ^ The selector function to apply to the environment.
   -> m a
-asks = C.reader (proxy# :: Proxy# tag)
+asks = reader @tag
+{-# INLINE asks #-}
 
 -- | Encode type-level information for 'ReaderT'.
-data READER t r
+data READER
 
 -- | The parameterizable reader monad.
 --
@@ -82,26 +56,41 @@ type Reader tag r = ReaderT tag r Identity
 --
 -- The 'return' function ignores the environment, while '>>=' passes
 -- the inherited environment to both subcomputations.
-type ReaderT tag r = D.Dispatch (READER tag r) (T.ReaderT r)
+type ReaderT tag r = D.Handler '(READER, tag) (T.ReaderT r)
 
 -- | Constructor for computations in the reader monad transformer.
 readerT :: forall tag r m a . (r -> m a) -> ReaderT tag r m a
-readerT = D.pack . T.ReaderT
+readerT = coerce (T.ReaderT @r @m @a)
+{-# INLINE readerT #-}
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the final value.
 runReaderT :: forall tag r m a . ReaderT tag r m a -> r -> m a
-runReaderT = T.runReaderT . D.unpack
+runReaderT = coerce (T.runReaderT @r @_ @m @a)
+{-# INLINE runReaderT #-}
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the final value.
 runReader :: forall tag r a . Reader tag r a -> r -> a
-runReader = T.runReader . D.unpack
+runReader = coerce (T.runReader @r @a)
+{-# INLINE runReader #-}
 
 instance
-    ( Monad m, r ~ r', trans ~ T.ReaderT r
-    ) => MonadReader tag r (D.Dispatch (READER tag r') trans m)
+    ( T.MonadReader r (trans m) -- FIXME: (forall m . T.MonadReader r (trans m))
+                                -- otherwise we can leak a MonadReader instance
+                                -- from 'm'
+    ) => MonadReader tag r (D.Handler '(READER, tag) trans (m :: * -> *))
   where
-    ask _ = D.pack T.ask
-    local _ f = D.pack . T.withReaderT f . D.unpack
-    reader _ = D.pack . T.reader
+
+    ask = coerce (T.ask @r @(trans m))
+    {-# INLINE ask #-}
+
+    local =
+      coerce (T.local @r @(trans m) @a) ::
+        forall dp a . Local r (D.Handler dp trans m) a
+    {-# INLINE local #-}
+
+    reader =
+      coerce (T.reader @r @(trans m) @a) ::
+        forall dp a . (r -> a) -> D.Handler dp trans m a
+    {-# INLINE reader #-}

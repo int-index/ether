@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 -- | See "Control.Monad.Except".
 
@@ -9,23 +9,22 @@ module Control.Monad.Ether.Except.Class
   ( MonadExcept(..)
   ) where
 
-import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Lift.Catch as Lift
 
 -- | See 'Control.Monad.Except.MonadError'.
 class Monad m => MonadExcept tag e m | m tag -> e where
 
     -- | Is used within a monadic computation to begin exception processing.
-    throw :: Proxy# tag -> e -> m a
+    throw :: e -> m a
 
     -- | A handler function to handle previous exceptions and return to
     -- normal execution.
-    catch :: Proxy# tag -> m a -> (e -> m a) -> m a
+    catch :: m a -> (e -> m a) -> m a
 
 instance {-# OVERLAPPABLE #-}
          ( Lift.LiftCatch t
          , Monad (t m)
          , MonadExcept tag e m
          ) => MonadExcept tag e (t m) where
-    throw t = Lift.lift . throw t
-    catch t = Lift.liftCatch (catch t)
+    throw = Lift.lift . throw @tag
+    catch = Lift.liftCatch (catch @tag)

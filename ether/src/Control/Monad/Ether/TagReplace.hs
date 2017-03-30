@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
-
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -25,43 +23,46 @@ import Control.Monad.Ether.State.Common as A
 import Control.Monad.Ether.Except as A
 import Control.Monad.Ether.Writer as A
 
-import Control.Monad.Trans.Ether.Dispatch
+import Control.Monad.Trans.Ether.Handler
+
+import Data.Coerce
 
 -- | Encode type-level information for 'tagReplace'.
 data TAG_REPLACE tOld tNew
 
-type TagReplaceT tOld tNew = Dispatch (TAG_REPLACE tOld tNew) IdentityT
+type TagReplaceT tOld tNew = Handler (TAG_REPLACE tOld tNew) IdentityT
 
 -- | Replace a tag with another tag.
 tagReplace :: forall tOld tNew m a . TagReplaceT tOld tNew m a -> m a
-tagReplace = runIdentityT . unpack
+tagReplace = coerce (runIdentityT @_ @m @a)
+{-# INLINE tagReplace #-}
 
 instance
     ( MonadReader tNew r m, trans ~ IdentityT
-    ) => MonadReader tOld r (Dispatch (TAG_REPLACE tOld tNew) trans m)
+    ) => MonadReader tOld r (Handler (TAG_REPLACE tOld tNew) trans m)
   where
-    ask   _ = A.ask @tNew
-    local _ = A.local @tNew
+    ask = A.ask @tNew
+    local = A.local @tNew
 
 instance
     ( MonadState tNew s m, trans ~ IdentityT
-    ) => MonadState tOld s (Dispatch (TAG_REPLACE tOld tNew) trans m)
+    ) => MonadState tOld s (Handler (TAG_REPLACE tOld tNew) trans m)
   where
-    get _ = A.get @tNew
-    put _ = A.put @tNew
+    get = A.get @tNew
+    put = A.put @tNew
 
 instance
     ( MonadExcept tNew e m, trans ~ IdentityT
-    ) => MonadExcept tOld e (Dispatch (TAG_REPLACE tOld tNew) trans m)
+    ) => MonadExcept tOld e (Handler (TAG_REPLACE tOld tNew) trans m)
   where
-    throw _ = A.throw @tNew
-    catch _ = A.catch @tNew
+    throw = A.throw @tNew
+    catch = A.catch @tNew
 
 instance
     ( MonadWriter tNew w m, trans ~ IdentityT
-    ) => MonadWriter tOld w (Dispatch (TAG_REPLACE tOld tNew) trans m)
+    ) => MonadWriter tOld w (Handler (TAG_REPLACE tOld tNew) trans m)
   where
-    writer _ = A.writer @tNew
-    tell   _ = A.tell @tNew
-    listen _ = A.listen @tNew
-    pass   _ = A.pass @tNew
+    writer = A.writer @tNew
+    tell = A.tell @tNew
+    listen = A.listen @tNew
+    pass = A.pass @tNew

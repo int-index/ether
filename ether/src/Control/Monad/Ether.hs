@@ -1,4 +1,3 @@
-
 -- | This module provides convenience exports of all
 -- tagged monad classes from Ether.
 

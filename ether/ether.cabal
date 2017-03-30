@@ -28,7 +28,7 @@ library
 
   exposed-modules:     Control.Ether.Abbr
                        Control.Ether.Implicit.Abbr
-                       Control.Monad.Trans.Ether.Dispatch
+                       Control.Monad.Trans.Ether.Handler
                        Control.Monad.Ether
                        Control.Monad.Ether.TagAttach
                        Control.Monad.Ether.TagReplace
@@ -73,10 +73,9 @@ library
                        DeriveGeneric
                        FlexibleInstances
                        GeneralizedNewtypeDeriving
-                       MagicHash
                        TypeFamilies
                        TypeOperators
                        UndecidableInstances
 
   hs-source-dirs:      src
-  ghc-options:         -Wall
+  ghc-options:         -Wall -O2

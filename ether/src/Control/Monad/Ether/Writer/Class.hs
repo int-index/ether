@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 -- | See "Control.Monad.Writer.Class".
 
@@ -9,7 +9,6 @@ module Control.Monad.Ether.Writer.Class
   ( MonadWriter(..)
   ) where
 
-import GHC.Prim (Proxy#)
 import qualified Control.Monad.Trans.Lift.Listen as Lift
 import qualified Control.Monad.Trans.Lift.Pass   as Lift
 
@@ -19,22 +18,22 @@ class (Monoid w, Monad m) => MonadWriter tag w m | m tag -> w where
     {-# MINIMAL (writer | tell), listen, pass #-}
 
     -- | Embed a simple writer action.
-    writer :: Proxy# tag -> (a, w) -> m a
-    writer t ~(a, w) = do
-      tell t w
+    writer :: (a, w) -> m a
+    writer ~(a, w) = do
+      tell @tag w
       return a
 
     -- | Append a value to the accumulator within the monad.
-    tell :: Proxy# tag -> w -> m ()
-    tell t w = writer t ((),w)
+    tell :: w -> m ()
+    tell w = writer @tag ((),w)
 
     -- | Execute an action and add its accumulator
     -- to the value of the computation.
-    listen :: Proxy# tag -> m a -> m (a, w)
+    listen :: m a -> m (a, w)
 
     -- | Execute an action which returns a value and a function,
     -- and return the value, applying the function to the accumulator.
-    pass :: Proxy# tag -> m (a, w -> w) -> m a
+    pass ::  m (a, w -> w) -> m a
 
 instance {-# OVERLAPPABLE #-}
          ( Lift.LiftListen t
@@ -43,7 +42,7 @@ instance {-# OVERLAPPABLE #-}
          , MonadWriter tag w m
          , Monoid w
          ) => MonadWriter tag w (t m) where
-    writer t = Lift.lift . writer t
-    tell   t = Lift.lift . tell t
-    listen t = Lift.liftListen (listen t)
-    pass   t = Lift.liftPass (pass t)
+    writer = Lift.lift . writer @tag
+    tell   = Lift.lift . tell @tag
+    listen = Lift.liftListen (listen @tag)
+    pass   = Lift.liftPass (pass @tag)

@@ -1,7 +1,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 -- | See "Control.Monad.Reader.Class".
 
@@ -9,8 +11,9 @@ module Control.Monad.Ether.Reader.Class
   ( MonadReader(..)
   ) where
 
-import GHC.Prim (Proxy#)
+import Control.Monad.Trans.Ether.Handler
 import qualified Control.Monad.Trans.Lift.Local as Lift
+import Data.Coerce
 
 -- | See 'Control.Monad.Reader.MonadReader'.
 class Monad m => MonadReader tag r m | m tag -> r where
@@ -18,13 +21,12 @@ class Monad m => MonadReader tag r m | m tag -> r where
     {-# MINIMAL (ask | reader), local #-}
 
     -- | Retrieves the monad environment.
-    ask :: Proxy# tag -> m r
-    ask t = reader t id
+    ask :: m r
+    ask = reader @tag id
 
     -- | Executes a computation in a modified environment.
     local
-        :: Proxy# tag
-        -> (r -> r)
+        :: (r -> r)
         -- ^ The function to modify the environment.
         -> m a
         -- ^ @Reader@ to run in the modified environment.
@@ -32,16 +34,36 @@ class Monad m => MonadReader tag r m | m tag -> r where
 
     -- | Retrieves a function of the current environment.
     reader
-        :: Proxy# tag
-        -> (r -> a)
+        :: (r -> a)
         -- ^ The selector function to apply to the environment.
         -> m a
-    reader t f = fmap f (ask t)
+    reader f = fmap f (ask @tag)
 
 instance {-# OVERLAPPABLE #-}
-         ( Lift.LiftLocal t
-         , Monad (t m)
-         , MonadReader tag r m
-         ) => MonadReader tag r (t m) where
-    ask t = Lift.lift (ask t)
-    local t = Lift.liftLocal (ask t) (local t)
+    ( Lift.LiftLocal t
+    , Monad (t m)
+    , MonadReader tag r m
+    ) => MonadReader tag r (t m)
+  where
+    ask = Lift.lift (ask @tag)
+    local = Lift.liftLocal (ask @tag) (local @tag)
+
+instance {-# OVERLAPPABLE #-}
+    ( Monad (trans m)
+    , MonadReader tag r (Handler dps trans m)
+    ) => MonadReader tag r (Handler (dp ': dps) trans (m :: * -> *))
+  where
+
+    ask =
+      (coerce ::
+        Handler        dps  trans m r ->
+        Handler (dp ': dps) trans m r)
+      (ask @tag)
+    {-# INLINE ask #-}
+
+    local =
+      (coerce :: forall a .
+        Lift.Local r (Handler dps trans m) a ->
+        Lift.Local r (Handler (dp ': dps) trans m) a)
+      (local @tag)
+    {-# INLINE local #-}
