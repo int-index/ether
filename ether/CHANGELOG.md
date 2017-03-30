@@ -1,10 +1,11 @@
 0.5.0.0
 -------
 
-* Support GHC 8.0 only.
-* Utilize the `TypeApplications` extension.
+* Support only GHC 8.0 and higher.
+* Use the `TypeApplications` extension to get rid of `Proxy`.
 * Remove `Control.Ether.TH`.
-* Use `Proxy#` in class methods.
+* Unify `Dispatch` and `TaggedTrans` as `Handler`.
+* Better `MonadBase` and `MonadBaseControl` instances.
 
 
 0.4.0.0
