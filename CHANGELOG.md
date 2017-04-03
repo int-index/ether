@@ -1,3 +1,8 @@
+0.4.2.0
+-------
+
+* Add default MTL instances for DispatchT.
+
 0.4.1.0
 -------
 

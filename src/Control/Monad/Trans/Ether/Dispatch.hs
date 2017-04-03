@@ -84,6 +84,7 @@ import Control.Monad.Ether.State.Class
 import Control.Monad.Ether.Except.Class
 import Control.Monad.Ether.Writer.Class
 
+import qualified Control.Monad.Cont   as Class
 import qualified Control.Monad.Reader as Class
 import qualified Control.Monad.State  as Class
 import qualified Control.Monad.Except as Class
@@ -207,3 +208,44 @@ instance MonadWriter tNew w m
   tell   _ = let t = Proxy :: Proxy tNew in Lift.lift . tell t
   listen _ = let t = Proxy :: Proxy tNew in Lift.liftListen (listen t)
   pass   _ = let t = Proxy :: Proxy tNew in Lift.liftPass (pass t)
+
+
+-- Instances for mtl classes
+
+instance {-# OVERLAPPABLE #-}
+    ( Class.MonadCont m
+    ) => Class.MonadCont (DispatchT dp m)
+  where
+    callCC = Lift.liftCallCC' Class.callCC
+
+instance {-# OVERLAPPABLE #-}
+    ( Class.MonadReader r m
+    ) => Class.MonadReader r (DispatchT dp m)
+  where
+    ask = Class.lift Class.ask
+    local = Lift.liftLocal Class.ask Class.local
+    reader = Class.lift . Class.reader
+
+instance {-# OVERLAPPABLE #-}
+    ( Class.MonadState s m
+    ) => Class.MonadState s (DispatchT dp m)
+  where
+    get = Class.lift Class.get
+    put = Class.lift . Class.put
+    state = Class.lift . Class.state
+
+instance {-# OVERLAPPABLE #-}
+    ( Class.MonadWriter w m
+    ) => Class.MonadWriter w (DispatchT dp m)
+  where
+    writer = Class.lift . Class.writer
+    tell   = Class.lift . Class.tell
+    listen = Lift.liftListen Class.listen
+    pass   = Lift.liftPass Class.pass
+
+instance {-# OVERLAPPABLE #-}
+    ( Class.MonadError e m
+    ) => Class.MonadError e (DispatchT dp m)
+  where
+    throwError = Class.lift . Class.throwError
+    catchError = Lift.liftCatch Class.catchError
