@@ -1,3 +1,8 @@
+0.4.1.0
+-------
+
+* Export DispatchT newtype constructor.
+
 0.4.0.0
 -------
 

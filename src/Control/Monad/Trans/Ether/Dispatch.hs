@@ -49,7 +49,7 @@ Out of the box it provides the following dispatch strategies:
 module Control.Monad.Trans.Ether.Dispatch
   (
   -- * The DispatchT monad transformer
-    DispatchT
+    DispatchT(..)
   -- * Dispatch types and functions
   , K_TagAttach(..)
   , K_TagReplace(..)
