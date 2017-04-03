@@ -1,5 +1,10 @@
 {-# LANGUAGE CPP #-}
 
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
+#endif
+
 #if __GLASGOW_HASKELL__ >= 710
 {-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
 #endif
