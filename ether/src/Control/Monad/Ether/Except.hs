@@ -24,8 +24,9 @@ module Control.Monad.Ether.Except
     , handle
     ) where
 
+import Control.Monad.Ether.Handle
 import Control.Monad.Ether.Except.Class
-import qualified Control.Monad.Trans.Ether.Handler as D
+import Control.Monad.Trans.Ether.Handler
 import qualified Control.Monad.Except as T
 import Control.Monad.Signatures (Catch)
 import Data.Functor.Identity
@@ -54,7 +55,7 @@ type Except tag e = ExceptT tag e Identity
 --
 -- The 'return' function returns a normal value, while '>>=' exits on
 -- the first exception.
-type ExceptT tag e = D.Handler '(EXCEPT, tag) (T.ExceptT e)
+type ExceptT tag e = Handler (TAGGED EXCEPT tag) (T.ExceptT e)
 
 -- | Runs an 'Except' and returns either an exception or a normal value.
 runExcept :: forall tag e a . Except tag e a -> Either e a
@@ -68,16 +69,27 @@ runExceptT = coerce (T.runExceptT @e @m @a)
 exceptT :: forall tag e m a . m (Either e a) -> ExceptT tag e m a
 exceptT = coerce (T.ExceptT @e @m @a)
 
+type instance HandleSuper      EXCEPT e trans   = ()
+type instance HandleConstraint EXCEPT e trans m =
+  T.MonadError e (trans m)
+
+instance Handle EXCEPT e (T.ExceptT e) where
+  handling r = r
+  {-# INLINE handling #-}
+
 instance
-    ( T.MonadError e (trans m) -- FIXME: (forall m . T.MonadError e (trans m))
-    ) => MonadExcept tag e (D.Handler '(EXCEPT, tag) trans (m :: * -> *))
+    ( Handle EXCEPT e trans
+    , Monad m, Monad (trans m)
+    ) => MonadExcept tag e (Handler (TAGGED EXCEPT tag) trans m)
   where
     throw =
+      handling @EXCEPT @e @trans @m $
       coerce (T.throwError @e @(trans m) @a) ::
-        forall dp a . e -> D.Handler dp trans m a
+        forall dp a . e -> Handler dp trans m a
     {-# INLINE throw #-}
 
     catch =
+      handling @EXCEPT @e @trans @m $
       coerce (T.catchError @e @(trans m) @a) ::
-        forall dp a . Catch e (D.Handler dp trans m) a
+        forall dp a . Catch e (Handler dp trans m) a
     {-# INLINE catch #-}

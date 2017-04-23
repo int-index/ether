@@ -6,65 +6,33 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE TypeInType #-}
 
 module Control.Monad.Ether.State.Flatten
   ( runState
   , runStateT
   ) where
 
-import Data.Functor.Identity
-import Control.Monad.Ether.State.Class as C
-import Control.Monad.Trans.Ether.Handler
-import qualified Control.Monad.State as T
+import Control.Ether.Optic
 import Control.Lens
-import Control.Ether.Flatten
+import Control.Monad.Ether.Handle
+import Control.Monad.Ether.State (STATE)
+import qualified Control.Monad.State as T
+import Control.Monad.Trans.Ether.Handler
 import Data.Coerce
+import Data.Kind
 
-data STATE
+type family STATES (ts :: HList xs) :: [Type] where
+  STATES 'HNil = '[]
+  STATES ('HCons t ts) = TAGGED STATE t ': STATES ts
 
-type family STATES ts where
-  STATES '[] = '[]
-  STATES (t ': ts) = '(STATE, t) ': STATES ts
+type StateT s = Handler (STATES (Tags s)) (T.StateT s)
 
-type StateT ts s = Handler (STATES ts) (T.StateT s)
+type State s = StateT s Identity
 
-type State ts s = StateT ts s Identity
+runStateT :: forall p m a . StateT p m a -> p -> m (a, p)
+runStateT = coerce (T.runStateT @p @m @a)
 
-instance
-    ( Monad m, HasLens tag payload s
-    , T.MonadState payload (trans m) -- FIXME: (forall m . T.MonadState payload (trans m))
-    ) => C.MonadState tag s (Handler ('(STATE, tag) ': dps) trans m)
-  where
-
-    get =
-      (coerce :: forall dp a .
-                   trans m a ->
-        Handler dp trans m a)
-      (use (lensOf @tag))
-    {-# INLINE get #-}
-
-    put s =
-      (coerce :: forall dp a .
-                   trans m a ->
-        Handler dp trans m a)
-      (T.modify (lensOf @tag .~ s))
-    {-# INLINE put #-}
-
-    state f =
-      (coerce :: forall dp a .
-                   trans m a ->
-        Handler dp trans m a)
-      (T.state (lensOf @tag f))
-    {-# INLINE state #-}
-
-runStateT
-  :: StateT tags (Product tags as) m a
-  -> Product tags as
-  -> m (a, Product tags as)
-runStateT m = T.runStateT (coerce m)
-
-runState
-  :: State tags (Product tags as) a
-  -> Product tags as
-  -> (a, Product tags as)
-runState m = T.runState (coerce m)
+runState :: forall p a . State p a -> p -> (a, p)
+runState = coerce (T.runState @p @a)

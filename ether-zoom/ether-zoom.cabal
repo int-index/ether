@@ -24,7 +24,7 @@ source-repository head
 library
 
   exposed-modules:     Control.Monad.Ether.State.Zoom
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base >=4.9 && <4.11
                ,       ether >=0.5 && <0.6
                ,       transformers >=0.5
                ,       lens >=4.14

@@ -3,6 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE TypeOperators #-}
 
 -- | See "Control.Monad.Reader".
 
@@ -21,10 +22,14 @@ module Control.Monad.Ether.Reader
     , ReaderT
     , readerT
     , runReaderT
+    -- *
+    , READER
     ) where
 
+import Control.Monad.Ether.Handle
 import Control.Monad.Ether.Reader.Class
-import qualified Control.Monad.Trans.Ether.Handler as D
+import Control.Ether.Optic
+import Control.Monad.Trans.Ether.Handler
 import Control.Monad.Trans.Lift.Local (Local)
 import qualified Control.Monad.Reader as T
 import Data.Functor.Identity
@@ -56,7 +61,7 @@ type Reader tag r = ReaderT tag r Identity
 --
 -- The 'return' function ignores the environment, while '>>=' passes
 -- the inherited environment to both subcomputations.
-type ReaderT tag r = D.Handler '(READER, tag) (T.ReaderT r)
+type ReaderT tag r = Handler (TAGGED READER tag) (T.ReaderT r)
 
 -- | Constructor for computations in the reader monad transformer.
 readerT :: forall tag r m a . (r -> m a) -> ReaderT tag r m a
@@ -75,22 +80,56 @@ runReader :: forall tag r a . Reader tag r a -> r -> a
 runReader = coerce (T.runReader @r @a)
 {-# INLINE runReader #-}
 
+type instance HandleSuper      READER r trans   = ()
+type instance HandleConstraint READER r trans m =
+  T.MonadReader r (trans m)
+
+instance Handle READER r (T.ReaderT r) where
+  handling r = r
+  {-# INLINE handling #-}
+
 instance
-    ( T.MonadReader r (trans m) -- FIXME: (forall m . T.MonadReader r (trans m))
-                                -- otherwise we can leak a MonadReader instance
-                                -- from 'm'
-    ) => MonadReader tag r (D.Handler '(READER, tag) trans (m :: * -> *))
+    ( Handle READER r trans
+    , Monad m, Monad (trans m)
+    ) => MonadReader tag r (Handler (TAGGED READER tag) trans m)
   where
 
-    ask = coerce (T.ask @r @(trans m))
+    ask =
+      handling @READER @r @trans @m $
+      coerce (T.ask @r @(trans m))
     {-# INLINE ask #-}
 
     local =
+      handling @READER @r @trans @m $
       coerce (T.local @r @(trans m) @a) ::
-        forall dp a . Local r (D.Handler dp trans m) a
+        forall dp a . Local r (Handler dp trans m) a
     {-# INLINE local #-}
 
     reader =
+      handling @READER @r @trans @m $
       coerce (T.reader @r @(trans m) @a) ::
-        forall dp a . (r -> a) -> D.Handler dp trans m a
+        forall dp a . (r -> a) -> Handler dp trans m a
     {-# INLINE reader #-}
+
+instance
+    ( HasLens tag payload r
+    , Handle READER payload trans
+    , Monad m, Monad (trans m)
+    ) => MonadReader tag r (Handler (TAGGED READER tag ': dps) trans m)
+  where
+
+    ask =
+      handling @READER @payload @trans @m $
+      (coerce :: forall dp a .
+                   trans m a ->
+        Handler dp trans m a)
+      (T.asks (view (lensOf @tag @payload @r)))
+    {-# INLINE ask #-}
+
+    local f =
+      handling @READER @payload @trans @m $
+      (coerce :: forall dp a .
+                   (trans m a ->            trans m a) ->
+        (Handler dp trans m a -> Handler dp trans m a))
+      (T.local (over (lensOf @tag @payload @r) f))
+    {-# INLINE local #-}

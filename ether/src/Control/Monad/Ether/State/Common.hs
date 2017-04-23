@@ -2,6 +2,8 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Control.Monad.Ether.State.Common
   ( MonadState
@@ -13,9 +15,11 @@ module Control.Monad.Ether.State.Common
   , STATE
   ) where
 
+import Control.Ether.Optic
+import Control.Monad.Ether.Handle
 import Control.Monad.Ether.State.Class
 import qualified Control.Monad.State as T
-import qualified Control.Monad.Trans.Ether.Handler as D
+import Control.Monad.Trans.Ether.Handler
 import Data.Coerce
 
 -- | Encode type-level information for 'StateT'.
@@ -31,18 +35,63 @@ gets :: forall tag s m a . MonadState tag s m => (s -> a) -> m a
 gets f = fmap f (get @tag)
 {-# INLINABLE gets #-}
 
+type instance HandleSuper      STATE s trans   = ()
+type instance HandleConstraint STATE s trans m =
+  T.MonadState s (trans m)
+
+instance Handle STATE s (T.StateT s) where
+  handling r = r
+  {-# INLINE handling #-}
+
 instance
-    ( T.MonadState s (trans m) -- FIXME: (forall m . T.MonadState s (trans m))
-    ) => MonadState tag s (D.Handler '(STATE, tag) trans (m :: * -> *))
+    ( Handle STATE s trans
+    , Monad m, Monad (trans m)
+    ) => MonadState tag s (Handler (TAGGED STATE tag) trans m)
   where
 
-    get = coerce (T.get @s @(trans m))
+    get =
+      handling @STATE @s @trans @m $
+      coerce (T.get @s @(trans m))
     {-# INLINE get #-}
 
-    put = coerce (T.put @s @(trans m))
+    put =
+      handling @STATE @s @trans @m $
+      coerce (T.put @s @(trans m))
     {-# INLINE put #-}
 
     state =
+      handling @STATE @s @trans @m $
       coerce (T.state @s @(trans m) @a) ::
-        forall dp a . (s -> (a, s)) -> D.Handler dp trans m a
+        forall dp a . (s -> (a, s)) -> Handler dp trans m a
+    {-# INLINE state #-}
+
+instance
+    ( HasLens tag payload s
+    , Handle STATE payload trans
+    , Monad m, Monad (trans m)
+    ) => MonadState tag s (Handler (TAGGED STATE tag ': dps) trans m)
+  where
+
+    get =
+      handling @STATE @payload @trans @m $
+      (coerce :: forall dp a .
+                   trans m a ->
+        Handler dp trans m a)
+      (T.gets (view (lensOf @tag @payload @s)))
+    {-# INLINE get #-}
+
+    put s =
+      handling @STATE @payload @trans @m $
+      (coerce :: forall dp a .
+                   trans m a ->
+        Handler dp trans m a)
+      (T.modify (over (lensOf @tag @payload @s) (const s)))
+    {-# INLINE put #-}
+
+    state f =
+      handling @STATE @payload @trans @m $
+      (coerce :: forall dp a .
+                   trans m a ->
+        Handler dp trans m a)
+      (T.state (lensOf @tag @payload @s f))
     {-# INLINE state #-}

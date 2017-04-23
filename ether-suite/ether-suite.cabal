@@ -9,7 +9,7 @@ library
 
 test-suite regression
 
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base >=4.9 && <4.11
                ,       transformers >=0.4.2
                ,       mtl >=2.2.1
                ,       tasty >=0.10
@@ -53,7 +53,7 @@ test-suite regression
 
 benchmark bench
 
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base >=4.9 && <4.11
                ,       mtl >=2.2.1
                ,       transformers >=0.4.2
                ,       criterion >=1.1

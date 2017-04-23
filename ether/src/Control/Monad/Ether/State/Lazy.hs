@@ -25,8 +25,11 @@ module Control.Monad.Ether.State.Lazy
     , runStateT
     , evalStateT
     , execStateT
+    -- *
+    , STATE
     ) where
 
+import Control.Monad.Ether.Handle
 import Control.Monad.Ether.State.Common
 import qualified Control.Monad.Trans.Ether.Handler as D
 import qualified Control.Monad.Trans.State.Lazy as T
@@ -45,7 +48,7 @@ type State tag r = StateT tag r Identity
 --
 -- The 'return' function leaves the state unchanged, while '>>=' uses
 -- the final state of the first computation as the initial state of the second.
-type StateT tag s = D.Handler '(STATE, tag) (T.StateT s)
+type StateT tag s = D.Handler (TAGGED STATE tag) (T.StateT s)
 
 -- | Constructor for computations in the state monad transformer.
 stateT :: forall tag s m a . (s -> m (a, s)) -> StateT tag s m a

@@ -25,8 +25,7 @@ library
 
   exposed-modules:     Control.Monad.Ether.Reader.Flatten
                  ,     Control.Monad.Ether.State.Flatten
-                 ,     Control.Ether.Flatten
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base >=4.9 && <4.11
                ,       ether >=0.5 && <0.6
                ,       mtl >=2.2.1
                ,       transformers >=0.4.2

@@ -1,9 +1,12 @@
+{-# OPTIONS -fno-warn-partial-type-signatures #-}
+
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 module Main (main) where
 
@@ -14,8 +17,8 @@ import qualified Control.Monad.Ether.Reader as E
 import qualified Control.Monad.Ether.State as E
 import qualified Control.Monad.Ether.Reader.Flatten as E.F
 import qualified Control.Monad.Ether.State.Flatten as E.F
-import Control.Ether.Flatten
 import qualified Control.Lens as L
+import Control.Ether.Optic
 import Control.DeepSeq
 
 id' :: a -> a
@@ -129,6 +132,7 @@ stateCombinerEther_sep_9 = do
     , E.get @7
     , E.get @8
     , E.get @9 ]
+{-# NOINLINE stateCombinerEther_sep_9 #-}
 
 run_readerCombinerEther_nested_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int) -> ()
 run_readerCombinerEther_nested_9
@@ -148,27 +152,51 @@ run_readerCombinerEther_flatten_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, In
 run_readerCombinerEther_flatten_9
   (a1, a2, a3, a4, a5, a6, a7, a8, a9)
     =
-      E.F.runReader @'[1,2,3,4,5,6,7,8,9]
+      E.F.runReader
         readerCombinerEther_sep_9
-          (P9 a9 a8 a7 a6 a5 a4 a3 a2 a1)
-
+          ( Tagged @1 a9,
+            Tagged @2 a8,
+            Tagged @3 a7,
+            Tagged @4 a6,
+            Tagged @5 a5,
+            Tagged @6 a4,
+            Tagged @7 a3,
+            Tagged @8 a2,
+            Tagged @9 a1 )
 
 run_readerCombinerEther_flattenhalf_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int) -> ()
 run_readerCombinerEther_flattenhalf_9
-  (a1, a2, a3, a4, a5, a6, a7, a8, a9)
-    = flip (E.F.runReader @'[1,2,3,4]) (P4 a9 a8 a7 a6)
-    . flip (E.F.runReaderT @'[5,6,7,8,9]) (P5 a5 a4 a3 a2 a1)
-    $ readerCombinerEther_sep_9
+  (a1, a2, a3, a4, a5, a6, a7, a8, a9) =
+    flip E.F.runReader
+      ( Tagged @1 a9,
+        Tagged @2 a8,
+        Tagged @3 a7,
+        Tagged @4 a6 ) .
+    flip E.F.runReaderT
+      ( Tagged @5 a5,
+        Tagged @6 a4,
+        Tagged @7 a3,
+        Tagged @8 a2,
+        Tagged @9 a1 ) $
+    readerCombinerEther_sep_9
 
 run_stateCombinerEther_flatten_9 ::
   (Int, Int, Int, Int, Int, Int, Int, Int, Int) ->
-    ((), Product '[1,2,3,4,5,6,7,8,9] '[Int,Int,Int,Int,Int,Int,Int,Int,Int])
+    ((), _)
 run_stateCombinerEther_flatten_9
   (a1, a2, a3, a4, a5, a6, a7, a8, a9)
     =
       E.F.runState
         stateCombinerEther_sep_9
-          (P9 a9 a8 a7 a6 a5 a4 a3 a2 a1)
+          ( Tagged @1 a9,
+            Tagged @2 a8,
+            Tagged @3 a7,
+            Tagged @4 a6,
+            Tagged @5 a5,
+            Tagged @6 a4,
+            Tagged @7 a3,
+            Tagged @8 a2,
+            Tagged @9 a1 )
 
 tuple_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int)
 tuple_9 = (1, -2, 3, -4, 5, -6, 7, -8, 9)

@@ -27,8 +27,9 @@ module Control.Monad.Ether.Writer
     , execWriterT
     ) where
 
+import Control.Monad.Ether.Handle
 import Control.Monad.Ether.Writer.Class
-import qualified Control.Monad.Trans.Ether.Handler as D
+import Control.Monad.Trans.Ether.Handler
 import qualified Control.Monad.Writer as T
 import Data.Functor.Identity
 import Control.Monad.Signatures (Listen, Pass)
@@ -62,7 +63,7 @@ type Writer tag w = WriterT tag w Identity
 --
 -- The 'return' function produces the output 'mempty', while '>>=' combines
 -- the outputs of the subcomputations using 'mappend'.
-type WriterT tag w = D.Handler '(WRITER, tag) (T.WriterT w)
+type WriterT tag w = Handler (TAGGED WRITER tag) (T.WriterT w)
 
 -- | Constructor for computations in the writer monad transformer.
 writerT :: forall tag w m a . m (a, w) -> WriterT tag w m a
@@ -88,25 +89,39 @@ execWriterT = coerce (T.execWriterT @m @w @a)
 execWriter :: forall tag w a . Writer tag w a -> w
 execWriter = coerce (T.execWriter @w @a)
 
+type instance HandleSuper      WRITER w trans   = Monoid w
+type instance HandleConstraint WRITER w trans m =
+  T.MonadWriter w (trans m)
+
+instance Monoid w => Handle WRITER w (T.WriterT w) where
+  handling r = r
+  {-# INLINE handling #-}
+
 instance
-    ( T.MonadWriter w (trans m) -- FIXME: (forall m . T.MonadWriter w (trans m))
-    ) => MonadWriter tag w (D.Handler '(WRITER, tag) trans (m :: * -> *))
+    ( Handle WRITER w trans
+    , Monad m, Monad (trans m)
+    ) => MonadWriter tag w (Handler (TAGGED WRITER tag) trans m)
   where
 
     writer =
+      handling @WRITER @w @trans @m $
       coerce (T.writer @w @(trans m) @a) ::
-        forall dp a . (a, w) -> D.Handler dp trans m a
+        forall dp a . (a, w) -> Handler dp trans m a
     {-# INLINE writer #-}
 
-    tell = coerce (T.tell @w @(trans m))
+    tell =
+      handling @WRITER @w @trans @m $
+      coerce (T.tell @w @(trans m))
     {-# INLINE tell #-}
 
     listen =
+      handling @WRITER @w @trans @m $
       coerce (T.listen @w @(trans m) @a) ::
-        forall dp a . Listen w (D.Handler dp trans m) a
+        forall dp a . Listen w (Handler dp trans m) a
     {-# INLINE listen #-}
 
     pass =
+      handling @WRITER @w @trans @m $
       coerce (T.pass @w @(trans m) @a) ::
-        forall dp a . Pass w (D.Handler dp trans m) a
+        forall dp a . Pass w (Handler dp trans m) a
     {-# INLINE pass #-}

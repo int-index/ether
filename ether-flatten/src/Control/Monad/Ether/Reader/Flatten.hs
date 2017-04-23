@@ -6,58 +6,34 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Control.Monad.Ether.Reader.Flatten
   ( runReader
   , runReaderT
   ) where
 
-import Data.Functor.Identity
-import Control.Monad.Ether.Reader.Class as C
-import Control.Monad.Trans.Ether.Handler
-import qualified Control.Monad.Reader as T
+import Control.Ether.Optic
 import Control.Lens
-import Control.Ether.Flatten
+import Control.Monad.Ether.Handle
+import Control.Monad.Ether.Reader (READER)
+import qualified Control.Monad.Reader as T
+import Control.Monad.Trans.Ether.Handler
 import Data.Coerce
+import Data.Kind
 
-data READER
+type family READERS (ts :: HList xs) :: [Type] where
+  READERS 'HNil = '[]
+  READERS ('HCons t ts) = TAGGED READER t ': READERS ts
 
-type family READERS ts where
-  READERS '[] = '[]
-  READERS (t ': ts) = '(READER, t) ': READERS ts
+type ReaderT r = Handler (READERS (Tags r)) (T.ReaderT r)
 
-type ReaderT ts r = Handler (READERS ts) (T.ReaderT r)
+type Reader r = ReaderT r Identity
 
-type Reader ts r = ReaderT ts r Identity
+runReaderT :: forall p m a . ReaderT p m a -> p -> m a
+runReaderT = coerce (T.runReaderT @p @_ @m @a)
 
-instance
-    ( HasLens tag payload r
-    , T.MonadReader payload (trans m) -- FIXME: (forall m . T.MonadReader payload (trans m))
-    ) => C.MonadReader tag r (Handler ('(READER, tag) ': dps) trans (m :: * -> *))
-  where
-
-    ask =
-      (coerce :: forall dp a .
-                   trans m a ->
-        Handler dp trans m a)
-      (view (lensOf @tag))
-    {-# INLINE ask #-}
-
-    local f =
-      (coerce :: forall dp a .
-                   (trans m a ->            trans m a) ->
-        (Handler dp trans m a -> Handler dp trans m a))
-      (T.local (lensOf @tag %~ f))
-    {-# INLINE local #-}
-
-runReaderT
-  :: ReaderT tags (Product tags as) m a
-  -> Product tags as
-  -> m a
-runReaderT m = T.runReaderT (coerce m)
-
-runReader
-  :: Reader tags (Product tags as) a
-  -> Product tags as
-  -> a
-runReader m = T.runReader (coerce m)
+runReader :: forall p a . Reader p a -> p -> a
+runReader = coerce (T.runReader @p @a)

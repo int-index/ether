@@ -28,8 +28,10 @@ library
 
   exposed-modules:     Control.Ether.Abbr
                        Control.Ether.Implicit.Abbr
+                       Control.Ether.Optic
                        Control.Monad.Trans.Ether.Handler
                        Control.Monad.Ether
+                       Control.Monad.Ether.Handle
                        Control.Monad.Ether.TagAttach
                        Control.Monad.Ether.TagReplace
                        Control.Monad.Ether.Reader
@@ -52,7 +54,7 @@ library
 
   other-modules:       Control.Monad.Ether.State.Common
 
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base >=4.9 && <4.11
                ,       transformers >=0.4.2
                ,       transformers-lift >=0.1.0.1
                ,       mtl >=2.2.1
@@ -60,7 +62,8 @@ library
                ,       monad-control >=1.0.0.4
                ,       transformers-base >=0.4.4
                ,       exceptions >=0.8
-               ,       ghc-prim >=0.3
+               ,       template-haskell >=2.11
+               ,       tagged >=0.8.5
 
   default-language:    Haskell2010
   default-extensions:  PolyKinds
