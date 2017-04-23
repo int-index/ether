@@ -6,6 +6,7 @@ module Control.Ether.Optic
   , view
   , over
   , HList(..)
+  , KindOf
   ) where
 
 import Control.Applicative
@@ -18,7 +19,9 @@ import Data.Traversable
 import Language.Haskell.TH
 import Data.Coerce
 
-type Lens s t a b = forall f. Functor f => (a -> f b) -> s -> f t
+type LensLike f s t a b = (a -> f b) -> s -> f t
+
+type Lens s t a b = forall f. Functor f => LensLike f s t a b
 
 type Lens' s a = Lens s s a a
 
@@ -29,17 +32,12 @@ instance HasLens a a a where
   lensOf = id
   {-# INLINE lensOf #-}
 
-(#.) :: Coercible c b => (b -> c) -> (a -> b) -> (a -> c)
-(#.) _ = coerce (\x -> x :: b) :: forall a b. Coercible b a => a -> b
-
-infixr 9 #.
-
-view :: Lens s t a b -> s -> a
-view l = getConst #. l Const
+view :: LensLike (Const a) s t a b -> s -> a
+view l = coerce (l Const)
 {-# INLINE view #-}
 
-over :: Lens s t a b -> (a -> b) -> s -> t
-over l f = runIdentity #. l (Identity #. f)
+over :: LensLike Identity s t a b -> (a -> b) -> s -> t
+over = coerce
 {-# INLINE over #-}
 
 data HList xs where
@@ -54,11 +52,13 @@ type family Tags  (p :: K.Type) :: HList (TagsK p)
 return []
 
 type instance TagsK () = '[]
+type instance TagsK (Tagged t a) = '[KindOf t]
 type instance TagsK (Tagged t0 a, Tagged t1 b) = '[KindOf t0, KindOf t1]
 
 return []
 
 type instance Tags () = 'HNil
+type instance Tags (Tagged t a) = 'HCons t 'HNil
 type instance Tags (Tagged t0 a, Tagged t1 b) = 'HCons t0 ('HCons t1 'HNil)
 
 do
