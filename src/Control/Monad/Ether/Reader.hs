@@ -95,34 +95,34 @@ instance
     local =
       handling @READER @r @trans @m $
       coerce (T.local @r @(trans m) @a) ::
-        forall dp a . Local r (Handler dp trans m) a
+        forall eff a . Local r (Handler eff trans m) a
     {-# INLINE local #-}
 
     reader =
       handling @READER @r @trans @m $
       coerce (T.reader @r @(trans m) @a) ::
-        forall dp a . (r -> a) -> Handler dp trans m a
+        forall eff a . (r -> a) -> Handler eff trans m a
     {-# INLINE reader #-}
 
 instance
     ( HasLens tag payload r
     , Handle READER payload trans
     , Monad m, Monad (trans m)
-    ) => MonadReader tag r (Handler (TAGGED READER tag ': dps) trans m)
+    ) => MonadReader tag r (Handler (TAGGED READER tag ': effs) trans m)
   where
 
     ask =
       handling @READER @payload @trans @m $
-      (coerce :: forall dp a .
-                   trans m a ->
-        Handler dp trans m a)
+      (coerce :: forall eff a .
+                    trans m a ->
+        Handler eff trans m a)
       (T.asks (view (lensOf @tag @payload @r)))
     {-# INLINE ask #-}
 
     local f =
       handling @READER @payload @trans @m $
-      (coerce :: forall dp a .
-                   (trans m a ->            trans m a) ->
-        (Handler dp trans m a -> Handler dp trans m a))
+      (coerce :: forall eff a .
+                    (trans m a ->            trans m a) ->
+        (Handler eff trans m a -> Handler eff trans m a))
       (T.local (over (lensOf @tag @payload @r) f))
     {-# INLINE local #-}

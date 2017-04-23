@@ -100,7 +100,7 @@ instance
     writer =
       handling @WRITER @w @trans @m $
       coerce (T.writer @w @(trans m) @a) ::
-        forall dp a . (a, w) -> Handler dp trans m a
+        forall eff a . (a, w) -> Handler eff trans m a
     {-# INLINE writer #-}
 
     tell =
@@ -111,11 +111,11 @@ instance
     listen =
       handling @WRITER @w @trans @m $
       coerce (T.listen @w @(trans m) @a) ::
-        forall dp a . Listen w (Handler dp trans m) a
+        forall eff a . Listen w (Handler eff trans m) a
     {-# INLINE listen #-}
 
     pass =
       handling @WRITER @w @trans @m $
       coerce (T.pass @w @(trans m) @a) ::
-        forall dp a . Pass w (Handler dp trans m) a
+        forall eff a . Pass w (Handler eff trans m) a
     {-# INLINE pass #-}

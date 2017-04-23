@@ -79,11 +79,11 @@ instance
     throw =
       handling @EXCEPT @e @trans @m $
       coerce (T.throwError @e @(trans m) @a) ::
-        forall dp a . e -> Handler dp trans m a
+        forall eff a . e -> Handler eff trans m a
     {-# INLINE throw #-}
 
     catch =
       handling @EXCEPT @e @trans @m $
       coerce (T.catchError @e @(trans m) @a) ::
-        forall dp a . Catch e (Handler dp trans m) a
+        forall eff a . Catch e (Handler eff trans m) a
     {-# INLINE catch #-}

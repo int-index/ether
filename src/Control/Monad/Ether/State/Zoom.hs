@@ -39,9 +39,9 @@ instance
     ) => MonadState tag sInner (Handler (TAG_ZOOM tag z) trans m)
   where
     state =
-      (coerce :: forall dp r a .
-        (r ->                  m a) ->
-        (r -> Handler dp trans m a))
+      (coerce :: forall eff r a .
+        (r ->                   m a) ->
+        (r -> Handler eff trans m a))
       (state @tag . l)
       where
         Lens l = reflect (Proxy :: Proxy z)

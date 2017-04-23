@@ -51,27 +51,27 @@ instance {-# OVERLAPPABLE #-}
 
 instance {-# OVERLAPPABLE #-}
     ( Monad (trans m)
-    , MonadReader tag r (Handler dps trans m)
-    ) => MonadReader tag r (Handler (dp ': dps) trans (m :: K.Type -> K.Type))
+    , MonadReader tag r (Handler effs trans m)
+    ) => MonadReader tag r (Handler (eff ': effs) trans (m :: K.Type -> K.Type))
   where
 
     ask =
       (coerce ::
-        Handler        dps  trans m r ->
-        Handler (dp ': dps) trans m r)
+        Handler         effs  trans m r ->
+        Handler (eff ': effs) trans m r)
       (ask @tag)
     {-# INLINE ask #-}
 
     local =
       (coerce :: forall a .
-        Lift.Local r (Handler dps trans m) a ->
-        Lift.Local r (Handler (dp ': dps) trans m) a)
+        Lift.Local r (Handler         effs  trans m) a ->
+        Lift.Local r (Handler (eff ': effs) trans m) a)
       (local @tag)
     {-# INLINE local #-}
 
     reader =
       (coerce :: forall a .
-        ((r -> a) -> Handler        dps  trans m a) ->
-        ((r -> a) -> Handler (dp ': dps) trans m a))
+        ((r -> a) -> Handler         effs  trans m a) ->
+        ((r -> a) -> Handler (eff ': effs) trans m a))
       (reader @tag)
     {-# INLINE reader #-}

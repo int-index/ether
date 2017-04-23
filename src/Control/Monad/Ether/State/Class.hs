@@ -48,27 +48,27 @@ instance {-# OVERLAPPABLE #-}
 
 instance {-# OVERLAPPABLE #-}
     ( Monad (trans m)
-    , MonadState tag s (Handler dps trans m)
-    ) => MonadState tag s (Handler (dp ': dps) trans (m :: K.Type -> K.Type))
+    , MonadState tag s (Handler effs trans m)
+    ) => MonadState tag s (Handler (eff ': effs) trans (m :: K.Type -> K.Type))
   where
 
     get =
       (coerce ::
-        Handler        dps  trans m s ->
-        Handler (dp ': dps) trans m s)
+        Handler         effs  trans m s ->
+        Handler (eff ': effs) trans m s)
       (get @tag)
     {-# INLINE get #-}
 
     put =
       (coerce ::
-        (s -> Handler        dps  trans m ()) ->
-        (s -> Handler (dp ': dps) trans m ()))
+        (s -> Handler         effs  trans m ()) ->
+        (s -> Handler (eff ': effs) trans m ()))
       (put @tag)
     {-# INLINE put #-}
 
     state =
       (coerce :: forall a .
-        ((s -> (a, s)) -> Handler        dps  trans m a) ->
-        ((s -> (a, s)) -> Handler (dp ': dps) trans m a))
+        ((s -> (a, s)) -> Handler         effs  trans m a) ->
+        ((s -> (a, s)) -> Handler (eff ': effs) trans m a))
       (state @tag)
     {-# INLINE state #-}

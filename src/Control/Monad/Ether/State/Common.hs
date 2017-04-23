@@ -55,36 +55,36 @@ instance
     state =
       handling @STATE @s @trans @m $
       coerce (T.state @s @(trans m) @a) ::
-        forall dp a . (s -> (a, s)) -> Handler dp trans m a
+        forall eff a . (s -> (a, s)) -> Handler eff trans m a
     {-# INLINE state #-}
 
 instance
     ( HasLens tag payload s
     , Handle STATE payload trans
     , Monad m, Monad (trans m)
-    ) => MonadState tag s (Handler (TAGGED STATE tag ': dps) trans m)
+    ) => MonadState tag s (Handler (TAGGED STATE tag ': effs) trans m)
   where
 
     get =
       handling @STATE @payload @trans @m $
-      (coerce :: forall dp a .
-                   trans m a ->
-        Handler dp trans m a)
+      (coerce :: forall eff a .
+                    trans m a ->
+        Handler eff trans m a)
       (T.gets (view (lensOf @tag @payload @s)))
     {-# INLINE get #-}
 
     put s =
       handling @STATE @payload @trans @m $
-      (coerce :: forall dp a .
-                   trans m a ->
-        Handler dp trans m a)
+      (coerce :: forall eff a .
+                    trans m a ->
+        Handler eff trans m a)
       (T.modify (over (lensOf @tag @payload @s) (const s)))
     {-# INLINE put #-}
 
     state f =
       handling @STATE @payload @trans @m $
-      (coerce :: forall dp a .
-                   trans m a ->
-        Handler dp trans m a)
+      (coerce :: forall eff a .
+                    trans m a ->
+        Handler eff trans m a)
       (T.state (lensOf @tag @payload @s f))
     {-# INLINE state #-}

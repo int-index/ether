@@ -29,37 +29,37 @@ import qualified Control.Monad.Error.Class   as Class
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
-newtype Handler dp trans m a = Handler (trans m a)
+newtype Handler eff trans m a = Handler (trans m a)
   deriving
     ( Generic
     , Functor, Applicative, Alternative, Monad, MonadPlus
     , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
     , MonadThrow, MonadCatch, MonadMask )
 
-type Pack dp trans m a = trans m a -> Handler dp trans m a
+type Pack eff trans m a = trans m a -> Handler eff trans m a
 
-type Unpack dp trans m a = Handler dp trans m a -> trans m a
+type Unpack eff trans m a = Handler eff trans m a -> trans m a
 
 instance
     ( MB.MonadBase b (trans m)
-    ) => MB.MonadBase b (Handler dp trans m)
+    ) => MB.MonadBase b (Handler eff trans m)
   where
     liftBase =
       (coerce :: forall a .
         (b a -> trans m a) ->
-        (b a -> Handler dp trans m a))
+        (b a -> Handler eff trans m a))
       MB.liftBase
 
 instance
     ( MC.MonadTransControl trans
-    ) => MC.MonadTransControl (Handler dp trans)
+    ) => MC.MonadTransControl (Handler eff trans)
   where
-    type StT (Handler dp trans) a = MC.StT trans a
+    type StT (Handler eff trans) a = MC.StT trans a
     liftWith = MC.defaultLiftWith
-      (coerce :: Pack dp trans m a)
-      (coerce :: Unpack dp trans m a)
+      (coerce :: Pack eff trans m a)
+      (coerce :: Unpack eff trans m a)
     restoreT = MC.defaultRestoreT
-      (coerce :: Pack dp trans m a)
+      (coerce :: Pack eff trans m a)
 
 type LiftBaseWith b m a = (MC.RunInBase m b -> b a) -> m a
 
@@ -67,16 +67,16 @@ newtype LiftBaseWith' b m a = LBW { unLBW :: LiftBaseWith b m a }
 
 coerceLiftBaseWith ::
   LiftBaseWith b            (trans m) a ->
-  LiftBaseWith b (Handler dp trans m) a
+  LiftBaseWith b (Handler eff trans m) a
 coerceLiftBaseWith lbw =
   unLBW (coerce (LBW lbw))
 {-# INLINE coerceLiftBaseWith #-}
 
 instance
     ( MC.MonadBaseControl b (trans m)
-    ) => MC.MonadBaseControl b (Handler dp trans m)
+    ) => MC.MonadBaseControl b (Handler eff trans m)
   where
-    type StM (Handler dp trans m) a = MC.StM (trans m) a
+    type StM (Handler eff trans m) a = MC.StM (trans m) a
 
     liftBaseWith = coerceLiftBaseWith MC.liftBaseWith
     {-# INLINE liftBaseWith #-}
@@ -84,45 +84,45 @@ instance
     restoreM =
       (coerce :: forall a .
         (MC.StM (trans m) a ->            trans m a) ->
-        (MC.StM (trans m) a -> Handler dp trans m a))
+        (MC.StM (trans m) a -> Handler eff trans m a))
       MC.restoreM
     {-# INLINE restoreM #-}
 
-type instance Lift.StT (Handler dp trans) a = Lift.StT trans a
+type instance Lift.StT (Handler eff trans) a = Lift.StT trans a
 
-instance Lift.LiftLocal trans => Lift.LiftLocal (Handler dp trans) where
+instance Lift.LiftLocal trans => Lift.LiftLocal (Handler eff trans) where
   liftLocal =
     Lift.defaultLiftLocal
-      (coerce :: Pack dp trans m a)
-      (coerce :: Unpack dp trans m a)
+      (coerce :: Pack eff trans m a)
+      (coerce :: Unpack eff trans m a)
 
-instance Lift.LiftCatch trans => Lift.LiftCatch (Handler dp trans) where
+instance Lift.LiftCatch trans => Lift.LiftCatch (Handler eff trans) where
   liftCatch =
     Lift.defaultLiftCatch
-      (coerce :: Pack dp trans m a)
-      (coerce :: Unpack dp trans m a)
+      (coerce :: Pack eff trans m a)
+      (coerce :: Unpack eff trans m a)
 
-instance Lift.LiftListen trans => Lift.LiftListen (Handler dp trans) where
+instance Lift.LiftListen trans => Lift.LiftListen (Handler eff trans) where
   liftListen =
     Lift.defaultLiftListen
-      (coerce :: Pack dp trans m a)
-      (coerce :: Unpack dp trans m a)
+      (coerce :: Pack eff trans m a)
+      (coerce :: Unpack eff trans m a)
 
-instance Lift.LiftPass trans => Lift.LiftPass (Handler dp trans) where
+instance Lift.LiftPass trans => Lift.LiftPass (Handler eff trans) where
   liftPass =
     Lift.defaultLiftPass
-      (coerce :: Pack dp trans m a)
-      (coerce :: Unpack dp trans m a)
+      (coerce :: Pack eff trans m a)
+      (coerce :: Unpack eff trans m a)
 
-instance Lift.LiftCallCC trans => Lift.LiftCallCC (Handler dp trans) where
+instance Lift.LiftCallCC trans => Lift.LiftCallCC (Handler eff trans) where
   liftCallCC  =
     Lift.defaultLiftCallCC
-      (coerce :: Pack dp trans m a)
-      (coerce :: Unpack dp trans m a)
+      (coerce :: Pack eff trans m a)
+      (coerce :: Unpack eff trans m a)
   liftCallCC' =
     Lift.defaultLiftCallCC'
-      (coerce :: Pack dp trans m a)
-      (coerce :: Unpack dp trans m a)
+      (coerce :: Pack eff trans m a)
+      (coerce :: Unpack eff trans m a)
 
 
 -- Instances for mtl classes
@@ -131,7 +131,7 @@ instance {-# OVERLAPPABLE #-}
     ( Class.MonadCont m
     , Lift.LiftCallCC trans
     , Monad (trans m)
-    ) => Class.MonadCont (Handler dp trans m)
+    ) => Class.MonadCont (Handler eff trans m)
   where
     callCC = Lift.liftCallCC' Class.callCC
 
@@ -139,7 +139,7 @@ instance {-# OVERLAPPABLE #-}
     ( Class.MonadReader r m
     , Lift.LiftLocal trans
     , Monad (trans m)
-    ) => Class.MonadReader r (Handler dp trans m)
+    ) => Class.MonadReader r (Handler eff trans m)
   where
     ask = lift Class.ask
     local = Lift.liftLocal Class.ask Class.local
@@ -149,7 +149,7 @@ instance {-# OVERLAPPABLE #-}
     ( Class.MonadState s m
     , MonadTrans trans
     , Monad (trans m)
-    ) => Class.MonadState s (Handler dp trans m)
+    ) => Class.MonadState s (Handler eff trans m)
   where
     get = lift Class.get
     put = lift . Class.put
@@ -160,7 +160,7 @@ instance {-# OVERLAPPABLE #-}
     , Lift.LiftListen trans
     , Lift.LiftPass trans
     , Monad (trans m)
-    ) => Class.MonadWriter w (Handler dp trans m)
+    ) => Class.MonadWriter w (Handler eff trans m)
   where
     writer = lift . Class.writer
     tell   = lift . Class.tell
@@ -171,7 +171,7 @@ instance {-# OVERLAPPABLE #-}
     ( Class.MonadError e m
     , Lift.LiftCatch trans
     , Monad (trans m)
-    ) => Class.MonadError e (Handler dp trans m)
+    ) => Class.MonadError e (Handler eff trans m)
   where
     throwError = lift . Class.throwError
     catchError = Lift.liftCatch Class.catchError
