@@ -6,6 +6,8 @@
 * Remove `Control.Ether.TH`.
 * Unify `Dispatch` and `TaggedTrans` as `Handler`.
 * Better `MonadBase` and `MonadBaseControl` instances.
+* Add flattening for `ReaderT` and `StateT`.
+* Add zooming for `MonadState`.
 
 0.4.1.0
 -------

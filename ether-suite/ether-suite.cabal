@@ -18,8 +18,7 @@ test-suite regression
     QuickCheck >=2.8,
     ghc-prim >=0.3,
     lens >=4.14,
-    ether,
-    ether-zoom
+    ether
 
   main-is:
     Regression.hs
@@ -85,8 +84,7 @@ benchmark bench
     criterion >=1.1,
     deepseq >=1.4,
     lens >=4.14,
-    ether,
-    ether-flatten
+    ether
 
   main-is:
     Bench.hs

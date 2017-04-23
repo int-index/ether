@@ -6,8 +6,8 @@ module Control.Monad.Ether.State.Zoom
   , tagZoom
   ) where
 
+import Control.Ether.Optic
 import Data.Kind as K
-import Control.Lens
 import Data.Reflection
 import Control.Monad.Trans.Ether.Handler
 import Control.Monad.Trans.Identity
@@ -19,6 +19,10 @@ import Data.Coerce
 data TAG_ZOOM t z
 
 type TagZoomT t (z :: K.Type) = Handler (TAG_ZOOM t z) IdentityT
+
+newtype ReifiedLens s t a b = Lens { runLens :: Lens s t a b }
+
+type ReifiedLens' s a = ReifiedLens s s a a
 
 -- | Zoom into a part of a state using a lens.
 tagZoom

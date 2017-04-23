@@ -37,12 +37,15 @@ library
     Control.Monad.Ether.TagReplace
     Control.Monad.Ether.Reader
     Control.Monad.Ether.Reader.Class
+    Control.Monad.Ether.Reader.Flatten
     Control.Monad.Ether.Writer
     Control.Monad.Ether.Writer.Class
     Control.Monad.Ether.State
     Control.Monad.Ether.State.Class
     Control.Monad.Ether.State.Lazy
     Control.Monad.Ether.State.Strict
+    Control.Monad.Ether.State.Flatten
+    Control.Monad.Ether.State.Zoom
     Control.Monad.Ether.Except
     Control.Monad.Ether.Except.Class
     Control.Monad.Ether.Implicit
@@ -66,7 +69,8 @@ library
     transformers-base >=0.4.4,
     exceptions >=0.8,
     template-haskell >=2.11,
-    tagged >=0.8.5
+    tagged >=0.8.5,
+    reflection >=2.1
 
   default-language:
     Haskell2010

@@ -1,15 +1,17 @@
 module Control.Monad.Ether.Reader.Flatten
-  ( runReader
+  ( ReaderT
   , runReaderT
+  , Reader
+  , runReader
   ) where
 
 import Control.Ether.Optic
-import Control.Lens
 import Control.Monad.Ether.Handle
 import Control.Monad.Ether.Reader (READER)
 import qualified Control.Monad.Reader as T
 import Control.Monad.Trans.Ether.Handler
 import Data.Coerce
+import Data.Functor.Identity
 import Data.Kind
 
 type family READERS (ts :: HList xs) :: [Type] where

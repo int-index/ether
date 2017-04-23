@@ -3,6 +3,9 @@ module Control.Ether.Optic
   , TagsK
   , Tags
   , HasLens(..)
+  , LensLike
+  , Lens
+  , Lens'
   , view
   , over
   , HList(..)

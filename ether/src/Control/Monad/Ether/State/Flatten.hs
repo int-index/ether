@@ -1,15 +1,17 @@
 module Control.Monad.Ether.State.Flatten
-  ( runState
+  ( StateT
   , runStateT
+  , State
+  , runState
   ) where
 
 import Control.Ether.Optic
-import Control.Lens
 import Control.Monad.Ether.Handle
 import Control.Monad.Ether.State (STATE)
 import qualified Control.Monad.State as T
 import Control.Monad.Trans.Ether.Handler
 import Data.Coerce
+import Data.Functor.Identity
 import Data.Kind
 
 type family STATES (ts :: HList xs) :: [Type] where

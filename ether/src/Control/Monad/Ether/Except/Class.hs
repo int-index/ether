@@ -21,5 +21,9 @@ instance {-# OVERLAPPABLE #-}
          , Monad (t m)
          , MonadExcept tag e m
          ) => MonadExcept tag e (t m) where
+
     throw = Lift.lift . throw @tag
+    {-# INLINE throw #-}
+
     catch = Lift.liftCatch (catch @tag)
+    {-# INLINE catch #-}

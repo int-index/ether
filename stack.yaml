@@ -2,6 +2,4 @@ resolver: lts-8.12
 
 packages:
 - 'ether'
-- 'ether-flatten'
-- 'ether-zoom'
 - 'ether-suite'
