@@ -1,5 +1,6 @@
 module Control.Ether.Optic
   ( Tagged(..)
+  , TagsK
   , Tags
   , HasLens(..)
   , view
