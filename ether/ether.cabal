@@ -20,65 +20,84 @@ extra-source-files:  CHANGELOG.md
 
 source-repository head
 
-  type:                git
-  location:            git@github.com:int-index/ether.git
+  type: git
+  location: git@github.com:int-index/ether.git
 
 
 library
 
-  exposed-modules:     Control.Ether.Abbr
-                       Control.Ether.Implicit.Abbr
-                       Control.Ether.Optic
-                       Control.Monad.Trans.Ether.Handler
-                       Control.Monad.Ether
-                       Control.Monad.Ether.Handle
-                       Control.Monad.Ether.TagAttach
-                       Control.Monad.Ether.TagReplace
-                       Control.Monad.Ether.Reader
-                       Control.Monad.Ether.Reader.Class
-                       Control.Monad.Ether.Writer
-                       Control.Monad.Ether.Writer.Class
-                       Control.Monad.Ether.State
-                       Control.Monad.Ether.State.Class
-                       Control.Monad.Ether.State.Lazy
-                       Control.Monad.Ether.State.Strict
-                       Control.Monad.Ether.Except
-                       Control.Monad.Ether.Except.Class
-                       Control.Monad.Ether.Implicit
-                       Control.Monad.Ether.Implicit.Reader
-                       Control.Monad.Ether.Implicit.Writer
-                       Control.Monad.Ether.Implicit.State
-                       Control.Monad.Ether.Implicit.State.Lazy
-                       Control.Monad.Ether.Implicit.State.Strict
-                       Control.Monad.Ether.Implicit.Except
+  exposed-modules:
+    Control.Ether.Abbr
+    Control.Ether.Implicit.Abbr
+    Control.Ether.Optic
+    Control.Monad.Trans.Ether.Handler
+    Control.Monad.Ether
+    Control.Monad.Ether.Handle
+    Control.Monad.Ether.TagAttach
+    Control.Monad.Ether.TagReplace
+    Control.Monad.Ether.Reader
+    Control.Monad.Ether.Reader.Class
+    Control.Monad.Ether.Writer
+    Control.Monad.Ether.Writer.Class
+    Control.Monad.Ether.State
+    Control.Monad.Ether.State.Class
+    Control.Monad.Ether.State.Lazy
+    Control.Monad.Ether.State.Strict
+    Control.Monad.Ether.Except
+    Control.Monad.Ether.Except.Class
+    Control.Monad.Ether.Implicit
+    Control.Monad.Ether.Implicit.Reader
+    Control.Monad.Ether.Implicit.Writer
+    Control.Monad.Ether.Implicit.State
+    Control.Monad.Ether.Implicit.State.Lazy
+    Control.Monad.Ether.Implicit.State.Strict
+    Control.Monad.Ether.Implicit.Except
 
-  other-modules:       Control.Monad.Ether.State.Common
+  other-modules:
+    Control.Monad.Ether.State.Common
 
-  build-depends:       base >=4.9 && <4.11
-               ,       transformers >=0.4.2
-               ,       transformers-lift >=0.1.0.1
-               ,       mtl >=2.2.1
-               ,       mmorph >=1.0.4
-               ,       monad-control >=1.0.0.4
-               ,       transformers-base >=0.4.4
-               ,       exceptions >=0.8
-               ,       template-haskell >=2.11
-               ,       tagged >=0.8.5
+  build-depends:
+    base >=4.9 && <4.11,
+    transformers >=0.4.2,
+    transformers-lift >=0.1.0.1,
+    mtl >=2.2.1,
+    mmorph >=1.0.4,
+    monad-control >=1.0.0.4,
+    transformers-base >=0.4.4,
+    exceptions >=0.8,
+    template-haskell >=2.11,
+    tagged >=0.8.5
 
-  default-language:    Haskell2010
-  default-extensions:  PolyKinds
-                       ScopedTypeVariables
-                       FunctionalDependencies
-                       TypeApplications
-  other-extensions:    ConstraintKinds
-                       DataKinds
-                       DefaultSignatures
-                       DeriveGeneric
-                       FlexibleInstances
-                       GeneralizedNewtypeDeriving
-                       TypeFamilies
-                       TypeOperators
-                       UndecidableInstances
+  default-language:
+    Haskell2010
 
-  hs-source-dirs:      src
-  ghc-options:         -Wall -O2
+  default-extensions:
+    AllowAmbiguousTypes
+    ConstraintKinds
+    DataKinds
+    DeriveGeneric
+    EmptyDataDecls
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GADTs
+    GeneralizedNewtypeDeriving
+    PartialTypeSignatures
+    PolyKinds
+    ScopedTypeVariables
+    RankNTypes
+    TemplateHaskell
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeInType
+    TypeOperators
+    TypeSynonymInstances
+    UndecidableInstances
+    UndecidableSuperClasses
+
+  hs-source-dirs:
+    src
+
+  ghc-options:
+    -Wall -O2

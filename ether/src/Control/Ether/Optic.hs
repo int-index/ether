@@ -1,16 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeInType #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module Control.Ether.Optic
   ( Tagged(..)
   , Tags

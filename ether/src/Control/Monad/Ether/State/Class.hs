@@ -1,16 +1,10 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 -- | See "Control.Monad.State.Class".
 
 module Control.Monad.Ether.State.Class
   ( MonadState(..)
   ) where
 
+import Data.Kind as K
 import Control.Monad.Trans.Ether.Handler
 import qualified Control.Monad.Trans as Lift
 import Data.Coerce
@@ -42,14 +36,20 @@ instance {-# OVERLAPPABLE #-}
     , MonadState tag s m
     ) => MonadState tag s (t m)
   where
+
     get = Lift.lift (get @tag)
+    {-# INLINE get #-}
+
     put = Lift.lift . put @tag
+    {-# INLINE put #-}
+
     state = Lift.lift . state @tag
+    {-# INLINE state #-}
 
 instance {-# OVERLAPPABLE #-}
     ( Monad (trans m)
     , MonadState tag s (Handler dps trans m)
-    ) => MonadState tag s (Handler (dp ': dps) trans (m :: * -> *))
+    ) => MonadState tag s (Handler (dp ': dps) trans (m :: K.Type -> K.Type))
   where
 
     get =

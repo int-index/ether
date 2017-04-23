@@ -1,15 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE TypeInType #-}
-{-# LANGUAGE ConstraintKinds #-}
-
 module Control.Monad.Ether.Reader.Flatten
   ( runReader
   , runReaderT

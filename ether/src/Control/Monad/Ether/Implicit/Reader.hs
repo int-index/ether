@@ -1,5 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-
 -- | See "Control.Monad.Ether.Reader".
 
 module Control.Monad.Ether.Implicit.Reader

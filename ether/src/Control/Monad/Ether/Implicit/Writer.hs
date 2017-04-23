@@ -1,5 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-
 -- | See "Control.Monad.Ether.Writer".
 
 module Control.Monad.Ether.Implicit.Writer

@@ -1,14 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE TypeInType #-}
-
 module Control.Monad.Ether.State.Flatten
   ( runState
   , runStateT

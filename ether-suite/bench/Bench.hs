@@ -1,13 +1,5 @@
 {-# OPTIONS -fno-warn-partial-type-signatures #-}
 
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE PartialTypeSignatures #-}
-
 module Main (main) where
 
 import Criterion.Main

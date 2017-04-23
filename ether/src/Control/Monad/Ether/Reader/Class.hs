@@ -1,16 +1,10 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 -- | See "Control.Monad.Reader.Class".
 
 module Control.Monad.Ether.Reader.Class
   ( MonadReader(..)
   ) where
 
+import Data.Kind as K
 import Control.Monad.Trans.Ether.Handler
 import qualified Control.Monad.Trans.Lift.Local as Lift
 import Data.Coerce
@@ -45,13 +39,20 @@ instance {-# OVERLAPPABLE #-}
     , MonadReader tag r m
     ) => MonadReader tag r (t m)
   where
+
     ask = Lift.lift (ask @tag)
+    {-# INLINE ask #-}
+
     local = Lift.liftLocal (ask @tag) (local @tag)
+    {-# INLINE local #-}
+
+    reader = Lift.lift . reader @tag
+    {-# INLINE reader #-}
 
 instance {-# OVERLAPPABLE #-}
     ( Monad (trans m)
     , MonadReader tag r (Handler dps trans m)
-    ) => MonadReader tag r (Handler (dp ': dps) trans (m :: * -> *))
+    ) => MonadReader tag r (Handler (dp ': dps) trans (m :: K.Type -> K.Type))
   where
 
     ask =
@@ -67,3 +68,10 @@ instance {-# OVERLAPPABLE #-}
         Lift.Local r (Handler (dp ': dps) trans m) a)
       (local @tag)
     {-# INLINE local #-}
+
+    reader =
+      (coerce :: forall a .
+        ((r -> a) -> Handler        dps  trans m a) ->
+        ((r -> a) -> Handler (dp ': dps) trans m a))
+      (reader @tag)
+    {-# INLINE reader #-}

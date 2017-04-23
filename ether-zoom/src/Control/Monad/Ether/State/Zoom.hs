@@ -1,19 +1,12 @@
 {-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
 
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module Control.Monad.Ether.State.Zoom
   ( TAG_ZOOM
   , TagZoomT
   , tagZoom
   ) where
 
+import Data.Kind as K
 import Control.Lens
 import Data.Reflection
 import Control.Monad.Trans.Ether.Handler
@@ -25,7 +18,7 @@ import Data.Coerce
 -- | Encode type-level information for 'tagZoom'.
 data TAG_ZOOM t z
 
-type TagZoomT t (z :: *) = Handler (TAG_ZOOM t z) IdentityT
+type TagZoomT t (z :: K.Type) = Handler (TAG_ZOOM t z) IdentityT
 
 -- | Zoom into a part of a state using a lens.
 tagZoom

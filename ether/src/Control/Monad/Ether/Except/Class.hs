@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 -- | See "Control.Monad.Except".
 
 module Control.Monad.Ether.Except.Class

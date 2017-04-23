@@ -1,5 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-
 -- | See "Control.Monad.Ether.State.Lazy".
 
 module Control.Monad.Ether.Implicit.State.Lazy

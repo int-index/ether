@@ -1,5 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-
 -- | See "Control.Monad.Ether.Except".
 
 module Control.Monad.Ether.Implicit.Except

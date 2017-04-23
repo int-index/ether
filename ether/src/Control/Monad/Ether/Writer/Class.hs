@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 -- | See "Control.Monad.Writer.Class".
 
 module Control.Monad.Ether.Writer.Class
@@ -19,9 +14,7 @@ class (Monoid w, Monad m) => MonadWriter tag w m | m tag -> w where
 
     -- | Embed a simple writer action.
     writer :: (a, w) -> m a
-    writer ~(a, w) = do
-      tell @tag w
-      return a
+    writer ~(a, w) = a <$ tell @tag w
 
     -- | Append a value to the accumulator within the monad.
     tell :: w -> m ()
@@ -33,7 +26,7 @@ class (Monoid w, Monad m) => MonadWriter tag w m | m tag -> w where
 
     -- | Execute an action which returns a value and a function,
     -- and return the value, applying the function to the accumulator.
-    pass ::  m (a, w -> w) -> m a
+    pass :: m (a, w -> w) -> m a
 
 instance {-# OVERLAPPABLE #-}
          ( Lift.LiftListen t
@@ -42,7 +35,15 @@ instance {-# OVERLAPPABLE #-}
          , MonadWriter tag w m
          , Monoid w
          ) => MonadWriter tag w (t m) where
+
     writer = Lift.lift . writer @tag
+    {-# INLINE writer #-}
+
     tell   = Lift.lift . tell @tag
+    {-# INLINE tell #-}
+
     listen = Lift.liftListen (listen @tag)
+    {-# INLINE listen #-}
+
     pass   = Lift.liftPass (pass @tag)
+    {-# INLINE pass #-}
