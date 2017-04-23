@@ -20,7 +20,7 @@ data TAG_ZOOM t z
 
 type TagZoomT t (z :: K.Type) = Handler (TAG_ZOOM t z) IdentityT
 
-newtype ReifiedLens s t a b = Lens { runLens :: Lens s t a b }
+newtype ReifiedLens s t a b = Lens (Lens s t a b)
 
 type ReifiedLens' s a = ReifiedLens s s a a
 
@@ -45,3 +45,4 @@ instance
       (state @tag . l)
       where
         Lens l = reflect (Proxy :: Proxy z)
+    {-# INLINE state #-}

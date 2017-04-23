@@ -1,5 +1,2 @@
 resolver: lts-8.12
-
-packages:
-- 'ether'
-- 'ether-suite'
+packages: ['.']
