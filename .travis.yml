@@ -15,8 +15,8 @@ install:
  - stack install --only-dependencies --no-terminal
 
 script:
- - stack test ether-suite:regression --no-terminal --ghc-options -Werror
- - stack bench ether-suite:bench --no-terminal --ghc-options -Werror
+ - stack test ether:regression --no-terminal --ghc-options -Werror
+ - stack bench ether:bench --no-terminal --ghc-options -Werror
 
 addons:
   apt:
