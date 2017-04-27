@@ -1,14 +1,13 @@
 module Regression.T4 (test4) where
 
-import Control.Ether.Abbr
-import Control.Monad.Ether
+import Ether
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
 
 data RTag
 
-testEther :: Ether '[RTag --> Int] m => m Int
+testEther :: MonadReader RTag Int m => m Int
 testEther = ask @RTag
 
 runner r

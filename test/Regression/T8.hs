@@ -1,7 +1,6 @@
 module Regression.T8 (test8) where
 
-import Control.Ether.Abbr
-import Control.Monad.Ether
+import Ether
 
 import qualified Control.Monad.State as T
 
@@ -18,7 +17,7 @@ testMTL2 :: T.MonadState Bool m => m ()
 testMTL2 = T.modify not
 
 testEther
-  :: Ether '[Foo <-> Int, Bar <-> Bool] m
+  :: (MonadState Foo Int m, MonadState Bar Bool m)
   => m String
 testEther = do
   tagAttach @Foo testMTL1

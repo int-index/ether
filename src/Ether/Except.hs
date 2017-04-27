@@ -1,38 +1,61 @@
--- | See "Control.Monad.Except".
+module Ether.Except
+  (
+  -- * MonadExcept class
+    MonadExcept
+  , throw
+  , catch
+  -- * The Except monad
+  , Except
+  , runExcept
+  -- * The ExceptT monad transformer
+  , ExceptT
+  , exceptT
+  , runExceptT
+  -- * MonadExcept class (implicit)
+  , MonadExcept'
+  , throw'
+  , catch'
+  -- * The Except monad (implicit)
+  , Except'
+  , runExcept'
+  -- * The ExceptT monad transformer (implicit)
+  , ExceptT'
+  , exceptT'
+  , runExceptT'
+  -- * Internal labels
+  , TAGGED
+  , EXCEPT
+  ) where
 
-module Control.Monad.Ether.Except
-    (
-    -- * MonadExcept class
-      MonadExcept
-    , throw
-    , catch
-    -- * The Except monad
-    , Except
-    , runExcept
-    -- * The ExceptT monad transformer
-    , ExceptT
-    , exceptT
-    , runExceptT
-    -- * Handle functions
-    , handleT
-    , handle
-    ) where
-
-import Control.Monad.Ether.Handle
-import Control.Monad.Ether.Except.Class
-import Control.Monad.Trans.Ether.Handler
 import qualified Control.Monad.Except as T
 import Control.Monad.Signatures (Catch)
-import Data.Functor.Identity
+import qualified Control.Monad.Trans.Lift.Catch as Lift
 import Data.Coerce
+import Data.Functor.Identity
 
--- | Runs an 'Except' and handles the exception with the given function.
-handle :: forall tag e a . (e -> a) -> Except tag e a -> a
-handle h m = runIdentity (handleT @tag h m)
+import Ether.Handler
+import Ether.Internal
 
--- | Runs an 'ExceptT' and handles the exception with the given function.
-handleT :: forall tag e m a . Functor m => (e -> a) -> ExceptT tag e m a -> m a
-handleT h m = fmap (either h id) (runExceptT @tag m)
+class Monad m => MonadExcept tag e m | m tag -> e where
+
+    -- | Is used within a monadic computation to begin exception processing.
+    throw :: e -> m a
+
+    -- | A handler function to handle previous exceptions and return to
+    -- normal execution.
+    catch :: m a -> (e -> m a) -> m a
+
+instance {-# OVERLAPPABLE #-}
+         ( Lift.LiftCatch t
+         , Monad (t m)
+         , MonadExcept tag e m
+         ) => MonadExcept tag e (t m) where
+
+    throw = Lift.lift . throw @tag
+    {-# INLINE throw #-}
+
+    catch = Lift.liftCatch (catch @tag)
+    {-# INLINE catch #-}
 
 -- | Encode type-level information for 'ExceptT'.
 data EXCEPT
@@ -54,14 +77,17 @@ type ExceptT tag e = Handler (TAGGED EXCEPT tag) (T.ExceptT e)
 -- | Runs an 'Except' and returns either an exception or a normal value.
 runExcept :: forall tag e a . Except tag e a -> Either e a
 runExcept = coerce (T.runExcept @e @a)
+{-# INLINE runExcept #-}
 
 -- | Runs an 'ExceptT' and returns either an exception or a normal value.
 runExceptT :: forall tag e m a . ExceptT tag e m a -> m (Either e a)
 runExceptT = coerce (T.runExceptT @e @m @a)
+{-# INLINE runExceptT #-}
 
 -- | Constructor for computations in the exception monad transformer.
 exceptT :: forall tag e m a . m (Either e a) -> ExceptT tag e m a
 exceptT = coerce (T.ExceptT @e @m @a)
+{-# INLINE exceptT #-}
 
 type instance HandleSuper      EXCEPT e trans   = ()
 type instance HandleConstraint EXCEPT e trans m =
@@ -87,3 +113,29 @@ instance
       coerce (T.catchError @e @(trans m) @a) ::
         forall eff a . Catch e (Handler eff trans m) a
     {-# INLINE catch #-}
+
+type MonadExcept' e = MonadExcept e e
+
+throw' :: forall e m a . MonadExcept' e m => e -> m a
+throw' = throw @e
+{-# INLINE throw' #-}
+
+catch' :: forall e m a . MonadExcept' e m => m a -> (e -> m a) -> m a
+catch' = catch @e
+{-# INLINE catch' #-}
+
+type Except' e = Except e e
+
+runExcept' :: Except' e a -> Either e a
+runExcept' = runExcept
+{-# INLINE runExcept' #-}
+
+type ExceptT' e = ExceptT e e
+
+exceptT' :: m (Either e a) -> ExceptT' e m a
+exceptT' = exceptT
+{-# INLINE exceptT' #-}
+
+runExceptT' :: ExceptT' e m a -> m (Either e a)
+runExceptT' = runExceptT
+{-# INLINE runExceptT' #-}

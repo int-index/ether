@@ -1,7 +1,6 @@
 module Regression.T9 (test9) where
 
-import Control.Ether.Abbr
-import Control.Monad.Ether
+import Ether
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
@@ -9,16 +8,16 @@ import Test.Tasty.QuickCheck
 data Foo
 data Bar
 
-testEther1 :: Ether '[Foo <-> Int] m => m String
+testEther1 :: MonadState Foo Int m => m String
 testEther1 = do
   modify @Foo negate
   gets @Foo show
 
-testEther2 :: Ether '[Bar <-> Int] m => m String
+testEther2 :: MonadState Bar Int m => m String
 testEther2 = tagReplace @Foo @Bar testEther1
 
 testEther
-  :: Ether '[Foo <-> Int, Bar <-> Int] m
+  :: (MonadState Foo Int m, MonadState Bar Int m)
   => m String
 testEther = do
   a <- testEther1

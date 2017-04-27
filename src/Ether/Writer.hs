@@ -1,33 +1,93 @@
--- | See "Control.Monad.Writer".
+module Ether.Writer
+  (
+  -- * MonadWriter class
+    MonadWriter
+  , writer
+  , tell
+  , listen
+  , pass
+  , listens
+  , censor
+  -- * The Writer monad
+  , Writer
+  , runWriter
+  , execWriter
+  -- * The WriterT monad transformer
+  , WriterT
+  , writerT
+  , runWriterT
+  , execWriterT
+  -- * MonadWriter class (implicit)
+  , MonadWriter'
+  , writer'
+  , tell'
+  , listen'
+  , pass'
+  , listens'
+  , censor'
+  -- * The Writer monad (implicit)
+  , Writer'
+  , runWriter'
+  , execWriter'
+  -- * The WriterT monad transformer (implicit)
+  , WriterT'
+  , writerT'
+  , runWriterT'
+  , execWriterT'
+  -- * Internal labels
+  , TAGGED
+  , WRITER
+  ) where
 
-module Control.Monad.Ether.Writer
-    (
-    -- * MonadWriter class
-      MonadWriter
-    , writer
-    , tell
-    , listen
-    , pass
-    , listens
-    , censor
-    -- * The Writer monad
-    , Writer
-    , runWriter
-    , execWriter
-    -- * The WriterT monad transformer
-    , WriterT
-    , writerT
-    , runWriterT
-    , execWriterT
-    ) where
-
-import Control.Monad.Ether.Handle
-import Control.Monad.Ether.Writer.Class
-import Control.Monad.Trans.Ether.Handler
-import qualified Control.Monad.Writer as T
-import Data.Functor.Identity
 import Control.Monad.Signatures (Listen, Pass)
+import qualified Control.Monad.Trans.Lift.Listen as Lift
+import qualified Control.Monad.Trans.Lift.Pass   as Lift
+import qualified Control.Monad.Writer as T
 import Data.Coerce
+import Data.Functor.Identity
+
+import Ether.Handler
+import Ether.Internal
+
+class (Monoid w, Monad m) => MonadWriter tag w m | m tag -> w where
+
+    {-# MINIMAL (writer | tell), listen, pass #-}
+
+    -- | Embed a simple writer action.
+    writer :: (a, w) -> m a
+    writer ~(a, w) = a <$ tell @tag w
+
+    -- | Append a value to the accumulator within the monad.
+    tell :: w -> m ()
+    tell w = writer @tag ((),w)
+
+    -- | Execute an action and add its accumulator
+    -- to the value of the computation.
+    listen :: m a -> m (a, w)
+
+    -- | Execute an action which returns a value and a function,
+    -- and return the value, applying the function to the accumulator.
+    pass :: m (a, w -> w) -> m a
+
+instance {-# OVERLAPPABLE #-}
+         ( Lift.LiftListen t
+         , Lift.LiftPass   t
+         , Monad (t m)
+         , MonadWriter tag w m
+         , Monoid w
+         ) => MonadWriter tag w (t m) where
+
+    writer = Lift.lift . writer @tag
+    {-# INLINE writer #-}
+
+    tell   = Lift.lift . tell @tag
+    {-# INLINE tell #-}
+
+    listen = Lift.liftListen (listen @tag)
+    {-# INLINE listen #-}
+
+    pass   = Lift.liftPass (pass @tag)
+    {-# INLINE pass #-}
 
 -- | Execute an action and add the result of applying the given function to
 -- its accumulator to the value of the computation.
@@ -119,3 +179,42 @@ instance
       coerce (T.pass @w @(trans m) @a) ::
         forall eff a . Pass w (Handler eff trans m) a
     {-# INLINE pass #-}
+
+type Writer' w = Writer w w
+
+runWriter' :: Writer' w a -> (a, w)
+runWriter' = runWriter
+
+execWriter' :: Writer' w a -> w
+execWriter' = execWriter
+
+type WriterT' w = WriterT w w
+
+writerT' :: m (a, w) -> WriterT' w m a
+writerT' = writerT
+
+runWriterT' :: WriterT' w m a -> m (a, w)
+runWriterT' = runWriterT
+
+execWriterT' :: Monad m => WriterT' w m a -> m w
+execWriterT' = execWriterT
+
+type MonadWriter' w = MonadWriter w w
+
+writer' :: forall w m a . MonadWriter' w m => (a, w) -> m a
+writer' = writer @w
+
+tell' :: forall w m . MonadWriter' w m => w -> m ()
+tell' = tell @w
+
+listen' :: forall w m a . MonadWriter' w m => m a -> m (a, w)
+listen' = listen @w
+
+pass' :: forall w m a . MonadWriter' w m => m (a, w -> w) -> m a
+pass' = pass @w
+
+listens' :: forall w m a b . MonadWriter' w m => (w -> b) -> m a -> m (a, b)
+listens' = listens @w
+
+censor' :: forall w m a . MonadWriter' w m => (w -> w) -> m a -> m a
+censor' = censor @w

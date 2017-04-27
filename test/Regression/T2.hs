@@ -1,20 +1,18 @@
 module Regression.T2 (test2) where
 
-import Control.Ether.Abbr
-import qualified Control.Monad.Ether.Implicit as I
-import qualified Control.Ether.Implicit.Abbr as I
+import Ether
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
 
-testEther :: Ether '[I.R Integer, I.R Bool] m => m String
-testEther = I.local (succ :: Integer -> Integer) $ do
-  n :: Integer <- I.asks (*2)
-  b <- I.local not I.ask
+testEther :: (MonadReader' Integer m, MonadReader' Bool m) => m String
+testEther = local' (succ :: Integer -> Integer) $ do
+  n :: Integer <- asks' (*2)
+  b <- local' not ask'
   return (if b then "" else show n)
 
-runner1 (n :: Integer) = flip I.runReader n . flip I.runReaderT True
-runner2 (n :: Integer) = flip I.runReader True . flip I.runReaderT n
+runner1 (n :: Integer) = flip runReader' n    . flip runReaderT' True
+runner2 (n :: Integer) = flip runReader' True . flip runReaderT' n
 
 test2 :: TestTree
 test2 = testGroup "T2: Implicit tags"

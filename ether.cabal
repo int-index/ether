@@ -27,37 +27,14 @@ source-repository head
 library
 
   exposed-modules:
-    Control.Ether.Abbr
-    Control.Ether.Implicit.Abbr
-    Control.Ether.Optic
-    Control.Monad.Trans.Ether.Handler
-    Control.Monad.Ether
-    Control.Monad.Ether.Handle
-    Control.Monad.Ether.TagAttach
-    Control.Monad.Ether.TagReplace
-    Control.Monad.Ether.Reader
-    Control.Monad.Ether.Reader.Class
-    Control.Monad.Ether.Reader.Flatten
-    Control.Monad.Ether.Writer
-    Control.Monad.Ether.Writer.Class
-    Control.Monad.Ether.State
-    Control.Monad.Ether.State.Class
-    Control.Monad.Ether.State.Lazy
-    Control.Monad.Ether.State.Strict
-    Control.Monad.Ether.State.Flatten
-    Control.Monad.Ether.State.Zoom
-    Control.Monad.Ether.Except
-    Control.Monad.Ether.Except.Class
-    Control.Monad.Ether.Implicit
-    Control.Monad.Ether.Implicit.Reader
-    Control.Monad.Ether.Implicit.Writer
-    Control.Monad.Ether.Implicit.State
-    Control.Monad.Ether.Implicit.State.Lazy
-    Control.Monad.Ether.Implicit.State.Strict
-    Control.Monad.Ether.Implicit.Except
-
-  other-modules:
-    Control.Monad.Ether.State.Common
+    Ether
+    Ether.Reader
+    Ether.State
+    Ether.Writer
+    Ether.Except
+    Ether.Handler
+    Ether.TagDispatch
+    Ether.Internal
 
   build-depends:
     base >=4.9 && <4.11,

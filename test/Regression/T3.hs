@@ -1,7 +1,6 @@
 module Regression.T3 (test3) where
 
-import Control.Ether.Abbr
-import Control.Monad.Ether
+import Ether
 
 import qualified Control.Monad.Reader as T
 import qualified Control.Monad.State as T
@@ -20,7 +19,7 @@ testMTL = do
   return (a * b)
 
 testEther
-  :: Ether '[STag --> Int, STag <-> Int, RTag --> Int] m
+  :: (MonadReader STag Int m, MonadState STag Int m, MonadReader RTag Int m)
   => m (Int, Int, Int)
 testEther = local @RTag (*2) $ do
   a_mul_b <- tagAttach @STag testMTL

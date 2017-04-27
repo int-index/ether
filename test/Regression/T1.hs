@@ -1,7 +1,6 @@
 module Regression.T1 (test1) where
 
-import Control.Monad.Ether
-import Control.Ether.Abbr
+import Ether
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
@@ -10,7 +9,7 @@ data Tag1
 data Tag2
 
 testEther
-  :: Ether '[Tag1 --> String, Tag2 --> String] m
+  :: (MonadReader Tag1 String m, MonadReader Tag2 String m)
   => m ((String, String), (String, String))
 testEther = do
   s1 <- ask @Tag1
