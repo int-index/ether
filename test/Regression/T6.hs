@@ -1,10 +1,7 @@
 module Regression.T6 (test6) where
 
-import Control.Monad
-import Control.Ether.Abbr
-
-import qualified Control.Monad.Ether.Implicit as I
-import qualified Control.Ether.Implicit.Abbr as I
+import Data.Function
+import Ether
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
@@ -17,32 +14,33 @@ data NegativeLog a = NegativeLog a
 
 testEther
   :: (Floating a, Ord a)
-  => Ether '[I.E DivideByZero, I.E (NegativeLog a)] m
+  => (MonadExcept' DivideByZero m, MonadExcept' (NegativeLog a) m)
   => a -> a -> m a
 testEther a b = do
-  when (b == 0) (I.throw DivideByZero)
+  when (b == 0) (throw' DivideByZero)
   let d = a / b
-  when (d < 0) (I.throw (NegativeLog d))
+  when (d < 0) (throw' (NegativeLog d))
   return (log d)
-
--- Copied verbatim from "Data.Function" to support @base < 4.8@.
-(&) :: a -> (a -> b) -> b
-x & f = f x
 
 handleNegativeLog (NegativeLog (x :: Double)) = "nl: " ++ show x
 handleDivideByZero DivideByZero = "dz"
 
+handleT' :: Functor m => (e -> a) -> ExceptT' e m a -> m a
+handleT' h m = fmap (either h id) (runExceptT' m)
+
 runner1 :: Double -> Double -> String
 runner1 a b = do
   (show `fmap` testEther a b)
-    & I.handleT handleNegativeLog
-    & I.handle  handleDivideByZero
+    & handleT' handleNegativeLog
+    & handleT'  handleDivideByZero
+    & runIdentity
 
 runner2 :: Double -> Double -> String
 runner2 a b = do
   (show `fmap` testEther a b)
-    & I.handleT handleDivideByZero
-    & I.handle  handleNegativeLog
+    & handleT' handleDivideByZero
+    & handleT' handleNegativeLog
+    & runIdentity
 
 logDiv :: Double -> Double -> String
 logDiv a b

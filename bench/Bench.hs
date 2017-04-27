@@ -2,16 +2,12 @@
 
 module Main (main) where
 
-import Criterion.Main
+import Control.DeepSeq
+import qualified Control.Lens as L
 import qualified Control.Monad.Reader as M
 import qualified Control.Monad.State as M
-import qualified Control.Monad.Ether.Reader as E
-import qualified Control.Monad.Ether.State as E
-import qualified Control.Monad.Ether.Reader.Flatten as E.F
-import qualified Control.Monad.Ether.State.Flatten as E.F
-import qualified Control.Lens as L
-import Control.Ether.Optic
-import Control.DeepSeq
+import Criterion.Main
+import Ether
 
 id' :: a -> a
 id' = id
@@ -71,80 +67,80 @@ run_stateCombinerMTL_flat_9
     M.runState stateCombinerMTL_flat_9 (a9, a8, a7, a6, a5, a4, a3, a2, a1)
 
 readerCombinerEther_sep_9
-  :: ( E.MonadReader 1 Int m
-     , E.MonadReader 2 Int m
-     , E.MonadReader 3 Int m
-     , E.MonadReader 4 Int m
-     , E.MonadReader 5 Int m
-     , E.MonadReader 6 Int m
-     , E.MonadReader 7 Int m
-     , E.MonadReader 8 Int m
-     , E.MonadReader 9 Int m )
+  :: ( MonadReader 1 Int m
+     , MonadReader 2 Int m
+     , MonadReader 3 Int m
+     , MonadReader 4 Int m
+     , MonadReader 5 Int m
+     , MonadReader 6 Int m
+     , MonadReader 7 Int m
+     , MonadReader 8 Int m
+     , MonadReader 9 Int m )
     => m ()
 readerCombinerEther_sep_9 = rnf <$> sequenceA
-  [ E.ask @1
-  , E.ask @2
-  , E.ask @3
-  , E.ask @4
-  , E.ask @5
-  , E.ask @6
-  , E.ask @7
-  , E.ask @8
-  , E.ask @9 ]
+  [ ask @1
+  , ask @2
+  , ask @3
+  , ask @4
+  , ask @5
+  , ask @6
+  , ask @7
+  , ask @8
+  , ask @9 ]
 {-# NOINLINE readerCombinerEther_sep_9 #-}
 
 stateCombinerEther_sep_9
-  :: ( E.MonadState 1 Int m
-     , E.MonadState 2 Int m
-     , E.MonadState 3 Int m
-     , E.MonadState 4 Int m
-     , E.MonadState 5 Int m
-     , E.MonadState 6 Int m
-     , E.MonadState 7 Int m
-     , E.MonadState 8 Int m
-     , E.MonadState 9 Int m )
+  :: ( MonadState 1 Int m
+     , MonadState 2 Int m
+     , MonadState 3 Int m
+     , MonadState 4 Int m
+     , MonadState 5 Int m
+     , MonadState 6 Int m
+     , MonadState 7 Int m
+     , MonadState 8 Int m
+     , MonadState 9 Int m )
     => m ()
 stateCombinerEther_sep_9 = do
-  E.modify @1 id'
-  E.modify @2 id'
-  E.modify @3 id'
-  E.modify @4 id'
-  E.modify @5 id'
-  E.modify @6 id'
-  E.modify @7 id'
-  E.modify @8 id'
-  E.modify @9 id'
+  modify @1 id'
+  modify @2 id'
+  modify @3 id'
+  modify @4 id'
+  modify @5 id'
+  modify @6 id'
+  modify @7 id'
+  modify @8 id'
+  modify @9 id'
   rnf <$> sequenceA
-    [ E.get @1
-    , E.get @2
-    , E.get @3
-    , E.get @4
-    , E.get @5
-    , E.get @6
-    , E.get @7
-    , E.get @8
-    , E.get @9 ]
+    [ get @1
+    , get @2
+    , get @3
+    , get @4
+    , get @5
+    , get @6
+    , get @7
+    , get @8
+    , get @9 ]
 {-# NOINLINE stateCombinerEther_sep_9 #-}
 
 run_readerCombinerEther_nested_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int) -> ()
 run_readerCombinerEther_nested_9
   (a1, a2, a3, a4, a5, a6, a7, a8, a9)
-    = flip (E.runReader  @9) a1
-    . flip (E.runReaderT @8) a2
-    . flip (E.runReaderT @7) a3
-    . flip (E.runReaderT @6) a4
-    . flip (E.runReaderT @5) a5
-    . flip (E.runReaderT @4) a6
-    . flip (E.runReaderT @3) a7
-    . flip (E.runReaderT @2) a8
-    . flip (E.runReaderT @1) a9
+    = flip (runReader  @9) a1
+    . flip (runReaderT @8) a2
+    . flip (runReaderT @7) a3
+    . flip (runReaderT @6) a4
+    . flip (runReaderT @5) a5
+    . flip (runReaderT @4) a6
+    . flip (runReaderT @3) a7
+    . flip (runReaderT @2) a8
+    . flip (runReaderT @1) a9
     $ readerCombinerEther_sep_9
 
 run_readerCombinerEther_flatten_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int) -> ()
 run_readerCombinerEther_flatten_9
   (a1, a2, a3, a4, a5, a6, a7, a8, a9)
     =
-      E.F.runReader
+      runReaders
         readerCombinerEther_sep_9
           ( Tagged @1 a9,
             Tagged @2 a8,
@@ -159,12 +155,12 @@ run_readerCombinerEther_flatten_9
 run_readerCombinerEther_flattenhalf_9 :: (Int, Int, Int, Int, Int, Int, Int, Int, Int) -> ()
 run_readerCombinerEther_flattenhalf_9
   (a1, a2, a3, a4, a5, a6, a7, a8, a9) =
-    flip E.F.runReader
+    flip runReaders
       ( Tagged @1 a9,
         Tagged @2 a8,
         Tagged @3 a7,
         Tagged @4 a6 ) .
-    flip E.F.runReaderT
+    flip runReadersT
       ( Tagged @5 a5,
         Tagged @6 a4,
         Tagged @7 a3,
@@ -178,7 +174,7 @@ run_stateCombinerEther_flatten_9 ::
 run_stateCombinerEther_flatten_9
   (a1, a2, a3, a4, a5, a6, a7, a8, a9)
     =
-      E.F.runState
+      runStates
         stateCombinerEther_sep_9
           ( Tagged @1 a9,
             Tagged @2 a8,

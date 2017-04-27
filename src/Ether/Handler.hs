@@ -1,4 +1,4 @@
-module Control.Monad.Trans.Ether.Handler
+module Ether.Handler
   ( Handler(..)
   ) where
 
@@ -20,11 +20,11 @@ import qualified Control.Monad.Trans.Lift.Listen as Lift
 import qualified Control.Monad.Trans.Lift.Pass   as Lift
 import qualified Control.Monad.Trans.Lift.CallCC as Lift
 
-import qualified Control.Monad.Cont.Class    as Class
-import qualified Control.Monad.Reader.Class  as Class
-import qualified Control.Monad.State.Class   as Class
-import qualified Control.Monad.Writer.Class  as Class
-import qualified Control.Monad.Error.Class   as Class
+import qualified Control.Monad.Cont.Class    as Mtl
+import qualified Control.Monad.Reader.Class  as Mtl
+import qualified Control.Monad.State.Class   as Mtl
+import qualified Control.Monad.Writer.Class  as Mtl
+import qualified Control.Monad.Error.Class   as Mtl
 
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
@@ -66,7 +66,7 @@ type LiftBaseWith b m a = (MC.RunInBase m b -> b a) -> m a
 newtype LiftBaseWith' b m a = LBW { unLBW :: LiftBaseWith b m a }
 
 coerceLiftBaseWith ::
-  LiftBaseWith b            (trans m) a ->
+  LiftBaseWith b             (trans m) a ->
   LiftBaseWith b (Handler eff trans m) a
 coerceLiftBaseWith lbw =
   unLBW (coerce (LBW lbw))
@@ -125,53 +125,53 @@ instance Lift.LiftCallCC trans => Lift.LiftCallCC (Handler eff trans) where
       (coerce :: Unpack eff trans m a)
 
 
--- Instances for mtl classes
+-- Instances for mtl Mtles
 
 instance {-# OVERLAPPABLE #-}
-    ( Class.MonadCont m
+    ( Mtl.MonadCont m
     , Lift.LiftCallCC trans
     , Monad (trans m)
-    ) => Class.MonadCont (Handler eff trans m)
+    ) => Mtl.MonadCont (Handler eff trans m)
   where
-    callCC = Lift.liftCallCC' Class.callCC
+    callCC = Lift.liftCallCC' Mtl.callCC
 
 instance {-# OVERLAPPABLE #-}
-    ( Class.MonadReader r m
+    ( Mtl.MonadReader r m
     , Lift.LiftLocal trans
     , Monad (trans m)
-    ) => Class.MonadReader r (Handler eff trans m)
+    ) => Mtl.MonadReader r (Handler eff trans m)
   where
-    ask = lift Class.ask
-    local = Lift.liftLocal Class.ask Class.local
-    reader = lift . Class.reader
+    ask = lift Mtl.ask
+    local = Lift.liftLocal Mtl.ask Mtl.local
+    reader = lift . Mtl.reader
 
 instance {-# OVERLAPPABLE #-}
-    ( Class.MonadState s m
+    ( Mtl.MonadState s m
     , MonadTrans trans
     , Monad (trans m)
-    ) => Class.MonadState s (Handler eff trans m)
+    ) => Mtl.MonadState s (Handler eff trans m)
   where
-    get = lift Class.get
-    put = lift . Class.put
-    state = lift . Class.state
+    get = lift Mtl.get
+    put = lift . Mtl.put
+    state = lift . Mtl.state
 
 instance {-# OVERLAPPABLE #-}
-    ( Class.MonadWriter w m
+    ( Mtl.MonadWriter w m
     , Lift.LiftListen trans
     , Lift.LiftPass trans
     , Monad (trans m)
-    ) => Class.MonadWriter w (Handler eff trans m)
+    ) => Mtl.MonadWriter w (Handler eff trans m)
   where
-    writer = lift . Class.writer
-    tell   = lift . Class.tell
-    listen = Lift.liftListen Class.listen
-    pass   = Lift.liftPass Class.pass
+    writer = lift . Mtl.writer
+    tell   = lift . Mtl.tell
+    listen = Lift.liftListen Mtl.listen
+    pass   = Lift.liftPass Mtl.pass
 
 instance {-# OVERLAPPABLE #-}
-    ( Class.MonadError e m
+    ( Mtl.MonadError e m
     , Lift.LiftCatch trans
     , Monad (trans m)
-    ) => Class.MonadError e (Handler eff trans m)
+    ) => Mtl.MonadError e (Handler eff trans m)
   where
-    throwError = lift . Class.throwError
-    catchError = Lift.liftCatch Class.catchError
+    throwError = lift . Mtl.throwError
+    catchError = Lift.liftCatch Mtl.catchError

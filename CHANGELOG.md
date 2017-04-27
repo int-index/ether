@@ -4,10 +4,12 @@
 * Support only GHC 8.0 and higher.
 * Use the `TypeApplications` extension to get rid of `Proxy`.
 * Remove `Control.Ether.TH`.
+* Remove `Control.Ether.Abbr`.
 * Unify `Dispatch` and `TaggedTrans` as `Handler`.
 * Better `MonadBase` and `MonadBaseControl` instances.
 * Add flattening for `ReaderT` and `StateT`.
 * Add zooming for `MonadState`.
+* Simpler module structure.
 
 0.4.1.0
 -------

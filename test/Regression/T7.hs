@@ -3,7 +3,7 @@ module Regression.T7 (test7) where
 import Data.Monoid
 import Control.Monad
 
-import Control.Monad.Ether
+import Ether
 import qualified Control.Monad.Writer as T
 
 import Test.Tasty

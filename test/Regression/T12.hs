@@ -1,7 +1,6 @@
 module Regression.T12 (test12) where
 
-import Control.Monad.Ether.State
-import Control.Monad.Ether.State.Zoom
+import Ether
 import Control.Lens
 
 import Test.Tasty
@@ -14,8 +13,8 @@ succState = modify @Foo succ
 
 testEther :: (Enum a, MonadState Foo (a, a) m) => m (a, a)
 testEther = do
-  tagZoom @Foo _1 succState
-  tagZoom @Foo _2 $ modify @Foo pred
+  Ether.zoom @Foo _1 succState
+  Ether.zoom @Foo _2 $ modify @Foo pred
   get @Foo
 
 model :: Enum a => (a, a) -> (a, a)
