@@ -46,7 +46,7 @@ import qualified Control.Monad.Writer as T
 import Data.Coerce
 import Data.Functor.Identity
 
-import Ether.Handler
+import Ether.TaggedTrans
 import Ether.Internal
 
 class (Monoid w, Monad m) => MonadWriter tag w m | m tag -> w where
@@ -117,7 +117,7 @@ type Writer tag w = WriterT tag w Identity
 --
 -- The 'return' function produces the output 'mempty', while '>>=' combines
 -- the outputs of the subcomputations using 'mappend'.
-type WriterT tag w = Handler (TAGGED WRITER tag) (T.WriterT w)
+type WriterT tag w = TaggedTrans (TAGGED WRITER tag) (T.WriterT w)
 
 -- | Constructor for computations in the writer monad transformer.
 writerT :: forall tag w m a . m (a, w) -> WriterT tag w m a
@@ -154,13 +154,13 @@ instance Monoid w => Handle WRITER w (T.WriterT w) where
 instance
     ( Handle WRITER w trans
     , Monad m, Monad (trans m)
-    ) => MonadWriter tag w (Handler (TAGGED WRITER tag) trans m)
+    ) => MonadWriter tag w (TaggedTrans (TAGGED WRITER tag) trans m)
   where
 
     writer =
       handling @WRITER @w @trans @m $
       coerce (T.writer @w @(trans m) @a) ::
-        forall eff a . (a, w) -> Handler eff trans m a
+        forall eff a . (a, w) -> TaggedTrans eff trans m a
     {-# INLINE writer #-}
 
     tell =
@@ -171,13 +171,13 @@ instance
     listen =
       handling @WRITER @w @trans @m $
       coerce (T.listen @w @(trans m) @a) ::
-        forall eff a . Listen w (Handler eff trans m) a
+        forall eff a . Listen w (TaggedTrans eff trans m) a
     {-# INLINE listen #-}
 
     pass =
       handling @WRITER @w @trans @m $
       coerce (T.pass @w @(trans m) @a) ::
-        forall eff a . Pass w (Handler eff trans m) a
+        forall eff a . Pass w (TaggedTrans eff trans m) a
     {-# INLINE pass #-}
 
 type Writer' w = Writer w w

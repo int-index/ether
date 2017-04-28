@@ -85,7 +85,7 @@ import Data.Kind
 import Data.Proxy
 import Data.Reflection
 
-import Ether.Handler
+import Ether.TaggedTrans
 import Ether.Internal
 
 class Monad m => MonadState tag s m | m tag -> s where
@@ -126,28 +126,28 @@ instance {-# OVERLAPPABLE #-}
 
 instance {-# OVERLAPPABLE #-}
     ( Monad (trans m)
-    , MonadState tag s (Handler effs trans m)
-    ) => MonadState tag s (Handler (eff ': effs) trans (m :: Type -> Type))
+    , MonadState tag s (TaggedTrans effs trans m)
+    ) => MonadState tag s (TaggedTrans (eff ': effs) trans (m :: Type -> Type))
   where
 
     get =
       (coerce ::
-        Handler         effs  trans m s ->
-        Handler (eff ': effs) trans m s)
+        TaggedTrans         effs  trans m s ->
+        TaggedTrans (eff ': effs) trans m s)
       (get @tag)
     {-# INLINE get #-}
 
     put =
       (coerce ::
-        (s -> Handler         effs  trans m ()) ->
-        (s -> Handler (eff ': effs) trans m ()))
+        (s -> TaggedTrans         effs  trans m ()) ->
+        (s -> TaggedTrans (eff ': effs) trans m ()))
       (put @tag)
     {-# INLINE put #-}
 
     state =
       (coerce :: forall a .
-        ((s -> (a, s)) -> Handler         effs  trans m a) ->
-        ((s -> (a, s)) -> Handler (eff ': effs) trans m a))
+        ((s -> (a, s)) -> TaggedTrans         effs  trans m a) ->
+        ((s -> (a, s)) -> TaggedTrans (eff ': effs) trans m a))
       (state @tag)
     {-# INLINE state #-}
 
@@ -179,7 +179,7 @@ instance Handle STATE s (T.Lazy.StateT s) where
 instance
     ( Handle STATE s trans
     , Monad m, Monad (trans m)
-    ) => MonadState tag s (Handler (TAGGED STATE tag) trans m)
+    ) => MonadState tag s (TaggedTrans (TAGGED STATE tag) trans m)
   where
 
     get =
@@ -195,21 +195,21 @@ instance
     state =
       handling @STATE @s @trans @m $
       coerce (T.state @s @(trans m) @a) ::
-        forall eff a . (s -> (a, s)) -> Handler eff trans m a
+        forall eff a . (s -> (a, s)) -> TaggedTrans eff trans m a
     {-# INLINE state #-}
 
 instance
     ( HasLens tag payload s
     , Handle STATE payload trans
     , Monad m, Monad (trans m)
-    ) => MonadState tag s (Handler (TAGGED STATE tag ': effs) trans m)
+    ) => MonadState tag s (TaggedTrans (TAGGED STATE tag ': effs) trans m)
   where
 
     get =
       handling @STATE @payload @trans @m $
       (coerce :: forall eff a .
                     trans m a ->
-        Handler eff trans m a)
+        TaggedTrans eff trans m a)
       (T.gets (view (lensOf @tag @payload @s)))
     {-# INLINE get #-}
 
@@ -217,7 +217,7 @@ instance
       handling @STATE @payload @trans @m $
       (coerce :: forall eff a .
                     trans m a ->
-        Handler eff trans m a)
+        TaggedTrans eff trans m a)
       (T.modify (over (lensOf @tag @payload @s) (const s)))
     {-# INLINE put #-}
 
@@ -225,7 +225,7 @@ instance
       handling @STATE @payload @trans @m $
       (coerce :: forall eff a .
                     trans m a ->
-        Handler eff trans m a)
+        TaggedTrans eff trans m a)
       (T.state (lensOf @tag @payload @s f))
     {-# INLINE state #-}
 
@@ -241,7 +241,7 @@ type State tag r = StateT tag r Identity
 --
 -- The 'return' function leaves the state unchanged, while '>>=' uses
 -- the final state of the first computation as the initial state of the second.
-type StateT tag s = Handler (TAGGED STATE tag) (T.Strict.StateT s)
+type StateT tag s = TaggedTrans (TAGGED STATE tag) (T.Strict.StateT s)
 
 -- | Constructor for computations in the state monad transformer.
 stateT :: forall tag s m a . (s -> m (a, s)) -> StateT tag s m a
@@ -296,7 +296,7 @@ type LazyState tag r = LazyStateT tag r Identity
 --
 -- The 'return' function leaves the state unchanged, while '>>=' uses
 -- the final state of the first computation as the initial state of the second.
-type LazyStateT tag s = Handler (TAGGED STATE tag) (T.Lazy.StateT s)
+type LazyStateT tag s = TaggedTrans (TAGGED STATE tag) (T.Lazy.StateT s)
 
 -- | Constructor for computations in the state monad transformer.
 lazyStateT :: forall tag s m a . (s -> m (a, s)) -> LazyStateT tag s m a
@@ -343,7 +343,7 @@ type family STATES (ts :: HList xs) :: [Type] where
   STATES 'HNil = '[]
   STATES ('HCons t ts) = TAGGED STATE t ': STATES ts
 
-type StatesT s = Handler (STATES (Tags s)) (T.Strict.StateT s)
+type StatesT s = TaggedTrans (STATES (Tags s)) (T.Strict.StateT s)
 
 type States s = StatesT s Identity
 
@@ -444,7 +444,7 @@ modify' = modify @s
 -- | Encode type-level information for 'zoom'.
 data ZOOM t z
 
-type ZoomT t (z :: Type) = Handler (ZOOM t z) IdentityT
+type ZoomT t (z :: Type) = TaggedTrans (ZOOM t z) IdentityT
 
 newtype ReifiedLens s t a b = Lens (Lens s t a b)
 
@@ -463,12 +463,12 @@ instance
     ( MonadState tag sOuter m
     , Reifies z (ReifiedLens' sOuter sInner)
     , trans ~ IdentityT
-    ) => MonadState tag sInner (Handler (ZOOM tag z) trans m)
+    ) => MonadState tag sInner (TaggedTrans (ZOOM tag z) trans m)
   where
     state =
       (coerce :: forall eff r a .
-        (r ->                   m a) ->
-        (r -> Handler eff trans m a))
+        (r ->                       m a) ->
+        (r -> TaggedTrans eff trans m a))
       (state @tag . l)
       where
         Lens l = reflect (Proxy :: Proxy z)
