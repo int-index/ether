@@ -65,7 +65,7 @@ tagAttach :: forall tag m a . TagAttachT tag m a -> m a
 tagAttach = coerce (runIdentityT @_ @m @a)
 {-# INLINE tagAttach #-}
 
-instance
+instance {-# OVERLAPPING #-}
     ( MonadReader tag r m, trans ~ IdentityT
     ) => Mtl.MonadReader r (TaggedTrans (TAG_ATTACH tag) trans m)
   where
@@ -79,7 +79,7 @@ instance
     reader = reader @tag
     {-# INLINE reader #-}
 
-instance
+instance {-# OVERLAPPING #-}
     ( MonadState tag s m, trans ~ IdentityT
     ) => Mtl.MonadState s (TaggedTrans (TAG_ATTACH tag) trans m)
   where
@@ -93,7 +93,7 @@ instance
     state = state @tag
     {-# INLINE state #-}
 
-instance
+instance {-# OVERLAPPING #-}
     ( MonadExcept tag e m, trans ~ IdentityT
     ) => Mtl.MonadError e (TaggedTrans (TAG_ATTACH tag) trans m)
   where
@@ -104,7 +104,7 @@ instance
     catchError = catch @tag
     {-# INLINE catchError #-}
 
-instance
+instance {-# OVERLAPPING #-}
     ( MonadWriter tag w m, trans ~ IdentityT
     ) => Mtl.MonadWriter w (TaggedTrans (TAG_ATTACH tag) trans m)
   where
