@@ -132,7 +132,7 @@ instance Lift.LiftCallCC trans => Lift.LiftCallCC (TaggedTrans tag trans) where
 
 -- Instances for mtl classes
 
-instance {-# OVERLAPPABLE #-}
+instance
     ( Mtl.MonadCont m
     , Lift.LiftCallCC trans
     , Monad (trans m)
@@ -140,7 +140,7 @@ instance {-# OVERLAPPABLE #-}
   where
     callCC = Lift.liftCallCC' Mtl.callCC
 
-instance {-# OVERLAPPABLE #-}
+instance
     ( Mtl.MonadReader r m
     , Lift.LiftLocal trans
     , Monad (trans m)
@@ -150,7 +150,7 @@ instance {-# OVERLAPPABLE #-}
     local = Lift.liftLocal Mtl.ask Mtl.local
     reader = lift . Mtl.reader
 
-instance {-# OVERLAPPABLE #-}
+instance
     ( Mtl.MonadState s m
     , MonadTrans trans
     , Monad (trans m)
@@ -160,7 +160,7 @@ instance {-# OVERLAPPABLE #-}
     put = lift . Mtl.put
     state = lift . Mtl.state
 
-instance {-# OVERLAPPABLE #-}
+instance
     ( Mtl.MonadWriter w m
     , Lift.LiftListen trans
     , Lift.LiftPass trans
@@ -172,7 +172,7 @@ instance {-# OVERLAPPABLE #-}
     listen = Lift.liftListen Mtl.listen
     pass   = Lift.liftPass Mtl.pass
 
-instance {-# OVERLAPPABLE #-}
+instance
     ( Mtl.MonadError e m
     , Lift.LiftCatch trans
     , Monad (trans m)
