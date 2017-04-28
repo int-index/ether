@@ -42,7 +42,8 @@ module Ether.Writer
 import Control.Monad.Signatures (Listen, Pass)
 import qualified Control.Monad.Trans.Lift.Listen as Lift
 import qualified Control.Monad.Trans.Lift.Pass   as Lift
-import qualified Control.Monad.Writer as T
+import qualified Control.Monad.Writer.Class as T
+import qualified Control.Monad.Writer.CPS as T.CPS
 import Data.Coerce
 import Data.Functor.Identity
 
@@ -117,37 +118,37 @@ type Writer tag w = WriterT tag w Identity
 --
 -- The 'return' function produces the output 'mempty', while '>>=' combines
 -- the outputs of the subcomputations using 'mappend'.
-type WriterT tag w = TaggedTrans (TAGGED WRITER tag) (T.WriterT w)
+type WriterT tag w = TaggedTrans (TAGGED WRITER tag) (T.CPS.WriterT w)
 
 -- | Constructor for computations in the writer monad transformer.
-writerT :: forall tag w m a . m (a, w) -> WriterT tag w m a
-writerT = coerce (T.WriterT @w @m @a)
+writerT :: forall tag w m a . (Functor m, Monoid w) => m (a, w) -> WriterT tag w m a
+writerT = coerce (T.CPS.writerT @m @w @a)
 
 -- | Runs a 'WriterT' and returns both the normal value
 -- and the final accumulator.
-runWriterT :: forall tag w m a . WriterT tag w m a -> m (a, w)
-runWriterT = coerce (T.runWriterT @w @m @a)
+runWriterT :: forall tag w m a . Monoid w => WriterT tag w m a -> m (a, w)
+runWriterT = coerce (T.CPS.runWriterT @w @m @a)
 
 -- | Runs a 'Writer' and returns both the normal value
 -- and the final accumulator.
-runWriter :: forall tag w a . Writer tag w a -> (a, w)
-runWriter = coerce (T.runWriter @w @a)
+runWriter :: forall tag w a . Monoid w => Writer tag w a -> (a, w)
+runWriter = coerce (T.CPS.runWriter @w @a)
 
 -- | Runs a 'WriterT' and returns the final accumulator,
 -- discarding the normal value.
-execWriterT :: forall tag w m a . Monad m => WriterT tag w m a -> m w
-execWriterT = coerce (T.execWriterT @m @w @a)
+execWriterT :: forall tag w m a . (Monad m, Monoid w) => WriterT tag w m a -> m w
+execWriterT = coerce (T.CPS.execWriterT @m @w @a)
 
 -- | Runs a 'Writer' and returns the final accumulator,
 -- discarding the normal value.
-execWriter :: forall tag w a . Writer tag w a -> w
-execWriter = coerce (T.execWriter @w @a)
+execWriter :: forall tag w a . Monoid w => Writer tag w a -> w
+execWriter = coerce (T.CPS.execWriter @w @a)
 
 type instance HandleSuper      WRITER w trans   = Monoid w
 type instance HandleConstraint WRITER w trans m =
   T.MonadWriter w (trans m)
 
-instance Monoid w => Handle WRITER w (T.WriterT w) where
+instance Monoid w => Handle WRITER w (T.CPS.WriterT w) where
   handling r = r
   {-# INLINE handling #-}
 
@@ -182,21 +183,21 @@ instance
 
 type Writer' w = Writer w w
 
-runWriter' :: Writer' w a -> (a, w)
+runWriter' :: Monoid w => Writer' w a -> (a, w)
 runWriter' = runWriter
 
-execWriter' :: Writer' w a -> w
+execWriter' :: Monoid w => Writer' w a -> w
 execWriter' = execWriter
 
 type WriterT' w = WriterT w w
 
-writerT' :: m (a, w) -> WriterT' w m a
+writerT' :: (Functor m, Monoid w) => m (a, w) -> WriterT' w m a
 writerT' = writerT
 
-runWriterT' :: WriterT' w m a -> m (a, w)
+runWriterT' :: Monoid w => WriterT' w m a -> m (a, w)
 runWriterT' = runWriterT
 
-execWriterT' :: Monad m => WriterT' w m a -> m w
+execWriterT' :: (Monad m, Monoid w) => WriterT' w m a -> m w
 execWriterT' = execWriterT
 
 type MonadWriter' w = MonadWriter w w

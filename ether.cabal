@@ -38,12 +38,13 @@ library
 
   build-depends:
     base >=4.9 && <4.11,
-    transformers >=0.4.2,
-    transformers-lift >=0.1.0.1,
+    transformers >=0.5.4.0,
+    transformers-lift >=0.2.0.0,
     mtl >=2.2.1,
     mmorph >=1.0.4,
     monad-control >=1.0.0.4,
     transformers-base >=0.4.4,
+    writer-cps-mtl >= 0.1.1.4,
     exceptions >=0.8,
     template-haskell >=2.11,
     tagged >=0.8.5,
