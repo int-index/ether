@@ -6,6 +6,8 @@ module Ether.Internal
   , LensLike
   , Lens
   , Lens'
+  , ReifiedLens(..)
+  , ReifiedLens'
   , view
   , over
   , HList(..)
@@ -58,6 +60,10 @@ type LensLike f s t a b = (a -> f b) -> s -> f t
 type Lens s t a b = forall f. Functor f => LensLike f s t a b
 
 type Lens' s a = Lens s s a a
+
+newtype ReifiedLens s t a b = Lens (Lens s t a b)
+
+type ReifiedLens' s a = ReifiedLens s s a a
 
 class HasLens tag outer inner | tag outer -> inner where
   lensOf :: Lens' outer inner

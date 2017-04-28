@@ -446,10 +446,6 @@ data ZOOM t z
 
 type ZoomT t (z :: Type) = TaggedTrans (ZOOM t z) IdentityT
 
-newtype ReifiedLens s t a b = Lens (Lens s t a b)
-
-type ReifiedLens' s a = ReifiedLens s s a a
-
 -- | Zoom into a part of a state using a lens.
 zoom
   :: forall tag sOuter sInner m a
