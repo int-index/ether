@@ -5,7 +5,7 @@
 * Use the `TypeApplications` extension to get rid of `Proxy`.
 * Remove `Control.Ether.TH`.
 * Remove `Control.Ether.Abbr`.
-* Unify `Dispatch` and `TaggedTrans` as `Handler`.
+* Unify `Dispatch` and `TaggedTrans`.
 * Better `MonadBase` and `MonadBaseControl` instances.
 * Add flattening for `ReaderT` and `StateT`.
 * Add zooming for `MonadState`.

@@ -45,7 +45,7 @@ import Data.Coerce
 import Data.Functor.Identity
 import Data.Kind
 
-import Ether.Handler
+import Ether.TaggedTrans
 import Ether.Internal
 
 class Monad m => MonadReader tag r m | m tag -> r where
@@ -89,28 +89,28 @@ instance {-# OVERLAPPABLE #-}
 
 instance {-# OVERLAPPABLE #-}
     ( Monad (trans m)
-    , MonadReader tag r (Handler effs trans m)
-    ) => MonadReader tag r (Handler (eff ': effs) trans (m :: Type -> Type))
+    , MonadReader tag r (TaggedTrans effs trans m)
+    ) => MonadReader tag r (TaggedTrans (eff ': effs) trans (m :: Type -> Type))
   where
 
     ask =
       (coerce ::
-        Handler         effs  trans m r ->
-        Handler (eff ': effs) trans m r)
+        TaggedTrans         effs  trans m r ->
+        TaggedTrans (eff ': effs) trans m r)
       (ask @tag)
     {-# INLINE ask #-}
 
     local =
       (coerce :: forall a .
-        Lift.Local r (Handler         effs  trans m) a ->
-        Lift.Local r (Handler (eff ': effs) trans m) a)
+        Lift.Local r (TaggedTrans         effs  trans m) a ->
+        Lift.Local r (TaggedTrans (eff ': effs) trans m) a)
       (local @tag)
     {-# INLINE local #-}
 
     reader =
       (coerce :: forall a .
-        ((r -> a) -> Handler         effs  trans m a) ->
-        ((r -> a) -> Handler (eff ': effs) trans m a))
+        ((r -> a) -> TaggedTrans         effs  trans m a) ->
+        ((r -> a) -> TaggedTrans (eff ': effs) trans m a))
       (reader @tag)
     {-# INLINE reader #-}
 
@@ -140,7 +140,7 @@ type Reader tag r = ReaderT tag r Identity
 --
 -- The 'return' function ignores the environment, while '>>=' passes
 -- the inherited environment to both subcomputations.
-type ReaderT tag r = Handler (TAGGED READER tag) (T.ReaderT r)
+type ReaderT tag r = TaggedTrans (TAGGED READER tag) (T.ReaderT r)
 
 -- | Constructor for computations in the reader monad transformer.
 readerT :: forall tag r m a . (r -> m a) -> ReaderT tag r m a
@@ -170,7 +170,7 @@ instance Handle READER r (T.ReaderT r) where
 instance
     ( Handle READER r trans
     , Monad m, Monad (trans m)
-    ) => MonadReader tag r (Handler (TAGGED READER tag) trans m)
+    ) => MonadReader tag r (TaggedTrans (TAGGED READER tag) trans m)
   where
 
     ask =
@@ -181,27 +181,27 @@ instance
     local =
       handling @READER @r @trans @m $
       coerce (T.local @r @(trans m) @a) ::
-        forall eff a . Local r (Handler eff trans m) a
+        forall eff a . Local r (TaggedTrans eff trans m) a
     {-# INLINE local #-}
 
     reader =
       handling @READER @r @trans @m $
       coerce (T.reader @r @(trans m) @a) ::
-        forall eff a . (r -> a) -> Handler eff trans m a
+        forall eff a . (r -> a) -> TaggedTrans eff trans m a
     {-# INLINE reader #-}
 
 instance
     ( HasLens tag payload r
     , Handle READER payload trans
     , Monad m, Monad (trans m)
-    ) => MonadReader tag r (Handler (TAGGED READER tag ': effs) trans m)
+    ) => MonadReader tag r (TaggedTrans (TAGGED READER tag ': effs) trans m)
   where
 
     ask =
       handling @READER @payload @trans @m $
       (coerce :: forall eff a .
                     trans m a ->
-        Handler eff trans m a)
+        TaggedTrans eff trans m a)
       (T.asks (view (lensOf @tag @payload @r)))
     {-# INLINE ask #-}
 
@@ -209,7 +209,7 @@ instance
       handling @READER @payload @trans @m $
       (coerce :: forall eff a .
                     (trans m a ->            trans m a) ->
-        (Handler eff trans m a -> Handler eff trans m a))
+        (TaggedTrans eff trans m a -> TaggedTrans eff trans m a))
       (T.local (over (lensOf @tag @payload @r) f))
     {-# INLINE local #-}
 
@@ -217,7 +217,7 @@ type family READERS (ts :: HList xs) :: [Type] where
   READERS 'HNil = '[]
   READERS ('HCons t ts) = TAGGED READER t ': READERS ts
 
-type ReadersT r = Handler (READERS (Tags r)) (T.ReaderT r)
+type ReadersT r = TaggedTrans (READERS (Tags r)) (T.ReaderT r)
 
 type Readers r = ReadersT r Identity
 

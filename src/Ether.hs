@@ -9,7 +9,7 @@ module Ether
   , module Ether.State
   , module Ether.Except
   , module Ether.TagDispatch
-  , module Ether.Handler
+  , module Ether.TaggedTrans
   ) where
 
 import Control.Monad
@@ -22,4 +22,4 @@ import Ether.Writer
 import Ether.State
 import Ether.Except
 import Ether.TagDispatch
-import Ether.Handler
+import Ether.TaggedTrans

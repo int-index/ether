@@ -50,7 +50,7 @@ import Ether.Except
 import Ether.Reader
 import Ether.State
 import Ether.Writer
-import Ether.Handler
+import Ether.TaggedTrans
 
 import Control.Monad.Trans.Identity
 import Data.Coerce
@@ -58,7 +58,7 @@ import Data.Coerce
 -- | Encode type-level information for 'tagAttach'.
 data TAG_ATTACH t
 
-type TagAttachT t = Handler (TAG_ATTACH t) IdentityT
+type TagAttachT t = TaggedTrans (TAG_ATTACH t) IdentityT
 
 -- | Attach a tag to untagged transformers.
 tagAttach :: forall tag m a . TagAttachT tag m a -> m a
@@ -67,7 +67,7 @@ tagAttach = coerce (runIdentityT @_ @m @a)
 
 instance
     ( MonadReader tag r m, trans ~ IdentityT
-    ) => Mtl.MonadReader r (Handler (TAG_ATTACH tag) trans m)
+    ) => Mtl.MonadReader r (TaggedTrans (TAG_ATTACH tag) trans m)
   where
 
     ask = ask @tag
@@ -81,7 +81,7 @@ instance
 
 instance
     ( MonadState tag s m, trans ~ IdentityT
-    ) => Mtl.MonadState s (Handler (TAG_ATTACH tag) trans m)
+    ) => Mtl.MonadState s (TaggedTrans (TAG_ATTACH tag) trans m)
   where
 
     get = get @tag
@@ -95,7 +95,7 @@ instance
 
 instance
     ( MonadExcept tag e m, trans ~ IdentityT
-    ) => Mtl.MonadError e (Handler (TAG_ATTACH tag) trans m)
+    ) => Mtl.MonadError e (TaggedTrans (TAG_ATTACH tag) trans m)
   where
 
     throwError = throw @tag
@@ -106,7 +106,7 @@ instance
 
 instance
     ( MonadWriter tag w m, trans ~ IdentityT
-    ) => Mtl.MonadWriter w (Handler (TAG_ATTACH tag) trans m)
+    ) => Mtl.MonadWriter w (TaggedTrans (TAG_ATTACH tag) trans m)
   where
 
     writer = writer @tag
@@ -124,7 +124,7 @@ instance
 -- | Encode type-level information for 'tagReplace'.
 data TAG_REPLACE tOld tNew
 
-type TagReplaceT tOld tNew = Handler (TAG_REPLACE tOld tNew) IdentityT
+type TagReplaceT tOld tNew = TaggedTrans (TAG_REPLACE tOld tNew) IdentityT
 
 -- | Replace a tag with another tag.
 tagReplace :: forall tOld tNew m a . TagReplaceT tOld tNew m a -> m a
@@ -133,7 +133,7 @@ tagReplace = coerce (runIdentityT @_ @m @a)
 
 instance
     ( MonadReader tNew r m, trans ~ IdentityT
-    ) => MonadReader tOld r (Handler (TAG_REPLACE tOld tNew) trans m)
+    ) => MonadReader tOld r (TaggedTrans (TAG_REPLACE tOld tNew) trans m)
   where
 
     ask = ask @tNew
@@ -147,7 +147,7 @@ instance
 
 instance
     ( MonadState tNew s m, trans ~ IdentityT
-    ) => MonadState tOld s (Handler (TAG_REPLACE tOld tNew) trans m)
+    ) => MonadState tOld s (TaggedTrans (TAG_REPLACE tOld tNew) trans m)
   where
 
     get = get @tNew
@@ -161,7 +161,7 @@ instance
 
 instance
     ( MonadExcept tNew e m, trans ~ IdentityT
-    ) => MonadExcept tOld e (Handler (TAG_REPLACE tOld tNew) trans m)
+    ) => MonadExcept tOld e (TaggedTrans (TAG_REPLACE tOld tNew) trans m)
   where
 
     throw = throw @tNew
@@ -172,7 +172,7 @@ instance
 
 instance
     ( MonadWriter tNew w m, trans ~ IdentityT
-    ) => MonadWriter tOld w (Handler (TAG_REPLACE tOld tNew) trans m)
+    ) => MonadWriter tOld w (TaggedTrans (TAG_REPLACE tOld tNew) trans m)
   where
 
     writer = writer @tNew

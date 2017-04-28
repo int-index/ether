@@ -33,7 +33,7 @@ import qualified Control.Monad.Trans.Lift.Catch as Lift
 import Data.Coerce
 import Data.Functor.Identity
 
-import Ether.Handler
+import Ether.TaggedTrans
 import Ether.Internal
 
 class Monad m => MonadExcept tag e m | m tag -> e where
@@ -41,7 +41,7 @@ class Monad m => MonadExcept tag e m | m tag -> e where
     -- | Is used within a monadic computation to begin exception processing.
     throw :: e -> m a
 
-    -- | A handler function to handle previous exceptions and return to
+    -- | A TaggedTrans function to handle previous exceptions and return to
     -- normal execution.
     catch :: m a -> (e -> m a) -> m a
 
@@ -72,7 +72,7 @@ type Except tag e = ExceptT tag e Identity
 --
 -- The 'return' function returns a normal value, while '>>=' exits on
 -- the first exception.
-type ExceptT tag e = Handler (TAGGED EXCEPT tag) (T.ExceptT e)
+type ExceptT tag e = TaggedTrans (TAGGED EXCEPT tag) (T.ExceptT e)
 
 -- | Runs an 'Except' and returns either an exception or a normal value.
 runExcept :: forall tag e a . Except tag e a -> Either e a
@@ -100,18 +100,18 @@ instance Handle EXCEPT e (T.ExceptT e) where
 instance
     ( Handle EXCEPT e trans
     , Monad m, Monad (trans m)
-    ) => MonadExcept tag e (Handler (TAGGED EXCEPT tag) trans m)
+    ) => MonadExcept tag e (TaggedTrans (TAGGED EXCEPT tag) trans m)
   where
     throw =
       handling @EXCEPT @e @trans @m $
       coerce (T.throwError @e @(trans m) @a) ::
-        forall eff a . e -> Handler eff trans m a
+        forall eff a . e -> TaggedTrans eff trans m a
     {-# INLINE throw #-}
 
     catch =
       handling @EXCEPT @e @trans @m $
       coerce (T.catchError @e @(trans m) @a) ::
-        forall eff a . Catch e (Handler eff trans m) a
+        forall eff a . Catch e (TaggedTrans eff trans m) a
     {-# INLINE catch #-}
 
 type MonadExcept' e = MonadExcept e e

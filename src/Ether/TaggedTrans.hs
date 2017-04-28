@@ -1,5 +1,5 @@
-module Ether.Handler
-  ( Handler(..)
+module Ether.TaggedTrans
+  ( TaggedTrans(..)
   ) where
 
 import Control.Applicative
@@ -29,109 +29,114 @@ import qualified Control.Monad.Error.Class   as Mtl
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
-newtype Handler eff trans m a = Handler (trans m a)
+newtype TaggedTrans tag trans m a = TaggedTrans (trans m a)
   deriving
     ( Generic
     , Functor, Applicative, Alternative, Monad, MonadPlus
     , MonadFix, MonadTrans, MonadIO, MFunctor, MMonad
     , MonadThrow, MonadCatch, MonadMask )
 
-type Pack eff trans m a = trans m a -> Handler eff trans m a
+type Pack tag trans m a = trans m a -> TaggedTrans tag trans m a
 
-type Unpack eff trans m a = Handler eff trans m a -> trans m a
+type Unpack tag trans m a = TaggedTrans tag trans m a -> trans m a
 
 instance
     ( MB.MonadBase b (trans m)
-    ) => MB.MonadBase b (Handler eff trans m)
+    ) => MB.MonadBase b (TaggedTrans tag trans m)
   where
     liftBase =
       (coerce :: forall a .
         (b a -> trans m a) ->
-        (b a -> Handler eff trans m a))
+        (b a -> TaggedTrans tag trans m a))
       MB.liftBase
+    {-# INLINE liftBase #-}
 
 instance
     ( MC.MonadTransControl trans
-    ) => MC.MonadTransControl (Handler eff trans)
+    ) => MC.MonadTransControl (TaggedTrans tag trans)
   where
-    type StT (Handler eff trans) a = MC.StT trans a
+    type StT (TaggedTrans tag trans) a = MC.StT trans a
+
     liftWith = MC.defaultLiftWith
-      (coerce :: Pack eff trans m a)
-      (coerce :: Unpack eff trans m a)
+      (coerce :: Pack tag trans m a)
+      (coerce :: Unpack tag trans m a)
+    {-# INLINE liftWith #-}
+
     restoreT = MC.defaultRestoreT
-      (coerce :: Pack eff trans m a)
+      (coerce :: Pack tag trans m a)
+    {-# INLINE restoreT #-}
 
 type LiftBaseWith b m a = (MC.RunInBase m b -> b a) -> m a
 
 newtype LiftBaseWith' b m a = LBW { unLBW :: LiftBaseWith b m a }
 
 coerceLiftBaseWith ::
-  LiftBaseWith b             (trans m) a ->
-  LiftBaseWith b (Handler eff trans m) a
+  LiftBaseWith b                 (trans m) a ->
+  LiftBaseWith b (TaggedTrans tag trans m) a
 coerceLiftBaseWith lbw =
   unLBW (coerce (LBW lbw))
 {-# INLINE coerceLiftBaseWith #-}
 
 instance
     ( MC.MonadBaseControl b (trans m)
-    ) => MC.MonadBaseControl b (Handler eff trans m)
+    ) => MC.MonadBaseControl b (TaggedTrans tag trans m)
   where
-    type StM (Handler eff trans m) a = MC.StM (trans m) a
+    type StM (TaggedTrans tag trans m) a = MC.StM (trans m) a
 
     liftBaseWith = coerceLiftBaseWith MC.liftBaseWith
     {-# INLINE liftBaseWith #-}
 
     restoreM =
       (coerce :: forall a .
-        (MC.StM (trans m) a ->            trans m a) ->
-        (MC.StM (trans m) a -> Handler eff trans m a))
+        (MC.StM (trans m) a ->                 trans m a) ->
+        (MC.StM (trans m) a -> TaggedTrans tag trans m a))
       MC.restoreM
     {-# INLINE restoreM #-}
 
-type instance Lift.StT (Handler eff trans) a = Lift.StT trans a
+type instance Lift.StT (TaggedTrans tag trans) a = Lift.StT trans a
 
-instance Lift.LiftLocal trans => Lift.LiftLocal (Handler eff trans) where
+instance Lift.LiftLocal trans => Lift.LiftLocal (TaggedTrans tag trans) where
   liftLocal =
     Lift.defaultLiftLocal
-      (coerce :: Pack eff trans m a)
-      (coerce :: Unpack eff trans m a)
+      (coerce :: Pack tag trans m a)
+      (coerce :: Unpack tag trans m a)
 
-instance Lift.LiftCatch trans => Lift.LiftCatch (Handler eff trans) where
+instance Lift.LiftCatch trans => Lift.LiftCatch (TaggedTrans tag trans) where
   liftCatch =
     Lift.defaultLiftCatch
-      (coerce :: Pack eff trans m a)
-      (coerce :: Unpack eff trans m a)
+      (coerce :: Pack tag trans m a)
+      (coerce :: Unpack tag trans m a)
 
-instance Lift.LiftListen trans => Lift.LiftListen (Handler eff trans) where
+instance Lift.LiftListen trans => Lift.LiftListen (TaggedTrans tag trans) where
   liftListen =
     Lift.defaultLiftListen
-      (coerce :: Pack eff trans m a)
-      (coerce :: Unpack eff trans m a)
+      (coerce :: Pack tag trans m a)
+      (coerce :: Unpack tag trans m a)
 
-instance Lift.LiftPass trans => Lift.LiftPass (Handler eff trans) where
+instance Lift.LiftPass trans => Lift.LiftPass (TaggedTrans tag trans) where
   liftPass =
     Lift.defaultLiftPass
-      (coerce :: Pack eff trans m a)
-      (coerce :: Unpack eff trans m a)
+      (coerce :: Pack tag trans m a)
+      (coerce :: Unpack tag trans m a)
 
-instance Lift.LiftCallCC trans => Lift.LiftCallCC (Handler eff trans) where
+instance Lift.LiftCallCC trans => Lift.LiftCallCC (TaggedTrans tag trans) where
   liftCallCC  =
     Lift.defaultLiftCallCC
-      (coerce :: Pack eff trans m a)
-      (coerce :: Unpack eff trans m a)
+      (coerce :: Pack tag trans m a)
+      (coerce :: Unpack tag trans m a)
   liftCallCC' =
     Lift.defaultLiftCallCC'
-      (coerce :: Pack eff trans m a)
-      (coerce :: Unpack eff trans m a)
+      (coerce :: Pack tag trans m a)
+      (coerce :: Unpack tag trans m a)
 
 
--- Instances for mtl Mtles
+-- Instances for mtl classes
 
 instance {-# OVERLAPPABLE #-}
     ( Mtl.MonadCont m
     , Lift.LiftCallCC trans
     , Monad (trans m)
-    ) => Mtl.MonadCont (Handler eff trans m)
+    ) => Mtl.MonadCont (TaggedTrans tag trans m)
   where
     callCC = Lift.liftCallCC' Mtl.callCC
 
@@ -139,7 +144,7 @@ instance {-# OVERLAPPABLE #-}
     ( Mtl.MonadReader r m
     , Lift.LiftLocal trans
     , Monad (trans m)
-    ) => Mtl.MonadReader r (Handler eff trans m)
+    ) => Mtl.MonadReader r (TaggedTrans tag trans m)
   where
     ask = lift Mtl.ask
     local = Lift.liftLocal Mtl.ask Mtl.local
@@ -149,7 +154,7 @@ instance {-# OVERLAPPABLE #-}
     ( Mtl.MonadState s m
     , MonadTrans trans
     , Monad (trans m)
-    ) => Mtl.MonadState s (Handler eff trans m)
+    ) => Mtl.MonadState s (TaggedTrans tag trans m)
   where
     get = lift Mtl.get
     put = lift . Mtl.put
@@ -160,7 +165,7 @@ instance {-# OVERLAPPABLE #-}
     , Lift.LiftListen trans
     , Lift.LiftPass trans
     , Monad (trans m)
-    ) => Mtl.MonadWriter w (Handler eff trans m)
+    ) => Mtl.MonadWriter w (TaggedTrans tag trans m)
   where
     writer = lift . Mtl.writer
     tell   = lift . Mtl.tell
@@ -171,7 +176,7 @@ instance {-# OVERLAPPABLE #-}
     ( Mtl.MonadError e m
     , Lift.LiftCatch trans
     , Monad (trans m)
-    ) => Mtl.MonadError e (Handler eff trans m)
+    ) => Mtl.MonadError e (TaggedTrans tag trans m)
   where
     throwError = lift . Mtl.throwError
     catchError = Lift.liftCatch Mtl.catchError
