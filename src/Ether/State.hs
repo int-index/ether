@@ -85,8 +85,8 @@ import Data.Kind
 import Data.Proxy
 import Data.Reflection
 
-import Ether.TaggedTrans
 import Ether.Internal
+import Ether.TaggedTrans
 
 class Monad m => MonadState tag s m | m tag -> s where
 
@@ -151,9 +151,6 @@ instance {-# OVERLAPPABLE #-}
       (state @tag)
     {-# INLINE state #-}
 
--- | Encode type-level information for 'StateT'.
-data STATE
-
 -- | Modifies the state inside a state monad.
 modify :: forall tag s m . MonadState tag s m => (s -> s) -> m ()
 modify f = state @tag (\s -> ((), f s))
@@ -163,6 +160,9 @@ modify f = state @tag (\s -> ((), f s))
 gets :: forall tag s m a . MonadState tag s m => (s -> a) -> m a
 gets f = fmap f (get @tag)
 {-# INLINABLE gets #-}
+
+-- | Encode type-level information for 'StateT'.
+data STATE
 
 type instance HandleSuper      STATE s trans   = ()
 type instance HandleConstraint STATE s trans m =
