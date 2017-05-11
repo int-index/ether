@@ -38,8 +38,8 @@ library
 
   build-depends:
     base >=4.9 && <4.11,
-    transformers >=0.5.4.0,
-    transformers-lift >=0.2.0.0,
+    transformers >=0.5.2.0,
+    transformers-lift >=0.2.0.1,
     mtl >=2.2.1,
     mmorph >=1.0.4,
     monad-control >=1.0.0.4,
