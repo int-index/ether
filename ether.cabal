@@ -36,6 +36,24 @@ library
     Ether.TagDispatch
     Ether.Internal
 
+  other-modules:
+    Ether.Internal.Tags
+    Ether.Internal.HasLens
+    Ether.Internal.TH_Utils
+    Ether.Internal.TH_TupleInstances
+    Ether.Internal.TupleInstances_TagsK
+    Ether.Internal.TupleInstances_Tags
+    Ether.Internal.TupleInstances_HasLens
+    Ether.Internal.TupleInstances_HasLens_1
+    Ether.Internal.TupleInstances_HasLens_2
+    Ether.Internal.TupleInstances_HasLens_3
+    Ether.Internal.TupleInstances_HasLens_4
+    Ether.Internal.TupleInstances_HasLens_5
+    Ether.Internal.TupleInstances_HasLens_6
+    Ether.Internal.TupleInstances_HasLens_7
+    Ether.Internal.TupleInstances_HasLens_8
+    Ether.Internal.TupleInstances_HasLens_9
+
   build-depends:
     base >=4.9 && <4.11,
     transformers >=0.5.2.0,
