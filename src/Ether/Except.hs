@@ -50,12 +50,8 @@ instance {-# OVERLAPPABLE #-}
          , Monad (t m)
          , MonadExcept tag e m
          ) => MonadExcept tag e (t m) where
-
     throw = Lift.lift . throw @tag
-    {-# INLINE throw #-}
-
     catch = Lift.liftCatch (catch @tag)
-    {-# INLINE catch #-}
 
 -- | Encode type-level information for 'ExceptT'.
 data EXCEPT
@@ -77,17 +73,14 @@ type ExceptT tag e = TaggedTrans (TAGGED EXCEPT tag) (T.ExceptT e)
 -- | Runs an 'Except' and returns either an exception or a normal value.
 runExcept :: forall tag e a . Except tag e a -> Either e a
 runExcept = coerce (T.runExcept @e @a)
-{-# INLINE runExcept #-}
 
 -- | Runs an 'ExceptT' and returns either an exception or a normal value.
 runExceptT :: forall tag e m a . ExceptT tag e m a -> m (Either e a)
 runExceptT = coerce (T.runExceptT @e @m @a)
-{-# INLINE runExceptT #-}
 
 -- | Constructor for computations in the exception monad transformer.
 exceptT :: forall tag e m a . m (Either e a) -> ExceptT tag e m a
 exceptT = coerce (T.ExceptT @e @m @a)
-{-# INLINE exceptT #-}
 
 type instance HandleSuper      EXCEPT e trans   = ()
 type instance HandleConstraint EXCEPT e trans m =
@@ -95,47 +88,40 @@ type instance HandleConstraint EXCEPT e trans m =
 
 instance Handle EXCEPT e (T.ExceptT e) where
   handling r = r
-  {-# INLINE handling #-}
 
 instance
     ( Handle EXCEPT e trans
     , Monad m, Monad (trans m)
     ) => MonadExcept tag e (TaggedTrans (TAGGED EXCEPT tag) trans m)
   where
+
     throw =
       handling @EXCEPT @e @trans @m $
       coerce (T.throwError @e @(trans m) @a) ::
         forall eff a . e -> TaggedTrans eff trans m a
-    {-# INLINE throw #-}
 
     catch =
       handling @EXCEPT @e @trans @m $
       coerce (T.catchError @e @(trans m) @a) ::
         forall eff a . Catch e (TaggedTrans eff trans m) a
-    {-# INLINE catch #-}
 
 type MonadExcept' e = MonadExcept e e
 
 throw' :: forall e m a . MonadExcept' e m => e -> m a
 throw' = throw @e
-{-# INLINE throw' #-}
 
 catch' :: forall e m a . MonadExcept' e m => m a -> (e -> m a) -> m a
 catch' = catch @e
-{-# INLINE catch' #-}
 
 type Except' e = Except e e
 
 runExcept' :: Except' e a -> Either e a
 runExcept' = runExcept
-{-# INLINE runExcept' #-}
 
 type ExceptT' e = ExceptT e e
 
 exceptT' :: m (Either e a) -> ExceptT' e m a
 exceptT' = exceptT
-{-# INLINE exceptT' #-}
 
 runExceptT' :: ExceptT' e m a -> m (Either e a)
 runExceptT' = runExceptT
-{-# INLINE runExceptT' #-}
