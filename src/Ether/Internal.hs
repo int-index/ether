@@ -69,18 +69,15 @@ class HasLens tag outer inner | tag outer -> inner where
 
 instance HasLens a a a where
   lensOf = id
-  {-# INLINE lensOf #-}
 
 instance HasLens t (Tagged t a) a where
   lensOf = \f -> fmap coerce . f . coerce
 
 view :: LensLike (Const a) s t a b -> s -> a
 view l = coerce (l Const)
-{-# INLINE view #-}
 
 over :: LensLike Identity s t a b -> (a -> b) -> s -> t
 over = coerce
-{-# INLINE over #-}
 
 data HList xs where
   HNil :: HList '[]
@@ -173,5 +170,4 @@ do
                               [TH.ConE 'Tagged `TH.AppE` TH.VarE cur'] ++
                               map TH.VarE next ))) `TH.AppE`
                          (TH.VarE f `TH.AppE` TH.VarE cur) )
-                    [] ],
-              TH.PragmaD (TH.InlineP 'lensOf TH.Inline TH.FunLike TH.AllPhases) ]
+                    [] ] ]

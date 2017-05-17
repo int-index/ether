@@ -114,15 +114,9 @@ instance {-# OVERLAPPABLE #-}
     , MonadState tag s m
     ) => MonadState tag s (t m)
   where
-
     get = Lift.lift (get @tag)
-    {-# INLINE get #-}
-
     put = Lift.lift . put @tag
-    {-# INLINE put #-}
-
     state = Lift.lift . state @tag
-    {-# INLINE state #-}
 
 instance {-# OVERLAPPABLE #-}
     ( Monad (trans m)
@@ -135,31 +129,26 @@ instance {-# OVERLAPPABLE #-}
         TaggedTrans         effs  trans m s ->
         TaggedTrans (eff ': effs) trans m s)
       (get @tag)
-    {-# INLINE get #-}
 
     put =
       (coerce ::
         (s -> TaggedTrans         effs  trans m ()) ->
         (s -> TaggedTrans (eff ': effs) trans m ()))
       (put @tag)
-    {-# INLINE put #-}
 
     state =
       (coerce :: forall a .
         ((s -> (a, s)) -> TaggedTrans         effs  trans m a) ->
         ((s -> (a, s)) -> TaggedTrans (eff ': effs) trans m a))
       (state @tag)
-    {-# INLINE state #-}
 
 -- | Modifies the state inside a state monad.
 modify :: forall tag s m . MonadState tag s m => (s -> s) -> m ()
 modify f = state @tag (\s -> ((), f s))
-{-# INLINABLE modify #-}
 
 -- | Gets specific component of the state, using a projection function supplied.
 gets :: forall tag s m a . MonadState tag s m => (s -> a) -> m a
 gets f = fmap f (get @tag)
-{-# INLINABLE gets #-}
 
 -- | Encode type-level information for 'StateT'.
 data STATE
@@ -170,11 +159,9 @@ type instance HandleConstraint STATE s trans m =
 
 instance Handle STATE s (T.Strict.StateT s) where
   handling r = r
-  {-# INLINE handling #-}
 
 instance Handle STATE s (T.Lazy.StateT s) where
   handling r = r
-  {-# INLINE handling #-}
 
 instance
     ( Handle STATE s trans
@@ -185,18 +172,15 @@ instance
     get =
       handling @STATE @s @trans @m $
       coerce (T.get @s @(trans m))
-    {-# INLINE get #-}
 
     put =
       handling @STATE @s @trans @m $
       coerce (T.put @s @(trans m))
-    {-# INLINE put #-}
 
     state =
       handling @STATE @s @trans @m $
       coerce (T.state @s @(trans m) @a) ::
         forall eff a . (s -> (a, s)) -> TaggedTrans eff trans m a
-    {-# INLINE state #-}
 
 instance
     ( HasLens tag payload s
@@ -211,7 +195,6 @@ instance
                     trans m a ->
         TaggedTrans eff trans m a)
       (T.gets (view (lensOf @tag @payload @s)))
-    {-# INLINE get #-}
 
     put s =
       handling @STATE @payload @trans @m $
@@ -219,7 +202,6 @@ instance
                     trans m a ->
         TaggedTrans eff trans m a)
       (T.modify (over (lensOf @tag @payload @s) (const s)))
-    {-# INLINE put #-}
 
     state f =
       handling @STATE @payload @trans @m $
@@ -227,7 +209,6 @@ instance
                     trans m a ->
         TaggedTrans eff trans m a)
       (T.state (lensOf @tag @payload @s f))
-    {-# INLINE state #-}
 
 -- | The parametrizable state monad.
 --
@@ -246,43 +227,36 @@ type StateT tag s = TaggedTrans (TAGGED STATE tag) (T.Strict.StateT s)
 -- | Constructor for computations in the state monad transformer.
 stateT :: forall tag s m a . (s -> m (a, s)) -> StateT tag s m a
 stateT = coerce (T.Strict.StateT @s @m @a)
-{-# INLINE stateT #-}
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns both the final value and the final state.
 runStateT :: forall tag s m a . StateT tag s m a -> s -> m (a, s)
 runStateT = coerce (T.Strict.runStateT @s @m @a)
-{-# INLINE runStateT #-}
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns the final value, discarding the final state.
 evalStateT :: forall tag s m a . Monad m => StateT tag s m a -> s -> m a
 evalStateT = coerce (T.Strict.evalStateT @m @s @a)
-{-# INLINE evalStateT #-}
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns the final state, discarding the final value.
 execStateT :: forall tag s m a . Monad m => StateT tag s m a -> s -> m s
 execStateT = coerce (T.Strict.execStateT @m @s @a)
-{-# INLINE execStateT #-}
 
 -- | Runs a 'State' with the given initial state
 -- and returns both the final value and the final state.
 runState :: forall tag s a . State tag s a -> s -> (a, s)
 runState = coerce (T.Strict.runState @s @a)
-{-# INLINE runState #-}
 
 -- | Runs a 'State' with the given initial state
 -- and returns the final value, discarding the final state.
 evalState :: forall tag s a . State tag s a -> s -> a
 evalState = coerce (T.Strict.evalState @s @a)
-{-# INLINE evalState #-}
 
 -- | Runs a 'State' with the given initial state
 -- and returns the final state, discarding the final value.
 execState :: forall tag s a . State tag s a -> s -> s
 execState = coerce (T.Strict.execState @s @a)
-{-# INLINE execState #-}
 
 -- | The parametrizable state monad.
 --
@@ -301,43 +275,36 @@ type LazyStateT tag s = TaggedTrans (TAGGED STATE tag) (T.Lazy.StateT s)
 -- | Constructor for computations in the state monad transformer.
 lazyStateT :: forall tag s m a . (s -> m (a, s)) -> LazyStateT tag s m a
 lazyStateT = coerce (T.Lazy.StateT @s @m @a)
-{-# INLINE lazyStateT #-}
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns both the final value and the final state.
 runLazyStateT :: forall tag s m a . LazyStateT tag s m a -> s -> m (a, s)
 runLazyStateT = coerce (T.Lazy.runStateT @s @m @a)
-{-# INLINE runLazyStateT #-}
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns the final value, discarding the final state.
 evalLazyStateT :: forall tag s m a . Monad m => LazyStateT tag s m a -> s -> m a
 evalLazyStateT = coerce (T.Lazy.evalStateT @m @s @a)
-{-# INLINE evalLazyStateT #-}
 
 -- | Runs a 'StateT' with the given initial state
 -- and returns the final state, discarding the final value.
 execLazyStateT :: forall tag s m a . Monad m => LazyStateT tag s m a -> s -> m s
 execLazyStateT = coerce (T.Lazy.execStateT @m @s @a)
-{-# INLINE execLazyStateT #-}
 
 -- | Runs a 'State' with the given initial state
 -- and returns both the final value and the final state.
 runLazyState :: forall tag s a . LazyState tag s a -> s -> (a, s)
 runLazyState = coerce (T.Lazy.runState @s @a)
-{-# INLINE runLazyState #-}
 
 -- | Runs a 'State' with the given initial state
 -- and returns the final value, discarding the final state.
 evalLazyState :: forall tag s a . LazyState tag s a -> s -> a
 evalLazyState = coerce (T.Lazy.evalState @s @a)
-{-# INLINE evalLazyState #-}
 
 -- | Runs a 'State' with the given initial state
 -- and returns the final state, discarding the final value.
 execLazyState :: forall tag s a . LazyState tag s a -> s -> s
 execLazyState = coerce (T.Lazy.execState @s @a)
-{-# INLINE execLazyState #-}
 
 type family STATES (ts :: HList xs) :: [Type] where
   STATES 'HNil = '[]
@@ -349,97 +316,76 @@ type States s = StatesT s Identity
 
 runStatesT :: forall p m a . StatesT p m a -> p -> m (a, p)
 runStatesT = coerce (T.Strict.runStateT @p @m @a)
-{-# INLINE runStatesT #-}
 
 runStates :: forall p a . States p a -> p -> (a, p)
 runStates = coerce (T.Strict.runState @p @a)
-{-# INLINE runStates #-}
 
 type StateT' s = StateT s s
 
 stateT' :: (s -> m (a, s)) -> StateT' s m a
 stateT' = stateT
-{-# INLINE stateT' #-}
 
 runStateT' :: StateT' s m a -> s -> m (a, s)
 runStateT' = runStateT
-{-# INLINE runStateT' #-}
 
 runState' :: State' s a -> s -> (a, s)
 runState' = runState
-{-# INLINE runState' #-}
 
 evalStateT' :: Monad m => StateT' s m a -> s -> m a
 evalStateT' = evalStateT
-{-# INLINE evalStateT' #-}
 
 type State' s = State s s
 
 evalState' :: State' s a -> s -> a
 evalState' = evalState
-{-# INLINE evalState' #-}
 
 execStateT' :: Monad m => StateT' s m a -> s -> m s
 execStateT' = execStateT
-{-# INLINE execStateT' #-}
 
 execState' :: State' s a -> s -> s
 execState' = execState
-{-# INLINE execState' #-}
 
 type LazyStateT' s = LazyStateT s s
 
 lazyStateT' :: (s -> m (a, s)) -> LazyStateT' s m a
 lazyStateT' = lazyStateT
-{-# INLINE lazyStateT' #-}
 
 runLazyStateT' :: LazyStateT' s m a -> s -> m (a, s)
 runLazyStateT' = runLazyStateT
-{-# INLINE runLazyStateT' #-}
 
 runLazyState' :: LazyState' s a -> s -> (a, s)
 runLazyState' = runLazyState
-{-# INLINE runLazyState' #-}
 
 evalLazyStateT' :: Monad m => LazyStateT' s m a -> s -> m a
 evalLazyStateT' = evalLazyStateT
-{-# INLINE evalLazyStateT' #-}
 
 type LazyState' s = LazyState s s
 
 evalLazyState' :: LazyState' s a -> s -> a
 evalLazyState' = evalLazyState
-{-# INLINE evalLazyState' #-}
 
 execLazyStateT' :: Monad m => LazyStateT' s m a -> s -> m s
 execLazyStateT' = execLazyStateT
-{-# INLINE execLazyStateT' #-}
 
 execLazyState' :: LazyState' s a -> s -> s
 execLazyState' = execLazyState
-{-# INLINE execLazyState' #-}
 
 type MonadState' s = MonadState s s
 
 get' :: forall s m . MonadState' s m => m s
 get' = get @s
-{-# INLINE get' #-}
 
 gets' :: forall s m a . MonadState' s m => (s -> a) -> m a
 gets' = gets @s
-{-# INLINE gets' #-}
 
 put' :: forall s m . MonadState' s m => s -> m ()
 put' = put @s
-{-# INLINE put' #-}
 
 state' :: forall s m a . MonadState' s m => (s -> (a, s)) -> m a
 state' = state @s
-{-# INLINE state' #-}
 
 modify' :: forall s m . MonadState' s m => (s -> s) -> m ()
 modify' = modify @s
-{-# INLINE modify' #-}
 
 -- | Encode type-level information for 'zoom'.
 data ZOOM t z
@@ -453,7 +399,6 @@ zoom
   -> (forall z . Reifies z (ReifiedLens' sOuter sInner) => ZoomT tag z m a)
   -> m a
 zoom l m = reify (Lens l) (\(_ :: Proxy z) -> coerce (m @z))
-{-# INLINE zoom #-}
 
 instance
     ( MonadState tag sOuter m
@@ -468,4 +413,3 @@ instance
       (state @tag . l)
       where
         Lens l = reflect (Proxy :: Proxy z)
-    {-# INLINE state #-}

@@ -96,18 +96,10 @@ instance {-# OVERLAPPABLE #-}
          , MonadWriter tag w m
          , Monoid w
          ) => MonadWriter tag w (t m) where
-
     writer = Lift.lift . writer @tag
-    {-# INLINE writer #-}
-
     tell   = Lift.lift . tell @tag
-    {-# INLINE tell #-}
-
     listen = Lift.liftListen (listen @tag)
-    {-# INLINE listen #-}
-
     pass   = Lift.liftPass (pass @tag)
-    {-# INLINE pass #-}
 
 -- | Execute an action and add the result of applying the given function to
 -- its accumulator to the value of the computation.
@@ -131,11 +123,9 @@ type instance HandleConstraint WRITER w trans m =
 
 instance Monoid w => Handle WRITER w (T.CPS.WriterT w) where
   handling r = r
-  {-# INLINE handling #-}
 
 instance Monoid w => Handle WRITER w (T.Lazy.WriterT w) where
   handling r = r
-  {-# INLINE handling #-}
 
 instance
     ( Handle WRITER w trans
@@ -147,24 +137,20 @@ instance
       handling @WRITER @w @trans @m $
       coerce (T.writer @w @(trans m) @a) ::
         forall eff a . (a, w) -> TaggedTrans eff trans m a
-    {-# INLINE writer #-}
 
     tell =
       handling @WRITER @w @trans @m $
       coerce (T.tell @w @(trans m))
-    {-# INLINE tell #-}
 
     listen =
       handling @WRITER @w @trans @m $
       coerce (T.listen @w @(trans m) @a) ::
         forall eff a . Listen w (TaggedTrans eff trans m) a
-    {-# INLINE listen #-}
 
     pass =
       handling @WRITER @w @trans @m $
       coerce (T.pass @w @(trans m) @a) ::
         forall eff a . Pass w (TaggedTrans eff trans m) a
-    {-# INLINE pass #-}
 
 -- | The parametrizable writer monad.
 --
@@ -183,31 +169,26 @@ type WriterT tag w = TaggedTrans (TAGGED WRITER tag) (T.CPS.WriterT w)
 -- | Constructor for computations in the writer monad transformer.
 writerT :: forall tag w m a . (Functor m, Monoid w) => m (a, w) -> WriterT tag w m a
 writerT = coerce (T.CPS.writerT @m @w @a)
-{-# INLINE writerT #-}
 
 -- | Runs a 'WriterT' and returns both the normal value
 -- and the final accumulator.
 runWriterT :: forall tag w m a . Monoid w => WriterT tag w m a -> m (a, w)
 runWriterT = coerce (T.CPS.runWriterT @w @m @a)
-{-# INLINE runWriterT #-}
 
 -- | Runs a 'Writer' and returns both the normal value
 -- and the final accumulator.
 runWriter :: forall tag w a . Monoid w => Writer tag w a -> (a, w)
 runWriter = coerce (T.CPS.runWriter @w @a)
-{-# INLINE runWriter #-}
 
 -- | Runs a 'WriterT' and returns the final accumulator,
 -- discarding the normal value.
 execWriterT :: forall tag w m a . (Monad m, Monoid w) => WriterT tag w m a -> m w
 execWriterT = coerce (T.CPS.execWriterT @m @w @a)
-{-# INLINE execWriterT #-}
 
 -- | Runs a 'Writer' and returns the final accumulator,
 -- discarding the normal value.
 execWriter :: forall tag w a . Monoid w => Writer tag w a -> w
 execWriter = coerce (T.CPS.execWriter @w @a)
-{-# INLINE execWriter #-}
 
 -- | The parametrizable writer monad.
 --
@@ -226,102 +207,81 @@ type LazyWriterT tag w = TaggedTrans (TAGGED WRITER tag) (T.Lazy.WriterT w)
 -- | Constructor for computations in the writer monad transformer.
 lazyWriterT :: forall tag w m a . m (a, w) -> LazyWriterT tag w m a
 lazyWriterT = coerce (T.Lazy.WriterT @w @m @a)
-{-# INLINE lazyWriterT #-}
 
 -- | Runs a 'WriterT' and returns both the normal value
 -- and the final accumulator.
 runLazyWriterT :: forall tag w m a . LazyWriterT tag w m a -> m (a, w)
 runLazyWriterT = coerce (T.Lazy.runWriterT @w @m @a)
-{-# INLINE runLazyWriterT #-}
 
 -- | Runs a 'Writer' and returns both the normal value
 -- and the final accumulator.
 runLazyWriter :: forall tag w a . LazyWriter tag w a -> (a, w)
 runLazyWriter = coerce (T.Lazy.runWriter @w @a)
-{-# INLINE runLazyWriter #-}
 
 -- | Runs a 'WriterT' and returns the final accumulator,
 -- discarding the normal value.
 execLazyWriterT :: forall tag w m a . Monad m => LazyWriterT tag w m a -> m w
 execLazyWriterT = coerce (T.Lazy.execWriterT @m @w @a)
-{-# INLINE execLazyWriterT #-}
 
 -- | Runs a 'Writer' and returns the final accumulator,
 -- discarding the normal value.
 execLazyWriter :: forall tag w a . LazyWriter tag w a -> w
 execLazyWriter = coerce (T.Lazy.execWriter @w @a)
-{-# INLINE execLazyWriter #-}
 
 type Writer' w = Writer w w
 
 runWriter' :: Monoid w => Writer' w a -> (a, w)
 runWriter' = runWriter
-{-# INLINE runWriter' #-}
 
 execWriter' :: Monoid w => Writer' w a -> w
 execWriter' = execWriter
-{-# INLINE execWriter' #-}
 
 type WriterT' w = WriterT w w
 
 writerT' :: (Functor m, Monoid w) => m (a, w) -> WriterT' w m a
 writerT' = writerT
-{-# INLINE writerT' #-}
 
 runWriterT' :: Monoid w => WriterT' w m a -> m (a, w)
 runWriterT' = runWriterT
-{-# INLINE runWriterT' #-}
 
 execWriterT' :: (Monad m, Monoid w) => WriterT' w m a -> m w
 execWriterT' = execWriterT
-{-# INLINE execWriterT' #-}
 
 type LazyWriter' w = LazyWriter w w
 
 runLazyWriter' :: LazyWriter' w a -> (a, w)
 runLazyWriter' = runLazyWriter
-{-# INLINE runLazyWriter' #-}
 
 execLazyWriter' :: LazyWriter' w a -> w
 execLazyWriter' = execLazyWriter
-{-# INLINE execLazyWriter' #-}
 
 type LazyWriterT' w = LazyWriterT w w
 
 lazyWriterT' :: m (a, w) -> LazyWriterT' w m a
 lazyWriterT' = lazyWriterT
-{-# INLINE lazyWriterT' #-}
 
 runLazyWriterT' :: LazyWriterT' w m a -> m (a, w)
 runLazyWriterT' = runLazyWriterT
-{-# INLINE runLazyWriterT' #-}
 
 execLazyWriterT' :: Monad m => LazyWriterT' w m a -> m w
 execLazyWriterT' = execLazyWriterT
-{-# INLINE execLazyWriterT' #-}
 
 type MonadWriter' w = MonadWriter w w
 
 writer' :: forall w m a . MonadWriter' w m => (a, w) -> m a
 writer' = writer @w
-{-# INLINE writer' #-}
 
 tell' :: forall w m . MonadWriter' w m => w -> m ()
 tell' = tell @w
-{-# INLINE tell' #-}
 
 listen' :: forall w m a . MonadWriter' w m => m a -> m (a, w)
 listen' = listen @w
-{-# INLINE listen' #-}
 
 pass' :: forall w m a . MonadWriter' w m => m (a, w -> w) -> m a
 pass' = pass @w
-{-# INLINE pass' #-}
 
 listens' :: forall w m a b . MonadWriter' w m => (w -> b) -> m a -> m (a, b)
 listens' = listens @w
-{-# INLINE listens' #-}
 
 censor' :: forall w m a . MonadWriter' w m => (w -> w) -> m a -> m a
 censor' = censor @w
-{-# INLINE censor' #-}

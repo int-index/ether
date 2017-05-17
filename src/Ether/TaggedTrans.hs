@@ -49,7 +49,6 @@ instance
         (b a -> trans m a) ->
         (b a -> TaggedTrans tag trans m a))
       MB.liftBase
-    {-# INLINE liftBase #-}
 
 instance
     ( MC.MonadTransControl trans
@@ -60,11 +59,9 @@ instance
     liftWith = MC.defaultLiftWith
       (coerce :: Pack tag trans m a)
       (coerce :: Unpack tag trans m a)
-    {-# INLINE liftWith #-}
 
     restoreT = MC.defaultRestoreT
       (coerce :: Pack tag trans m a)
-    {-# INLINE restoreT #-}
 
 type LiftBaseWith b m a = (MC.RunInBase m b -> b a) -> m a
 
@@ -75,7 +72,6 @@ coerceLiftBaseWith ::
   LiftBaseWith b (TaggedTrans tag trans m) a
 coerceLiftBaseWith lbw =
   unLBW (coerce (LBW lbw))
-{-# INLINE coerceLiftBaseWith #-}
 
 instance
     ( MC.MonadBaseControl b (trans m)
@@ -84,14 +80,12 @@ instance
     type StM (TaggedTrans tag trans m) a = MC.StM (trans m) a
 
     liftBaseWith = coerceLiftBaseWith MC.liftBaseWith
-    {-# INLINE liftBaseWith #-}
 
     restoreM =
       (coerce :: forall a .
         (MC.StM (trans m) a ->                 trans m a) ->
         (MC.StM (trans m) a -> TaggedTrans tag trans m a))
       MC.restoreM
-    {-# INLINE restoreM #-}
 
 type instance Lift.StT (TaggedTrans tag trans) a = Lift.StT trans a
 

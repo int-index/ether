@@ -1,5 +1,2 @@
-resolver: lts-8.13
+resolver: nightly-2017-05-17
 packages: ['.']
-
-extra-deps:
-- transformers-lift-0.2.0.1
