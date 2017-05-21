@@ -7,7 +7,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.IO.Class (MonadIO)
-import Control.Monad.Morph (MFunctor(..), MMonad)
+import Control.Monad.Morph (MFunctor(..), MMonad(..))
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 
 import qualified Control.Monad.Base as MB
@@ -33,7 +33,7 @@ newtype TaggedTrans tag trans m a = TaggedTrans (trans m a)
   deriving
     ( Generic
     , Functor, Applicative, Alternative, Monad, MonadPlus
-    , MonadFix, MonadTrans, MonadIO, MMonad
+    , MonadFix, MonadTrans, MonadIO
     , MonadThrow, MonadCatch, MonadMask )
 
 type Pack tag trans m a = trans m a -> TaggedTrans tag trans m a
@@ -179,3 +179,10 @@ instance
 -- trigger GHC Trac #11837 on GHC 8.0.1 and older.
 instance MFunctor trans => MFunctor (TaggedTrans tag trans) where
     hoist f (TaggedTrans t) = TaggedTrans (hoist f t)
+
+-- NB: Don't use GeneralizedNewtypeDeriving to create this instance, as it will
+-- trigger GHC Trac #11837 on GHC 8.0.1 and older.
+instance MMonad trans => MMonad (TaggedTrans tag trans) where
+    embed f (TaggedTrans t) = TaggedTrans (embed (runTaggedTrans . f) t)
+      where
+        runTaggedTrans (TaggedTrans x) = x
