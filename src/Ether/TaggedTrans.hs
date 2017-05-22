@@ -1,4 +1,7 @@
-{-# LANGUAGE CPP #-}
+-- The use of ImpredicativeTypes here is safe, see discussion under GitHub issue
+-- #35. It's only needed to allow the visible type application of a polytype.
+{-# LANGUAGE ImpredicativeTypes #-}
+
 module Ether.TaggedTrans
   ( TaggedTrans(..)
   ) where
@@ -30,17 +33,11 @@ import qualified Control.Monad.Error.Class   as Mtl
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
-#define TRAC_11837_PRESENT \
-  __GLASGOW_HASKELL__ == 800 && __GLASGOW_HASKELL_PATCHLEVEL1__ == 1
-
 newtype TaggedTrans tag trans m a = TaggedTrans (trans m a)
   deriving
     ( Generic
     , Functor, Applicative, Alternative, Monad, MonadPlus
     , MonadFix, MonadTrans, MonadIO
-#if !(TRAC_11837_PRESENT)
-    , MFunctor, MMonad
-#endif
     , MonadThrow, MonadCatch, MonadMask )
 
 type Pack tag trans m a = trans m a -> TaggedTrans tag trans m a
@@ -182,15 +179,28 @@ instance
     throwError = lift . Mtl.throwError
     catchError = Lift.liftCatch Mtl.catchError
 
-#if TRAC_11837_PRESENT
--- NB: Don't use GeneralizedNewtypeDeriving to create these instances on
--- GHC 8.0.1, as they will trigger GHC Trac #11837
+type Hoist trans =
+  forall m n b . Monad m =>
+    (forall a . m a -> n a) -> trans m b -> trans n b
 
+-- NB: Don't use GeneralizedNewtypeDeriving to create this instance, as it will
+-- trigger GHC Trac #11837 on GHC 8.0.1 and older.
 instance MFunctor trans => MFunctor (TaggedTrans tag trans) where
-    hoist f (TaggedTrans t) = TaggedTrans (hoist f t)
+  hoist =
+    coerce
+      @(Hoist trans)
+      @(Hoist (TaggedTrans tag trans))
+      hoist
 
+type Embed trans =
+  forall n m b . Monad n =>
+    (forall a . m a -> trans n a) -> trans m b -> trans n b
+
+-- NB: Don't use GeneralizedNewtypeDeriving to create this instance, as it will
+-- trigger GHC Trac #11837 on GHC 8.0.1 and older.
 instance MMonad trans => MMonad (TaggedTrans tag trans) where
-    embed f (TaggedTrans t) = TaggedTrans (embed (runTaggedTrans . f) t)
-      where
-        runTaggedTrans (TaggedTrans x) = x
-#endif
+  embed =
+    coerce
+      @(Embed                  trans)
+      @(Embed (TaggedTrans tag trans))
+      embed

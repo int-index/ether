@@ -1,2 +1,5 @@
-resolver: nightly-2017-05-17
+resolver: lts-7.23
 packages: ['.']
+extra-deps:
+- transformers-lift-0.2.0.1
+- mmorph-1.1.0
