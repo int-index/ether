@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Ether.TaggedTrans
   ( TaggedTrans(..)
   ) where
@@ -29,11 +30,17 @@ import qualified Control.Monad.Error.Class   as Mtl
 import GHC.Generics (Generic)
 import Data.Coerce (coerce)
 
+#define TRAC_11837_PRESENT \
+  __GLASGOW_HASKELL__ == 800 && __GLASGOW_HASKELL_PATCHLEVEL1__ == 1
+
 newtype TaggedTrans tag trans m a = TaggedTrans (trans m a)
   deriving
     ( Generic
     , Functor, Applicative, Alternative, Monad, MonadPlus
     , MonadFix, MonadTrans, MonadIO
+#if !(TRAC_11837_PRESENT)
+    , MFunctor, MMonad
+#endif
     , MonadThrow, MonadCatch, MonadMask )
 
 type Pack tag trans m a = trans m a -> TaggedTrans tag trans m a
@@ -175,14 +182,15 @@ instance
     throwError = lift . Mtl.throwError
     catchError = Lift.liftCatch Mtl.catchError
 
--- NB: Don't use GeneralizedNewtypeDeriving to create this instance, as it will
--- trigger GHC Trac #11837 on GHC 8.0.1 and older.
+#if TRAC_11837_PRESENT
+-- NB: Don't use GeneralizedNewtypeDeriving to create these instances on
+-- GHC 8.0.1, as they will trigger GHC Trac #11837
+
 instance MFunctor trans => MFunctor (TaggedTrans tag trans) where
     hoist f (TaggedTrans t) = TaggedTrans (hoist f t)
 
--- NB: Don't use GeneralizedNewtypeDeriving to create this instance, as it will
--- trigger GHC Trac #11837 on GHC 8.0.1 and older.
 instance MMonad trans => MMonad (TaggedTrans tag trans) where
     embed f (TaggedTrans t) = TaggedTrans (embed (runTaggedTrans . f) t)
       where
         runTaggedTrans (TaggedTrans x) = x
+#endif
