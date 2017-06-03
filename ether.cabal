@@ -24,6 +24,20 @@ source-repository head
   location: git@github.com:int-index/ether.git
 
 
+flag disable-tup-instances
+
+  description:
+      Disable auto-generated 'HasLens' instances for tuples. The reason one
+      might want to do this is to reduce the size of .hi-files, as well as the
+      time and memory GHC needs to build Ether. To recover flattening with
+      tuples, use 'Ether.Internal.makeTupleInstancesHasLens' at specific tuple
+      sizes you need in your application.
+
+      This is a build-time performance hack, enable this flag at your own risk.
+
+  default: False
+  manual: True
+
 library
 
   exposed-modules:
@@ -41,18 +55,7 @@ library
     Ether.Internal.HasLens
     Ether.Internal.TH_Utils
     Ether.Internal.TH_TupleInstances
-    Ether.Internal.TupleInstances_TagsK
-    Ether.Internal.TupleInstances_Tags
-    Ether.Internal.TupleInstances_HasLens
-    Ether.Internal.TupleInstances_HasLens_1
-    Ether.Internal.TupleInstances_HasLens_2
-    Ether.Internal.TupleInstances_HasLens_3
-    Ether.Internal.TupleInstances_HasLens_4
-    Ether.Internal.TupleInstances_HasLens_5
-    Ether.Internal.TupleInstances_HasLens_6
-    Ether.Internal.TupleInstances_HasLens_7
-    Ether.Internal.TupleInstances_HasLens_8
-    Ether.Internal.TupleInstances_HasLens_9
+    Ether.Internal.TupleInstances
 
   build-depends:
     base >=4.9 && <4.11,
@@ -101,6 +104,9 @@ library
 
   ghc-options:
     -Wall -O2
+
+  if flag(disable-tup-instances)
+    cpp-options: -DDISABLE_TUP_INSTANCES
 
 test-suite regression
 

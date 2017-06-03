@@ -16,6 +16,7 @@ module Ether.Internal
   , HandleSuper
   , HandleConstraint
   , Handle(..)
+  , makeTupleInstancesHasLens
   ) where
 
 import Control.Applicative
@@ -27,9 +28,8 @@ import GHC.Exts (Constraint)
 
 import Ether.Internal.HasLens
 import Ether.Internal.Tags
-import Ether.Internal.TupleInstances_Tags ()
-import Ether.Internal.TupleInstances_TagsK ()
-import Ether.Internal.TupleInstances_HasLens ()
+import Ether.Internal.TH_TupleInstances (makeTupleInstancesHasLens)
+import Ether.Internal.TupleInstances ()
 
 data TAGGED e t
 
