@@ -1,3 +1,8 @@
+0.5.1.0
+-------
+
+* Disable `HasLens` for tuples via cabal flag.
+
 0.5.0.0
 -------
 
