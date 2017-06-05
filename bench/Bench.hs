@@ -8,6 +8,7 @@ import qualified Control.Monad.Reader as M
 import qualified Control.Monad.State as M
 import Criterion.Main
 import Ether
+import TupleInstances ()
 
 id' :: a -> a
 id' = id

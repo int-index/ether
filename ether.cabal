@@ -125,6 +125,7 @@ test-suite regression
     Regression.hs
 
   other-modules:
+    TupleInstances
     Regression.T1
     Regression.T2
     Regression.T3
@@ -175,6 +176,9 @@ test-suite regression
   ghc-options:
     -Wall -fno-warn-missing-signatures
 
+  if flag(disable-tup-instances)
+    cpp-options: -DDISABLE_TUP_INSTANCES
+
 
 benchmark bench
 
@@ -189,6 +193,9 @@ benchmark bench
 
   main-is:
     Bench.hs
+
+  other-modules:
+    TupleInstances
 
   type:
     exitcode-stdio-1.0
@@ -229,3 +236,6 @@ benchmark bench
 
   ghc-prof-options:
     -fprof-auto
+
+  if flag(disable-tup-instances)
+    cpp-options: -DDISABLE_TUP_INSTANCES

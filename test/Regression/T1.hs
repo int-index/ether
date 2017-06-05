@@ -1,6 +1,7 @@
 module Regression.T1 (test1) where
 
 import Ether
+import TupleInstances ()
 import Data.List (group)
 
 import Test.Tasty
