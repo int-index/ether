@@ -1,28 +1,16 @@
-sudo: false
+language: nix
+
+env:
+  - HC=ghc822
+  - HC=ghc844
+  - HC=ghc861
+
+script:
+  - travis_retry ./nix-cabal new-update
+  - ./nix-cabal new-test ether:regression
+  - ./nix-cabal new-bench ether:bench
 
 cache:
   directories:
-    - $HOME/.stack/
-
-env:
-  - FLAGS=""
-  - FLAGS="--flag ether:disable-tup-instances"
-
-before_install:
-  - mkdir -p ~/.local/bin
-  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-  - export PATH=~/.local/bin:$PATH
-  - stack --version
-  - stack setup
-
-install:
- - stack install --only-dependencies --no-terminal
-
-script:
- - stack test ether:regression --no-terminal --ghc-options -Werror $FLAGS
- - stack bench ether:bench --no-terminal --ghc-options -Werror $FLAGS
-
-addons:
-  apt:
-    packages:
-    - libgmp-dev
+    - ~/.cabal
+    - ~/.ghc

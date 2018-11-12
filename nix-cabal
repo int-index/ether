@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ -z "$HC" ]; then
+  ARG_HC=""
+else
+  ARG_HC="--argstr hc $HC"
+fi
+
+CMD="cabal $@"
+nix-shell --pure $ARG_HC --command "$CMD"
