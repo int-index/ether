@@ -5,8 +5,11 @@ env:
   - HC=ghc844
   - HC=ghc861
 
-script:
+before_install:
+  - curl https://raw.githubusercontent.com/int-index/nix-cabal/master/nix-cabal -o nix-cabal && chmod u+x nix-cabal
   - travis_retry ./nix-cabal new-update
+
+script:
   - ./nix-cabal new-test ether:regression
   - ./nix-cabal new-bench ether:bench
 
