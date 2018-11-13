@@ -1,12 +1,16 @@
 language: nix
 
+os:
+  - linux
+  - osx
+
 env:
   - HC=ghc822
   - HC=ghc844
   - HC=ghc861
 
 before_install:
-  - curl https://raw.githubusercontent.com/int-index/nix-cabal/master/nix-cabal -o nix-cabal && chmod u+x nix-cabal
+  - curl https://raw.githubusercontent.com/monadfix/nix-cabal/master/nix-cabal -o nix-cabal && chmod u+x nix-cabal
   - travis_retry ./nix-cabal new-update
 
 script:
@@ -17,3 +21,11 @@ cache:
   directories:
     - ~/.cabal
     - ~/.ghc
+
+matrix:
+  # broken at the moment
+  exclude:
+    - os: osx
+      env: HC=ghc822
+    - os: osx
+      env: HC=ghc861
