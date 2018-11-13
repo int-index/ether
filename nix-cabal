@@ -9,4 +9,4 @@ else
 fi
 
 CMD="cabal $@"
-nix-shell --pure $ARG_HC --command "$CMD"
+nix-shell --pure $ARG_HC --run "$CMD"
