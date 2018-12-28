@@ -58,7 +58,7 @@ library
     Ether.Internal.TupleInstances
 
   build-depends:
-    base >=4.9 && <4.13,
+    base >=4.9 && <5,
     transformers >=0.5.2.0,
     transformers-lift >=0.2.0.1,
     mtl >=2.2.1,
@@ -111,7 +111,7 @@ library
 test-suite regression
 
   build-depends:
-    base >=4.9 && <4.13,
+    base >=4.9 && <5,
     transformers >=0.4.2,
     mtl >=2.2.1,
     tasty >=0.10,
@@ -183,7 +183,7 @@ test-suite regression
 benchmark bench
 
   build-depends:
-    base >=4.9 && <4.13,
+    base >=4.9 && <5,
     mtl >=2.2.1,
     transformers >=0.4.2,
     criterion >=1.1,
