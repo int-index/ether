@@ -217,15 +217,9 @@ body > footer {
             <p>
               Ether's interface is similar to mtl's interface, except most
               functions require a tag. So let's create some tags:
-<pre class="source"><code class="haskell">ethereal "Foo" "foo"
-ethereal "Bar" "bar"</code></pre>
-              <code>ethereal</code> is a Template Haskell function that expands
-              to an empty data declaration and a value-level proxy. If for some
-              reason you don't want to use Template Haskell, you can create tags
-              manually like so:
 <pre class="source"><code class="haskell">data Foo
-foo = Proxy :: Proxy Foo</code></pre>
-              In fact, any type can serve as a tag. Later we'll see
+data Bar</code></pre>
+              Any type can serve as a tag. Later we'll see
               how it's used for implicit tagging.
             </p>
             <p>
@@ -236,10 +230,10 @@ foo = Proxy :: Proxy Foo</code></pre>
        , MonadReader Foo a m
        , MonadReader Bar a m
        ) =&gt; m a
-add = liftA2 (+) (ask foo) (ask bar)
+add = liftA2 (+) (ask @Foo) (ask @Bar)
 
 n :: Num a =&gt; a
-n = runReader foo (runReaderT bar add 10) 20</code></pre>
+n = runReader @Foo (runReaderT @Bar add 10) 20</code></pre>
               Here we can see that <code>MonadReader</code>, <code>ask</code>,
               <code>runReader</code> and <code>runReaderT</code> are used just
               like the ones from mtl, only with a tag. As you might expect,
@@ -278,7 +272,7 @@ summator
 summator xs = do
     for_ xs $ \x -&gt; do
         tell (Sum x)
-        Ether.tell foo (Sum 1)</code></pre>
+        Ether.tell @Foo (Sum 1)</code></pre>
               Easy, right? Untagged classes can be considered a special case of
               tagged ones, and any mix of them should Just Work&trade;. But
               wait, there's more...
@@ -300,8 +294,8 @@ useboth
        , Ether.MonadState Bar Bool m
        ) =&gt; m String
 useboth = do
-    a &lt;- tagAttach foo f
-    b &lt;- tagAttach bar g
+    a &lt;- tagAttach @Foo f
+    b &lt;- tagAttach @Bar g
     return (a ++ b)
 </code></pre>
               Here we use the <code>tagAttach</code> function
@@ -322,9 +316,9 @@ logDiv
     , MonadExcept Bar NegativeLog  m
     ) =&gt; a -&gt; a -&gt; m a
 logDiv x y = do
-    when (y == 0) (throw foo DivideByZero)
+    when (y == 0) (throw @Foo DivideByZero)
     let d = x/y
-    when (d &lt; 0) (throw bar NegativeLog)
+    when (d &lt; 0) (throw @Bar NegativeLog)
     return (log d)</code></pre>
               Now we can handle those exceptions one by one with <code>runExceptT</code>.
               However, this tagging business starts to become unmanagable. Do we
@@ -350,14 +344,6 @@ logDiv x y = do
             tags too, but its behavior can be sometimes unobvious. You also may
             need to use type annotations when using implicit tagging, so for
             anything polymorphic prefer the explicit style.
-            </p>
-            <h1>Production Ready?</h1>
-            <p>
-              Yes! Ether is not a research project&mdash;at
-              <a href="https://typeable.io/">Typeable IO</a> we use Ether in
-              production. Get it on
-              <a href="https://hackage.haskell.org/package/ether">Hackage</a> or
-              <a href="https://www.stackage.org/package/ether">Stackage</a>.
             </p>
         </div>
         </section>
