@@ -139,7 +139,7 @@ readerT = coerce (T.ReaderT @r @m @a)
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the final value.
 runReaderT :: forall tag r m a . ReaderT tag r m a -> r -> m a
-runReaderT = coerce (T.runReaderT @r @_ @m @a)
+runReaderT = coerce (T.runReaderT @r @m @a)
 
 -- | Runs a 'ReaderT' with the given environment
 -- and returns the final value.
@@ -203,7 +203,7 @@ type ReadersT r = TaggedTrans (READERS (Tags r)) (T.ReaderT r)
 type Readers r = ReadersT r Identity
 
 runReadersT :: forall p m a . ReadersT p m a -> p -> m a
-runReadersT = coerce (T.runReaderT @p @_ @m @a)
+runReadersT = coerce (T.runReaderT @p @m @a)
 
 runReaders :: forall p a . Readers p a -> p -> a
 runReaders = coerce (T.runReader @p @a)
