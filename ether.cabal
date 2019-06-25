@@ -1,16 +1,11 @@
 name:                ether
 version:             0.5.2.0
 synopsis:            Monad transformers and classes
-description:
-    Ether is a Haskell library that extends @mtl@ and @transformers@ with
-    tagged monad transformers and classes in a compatible way.
-
-    Introduction <https://int-index.github.io/ether/>
-
-category:            Control
-license:             MIT
+description:         Lib
+license:             BSD-3-Clause
 -- ^ unfortunately have to change this line due to the issue with cabal2nix
 license-file:        LICENSE
+category:            Control
 author:              Vladislav Zavialov
 maintainer:          Vladislav Zavialov <vlad.z.4096@gmail.com>
 homepage:            https://int-index.github.io/ether/
