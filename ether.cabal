@@ -1,3 +1,4 @@
+cabal-version:       2.2
 name:                ether
 version:             0.5.2.0
 synopsis:            Monad transformers and classes
@@ -11,7 +12,6 @@ maintainer:          Vladislav Zavialov <vlad.z.4096@gmail.com>
 homepage:            https://int-index.github.io/ether/
 bug-reports:         https://github.com/int-index/ether/issues
 build-type:          Simple
-cabal-version:       >=1.18
 extra-source-files:  CHANGELOG.md
 
 source-repository head
