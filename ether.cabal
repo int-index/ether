@@ -8,8 +8,8 @@ description:
     Introduction <https://int-index.github.io/ether/>
 
 category:            Control
--- license:             BSD-3
--- ^ unfortunately have to comment this line due to the issue with cabal2nix
+license:             MIT
+-- ^ unfortunately have to change this line due to the issue with cabal2nix
 license-file:        LICENSE
 author:              Vladislav Zavialov
 maintainer:          Vladislav Zavialov <vlad.z.4096@gmail.com>
